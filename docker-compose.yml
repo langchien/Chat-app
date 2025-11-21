@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo
+    container_name: my-mongo-compose
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo-data:/data/db
+    restart: unless-stopped # always, no, on-failure, unless-stopped
+    # authentication
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: examplepassword
+  redis:
+    image: redis:alpine
+    container_name: my-redis-compose
+    ports:
+      - '6379:6379'
+    restart: unless-stopped
+volumes:
+  mongo-data: # <-- Khai báo volume ở đây để lưu trữ dữ liệu MongoDB
+    driver: local

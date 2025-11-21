@@ -48,6 +48,18 @@ class UserRepo {
     return UserSchema.parse(result)
   }
 
+  async findOneByEmail(email: string): Promise<IUser | null> {
+    const result = await this.collection.findOne({ email })
+    if (!result) return null
+    return UserSchema.parse(result)
+  }
+
+  async findOneByUsername(username: string): Promise<IUser | null> {
+    const result = await this.collection.findOne({ username })
+    if (!result) return null
+    return UserSchema.parse(result)
+  }
+
   async findAll(): Promise<IUser[]> {
     const results = await this.collection.find().sort({ _id: -1 }).toArray()
     return results.map((result) => UserSchema.parse(result))

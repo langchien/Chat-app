@@ -1,4 +1,5 @@
 import { envConfig } from '@/config/env-config'
+import { userRepo } from '@/routes/user/user.repo'
 import { Db, MongoClient } from 'mongodb'
 import { logger } from './logger.service'
 
@@ -56,3 +57,7 @@ process.on('SIGINT', async () => {
 })
 
 export const databaseService = DatabaseService.getInstance()
+
+export const initIndexesDb = async (): Promise<void> => {
+  await userRepo.initIndexes()
+}

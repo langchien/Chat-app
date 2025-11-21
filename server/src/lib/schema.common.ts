@@ -57,3 +57,9 @@ export const BaseCollectionSchema = z.object({
   createdAt: z.date().default(() => new Date()),
   updatedAt: z.date().default(() => new Date()),
 })
+
+export const UsernameSchema = z
+  .string()
+  .min(3, 'Username phải có ít nhất 3 ký tự')
+  .max(100, 'Username không được vượt quá 100 ký tự')
+  .regex(/^[a-zA-Z0-9_-]+$/, 'Username chỉ được chứa chữ cái, số và gạch dưới')

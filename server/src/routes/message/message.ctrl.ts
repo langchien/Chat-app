@@ -2,7 +2,7 @@ import { NotFoundException } from '@/core/exceptions'
 import { HttpStatusCode } from '@/core/status-code'
 import { PaginateCursorCtrl } from '@/lib/paginate-cusor.ctrl'
 import { RequestHandler } from 'express'
-import { IChatIdParam } from '../chat/chat.req.dto'
+import { IChatIdParamDto } from '../chat/chat.req.dto'
 import { messageRepo } from './message.repo'
 import { ICreateMessageBodyDto, IMessageIdParamDto, IUpdateMessageBodyDto } from './message.req.dto'
 import { IGetMessageRes, IMessagePaginateCursorRes } from './message.res.dto'
@@ -22,7 +22,7 @@ class MessageCtrl extends PaginateCursorCtrl {
     res.status(204).end()
   }
 
-  getMessagesByCursor: RequestHandler<IChatIdParam, IMessagePaginateCursorRes> = async (
+  getMessagesByCursor: RequestHandler<IChatIdParamDto, IMessagePaginateCursorRes> = async (
     req,
     res,
   ) => {

@@ -7,36 +7,28 @@ import { CreateMessageBodySchema, MessageIdParamSchema } from './message.req.dto
 
 export const messageRouter = Router()
 
+messageRouter.use(accessTokenValidate)
 messageRouter.get(
   '/:messageId',
-  accessTokenValidate,
   zodValidate(MessageIdParamSchema, 'params'),
   messageCtrl.findOneById,
 )
 
 messageRouter.delete(
   '/:messageId',
-  accessTokenValidate,
   zodValidate(MessageIdParamSchema, 'params'),
   messageCtrl.deleteOneById,
 )
 
 messageRouter.get(
   '/chat/:chatId',
-  accessTokenValidate,
   zodValidate(ChatIdParamSchema, 'params'),
   messageCtrl.getMessagesByCursor,
 )
 
-messageRouter.post(
-  '/',
-  accessTokenValidate,
-  zodValidate(CreateMessageBodySchema),
-  messageCtrl.create,
-)
+messageRouter.post('/', zodValidate(CreateMessageBodySchema), messageCtrl.create)
 messageRouter.patch(
   '/:messageId',
-  accessTokenValidate,
   zodValidate(MessageIdParamSchema, 'params'),
   zodValidate(CreateMessageBodySchema),
   messageCtrl.update,

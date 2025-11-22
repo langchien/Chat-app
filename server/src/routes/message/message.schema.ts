@@ -15,12 +15,11 @@ export const MessageSchema = BaseCollectionSchema.extend({
 })
 export const MessageCollectionSchema = MessageSchema.partial({ _id: true })
 
-export const UpdateMessageSchema = MessageSchema.omit({
+export const UpdateMessageSchema = MessageSchema.partial().omit({
   _id: true,
   createdAt: true,
   senderId: true,
   chatId: true,
-  mediaId: true,
 })
 
 export interface IMessage extends z.infer<typeof MessageSchema> {}

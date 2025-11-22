@@ -9,7 +9,7 @@ export const MessagePaginateCursorResSchema = PaginateCursorResSchema.extend({
 
 export interface IMessagePaginateCursorRes extends z.infer<typeof MessagePaginateCursorResSchema> {}
 
-export const MessageResSchema = MessageSchema.extend({
+export const GetMessageResSchema = MessageSchema.extend({
   media: MediaSchema.omit({
     createdAt: true,
     updatedAt: true,
@@ -18,4 +18,6 @@ export const MessageResSchema = MessageSchema.extend({
   mediaId: true,
 })
 
-export interface IMessageRes extends z.infer<typeof MessageResSchema> {}
+export interface IGetMessageRes extends z.infer<typeof GetMessageResSchema> {}
+
+export interface ICreateMessageRes extends z.infer<typeof MessageSchema> {}

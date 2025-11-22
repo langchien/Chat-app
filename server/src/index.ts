@@ -2,7 +2,7 @@ import { envConfig } from '@/config/env-config'
 import { handlerExceptionDefault } from '@/core/handler-exception'
 import { apiRateLimiter } from '@/core/rate-limit.middleware'
 import { APP_ROUTES } from '@/core/routes.const'
-import { databaseService } from '@/lib/database.service'
+import { databaseService, initIndexesDb } from '@/lib/database.service'
 import { logger } from '@/lib/logger.service'
 import { maillerService } from '@/lib/mailler.service'
 import { redisService } from '@/lib/redis.service'
@@ -15,7 +15,7 @@ import { uploadService } from '@/routes/media/upload.service'
 import { messageRouter } from '@/routes/message/message.route'
 import { oauth2Router } from '@/routes/oauth2/oauth2.router'
 import { protectedRouter } from '@/routes/protected/protected.route'
-import { userRouter } from '@/routes/user/user.router'
+import { userRouter } from '@/routes/user/user.route'
 import cors from 'cors'
 import express from 'express'
 import { createServer } from 'http'
@@ -32,6 +32,8 @@ const main = async () => {
     maillerService.verifyConnection(), // Xác minh kết nối mailer
     s3Service.verifyS3Connection(), // Xác minh kết nối S3
   ])
+  await initIndexesDb() // Khởi tạo các indexes cho database
+
   app.use(express.json()) // Middleware để phân tích JSON body
   app.use(apiRateLimiter) // Rate limiter cho toàn bộ API
   // cho phép truy cập từ các nguồn khác (CORS)

@@ -11,9 +11,9 @@ import { jwtService, TokenType } from '@/lib/jwt.service'
 import { redisService } from '@/lib/redis.service'
 import { generateSlug } from '@/lib/utils'
 import {
-  IForgotPasswordReqBodyDto,
   ILoginReqBodyDto,
   IRegisterReqBodyDto,
+  IResetPasswordReqBodyDto,
   ISendOtpReqBodyDto,
   IVerifyOtpDto,
 } from '@/routes/auth/auth.req.dto'
@@ -206,13 +206,13 @@ class AuthCtrl {
     const email = req.body.email
     const existingEmail = await userRepo.findOneByEmail(email)
     if (!existingEmail) throw new NotFoundException('Email không tồn tại trong hệ thống')
-    await this.generateOtpAndSendEmail(email, OtpType.ForgotPasswordReqBodyDto)
+    await this.generateOtpAndSendEmail(email, OtpType.ResetPasswordReqBodyDto)
     return res.status(HttpStatusCode.NoContent).json({})
   }
 
   verifyForgotPasswordEmailCtrl: RequestHandler<any, any, IVerifyOtpDto> = async (req, res) => {
     const { email, otp } = req.body
-    const forgotPasswordToken = await this.verifyEmail(email, otp, OtpType.ForgotPasswordReqBodyDto)
+    const forgotPasswordToken = await this.verifyEmail(email, otp, OtpType.ResetPasswordReqBodyDto)
     jwtService.setCookieToClient(res, forgotPasswordToken, TokenType.Otp, 'forgotPasswordToken')
     return res.status(HttpStatusCode.NoContent).json()
   }
@@ -220,7 +220,7 @@ class AuthCtrl {
   /**
    * @todo Ở đây cần thu hồi forgotPasswordToken sau khi đổi mật khẩu đỡ mất công bị spam nhưng lười code quá
    */
-  resetPasswordCtrl: RequestHandler<any, any, IForgotPasswordReqBodyDto> = async (req, res) => {
+  resetPasswordCtrl: RequestHandler<any, any, IResetPasswordReqBodyDto> = async (req, res) => {
     try {
       const { password } = req.body
       const forgotPasswordToken = req.cookies['forgotPasswordToken']
@@ -228,15 +228,21 @@ class AuthCtrl {
         throw new UnauthorizedException('Không tìm thấy forgot password token')
       jwtService.deleteCookieFromClient(res, TokenType.Otp, 'forgotPasswordToken')
       const { email, type, exp } = jwtService.verifyOtpToken(forgotPasswordToken)
-      if (type !== OtpType.ForgotPasswordReqBodyDto) throw new UnauthorizedException()
+      if (type !== OtpType.ResetPasswordReqBodyDto) throw new UnauthorizedException()
       if (Date.now() >= exp * 1000)
         throw new UnauthorizedException('Forgot password token đã hết hạn')
       const hashedPassword = await hashingService.hash(password)
       const user = await userRepo.findOneByEmail(email)
+      const { accessToken, refreshToken } = jwtService.generateTokens({
+        email,
+        userId: user!._id.toString(),
+      })
+      await this.addRefreshTokenToRedis(refreshToken, user!._id.toString())
+      jwtService.setCookieToClient(res, refreshToken, TokenType.Refresh)
       if (!user) throw new NotFoundException('Người dùng không tồn tại')
       const result = await userRepo.update(user._id.toString(), { hashedPassword })
       if (!result) throw new NotFoundException('Người dùng không tồn tại')
-      return res.status(HttpStatusCode.NoContent).json()
+      return res.status(HttpStatusCode.Created).json({ accessToken })
     } catch (error) {
       // Trường hợn đặc biệt, override lỗi khi verify và tránh mã lỗi 401 để client dễ xử lý
       if (error instanceof UnauthorizedException)

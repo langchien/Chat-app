@@ -30,7 +30,7 @@ export const LoginReqBodyDto = z.object({
 })
 export interface ILoginReqBodyDto extends z.infer<typeof LoginReqBodyDto> {}
 
-export const ForgotPasswordReqBodyDto = z.object({
+export const ResetPasswordReqBodyDto = z.object({
   password: Password,
 })
-export interface IForgotPasswordReqBodyDto extends z.infer<typeof ForgotPasswordReqBodyDto> {}
+export interface IResetPasswordReqBodyDto extends z.infer<typeof ResetPasswordReqBodyDto> {}

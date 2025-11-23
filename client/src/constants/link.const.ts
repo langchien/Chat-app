@@ -6,5 +6,5 @@ export const APP_PAGES = {
   GOOGLE_OAUTH2: '/oauth2/google/redirect',
   FORGOT_PASSWORD: '/auth/forgot-password',
   RESET_PASSWORD: '/auth/reset-password',
-  CONVERSATIONS: '/conversation',
+  CHAT: '/chat',
 } as const

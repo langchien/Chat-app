@@ -2,10 +2,10 @@ import { accessTokenValidate } from '@/core/access-token.middleware'
 import { emailRateLimiter } from '@/core/rate-limit.middleware'
 import { zodValidate } from '@/core/validate.middleware'
 import {
-  ForgotPasswordReqBodyDto,
   LoginReqBodyDto,
   RefreshTokenReqBodyDto,
   RegisterReqBodyDto,
+  ResetPasswordReqBodyDto,
   SendOtpReqBodyDto,
   VerifyOtp,
 } from '@/routes/auth/auth.req.dto'
@@ -55,8 +55,4 @@ authRouter.post(
   authCtrl.verifyForgotPasswordEmailCtrl,
 )
 
-authRouter.post(
-  '/password/reset',
-  zodValidate(ForgotPasswordReqBodyDto),
-  authCtrl.resetPasswordCtrl,
-)
+authRouter.post('/password/reset', zodValidate(ResetPasswordReqBodyDto), authCtrl.resetPasswordCtrl)

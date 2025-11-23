@@ -1,7 +1,14 @@
 import { databaseService } from '@/lib/database.service'
 import { logger } from '@/lib/logger.service'
 import { Collection, ObjectId } from 'mongodb'
-import { IUpdateUserInput, IUser, IUserCollection, UpdateUser, UserCollection } from './user.db'
+import {
+  ICreateUserInput,
+  IUpdateUserInput,
+  IUser,
+  IUserCollection,
+  UpdateUser,
+  UserCollection,
+} from './user.db'
 import { User } from './user.schema'
 
 class UserRepo {
@@ -9,7 +16,7 @@ class UserRepo {
     return databaseService.db.collection('users')
   }
 
-  async create(data: IUserCollection): Promise<IUser> {
+  async create(data: ICreateUserInput): Promise<IUser> {
     const parsedData = UserCollection.parse(data)
     const result = await this.collection.insertOne(parsedData)
     return User.parse({

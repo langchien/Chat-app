@@ -11,7 +11,7 @@ export const UpdateMedia = Media.partial().omit({
   type: true,
 })
 
-export interface IInsertMediaInput extends z.input<typeof MediaCollection> {}
 export interface IMedia extends z.infer<typeof Media> {}
 export interface IMediaCollection extends z.infer<typeof MediaCollection> {}
 export interface IUpdateMediaInput extends z.input<typeof UpdateMedia> {}
+export interface ICreateMediaInput extends z.input<typeof Media> {}

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   NotFoundException,
   UnauthorizedException,
@@ -6,19 +7,17 @@ import {
 } from '@/core/exceptions'
 import { HttpStatusCode } from '@/core/status-code'
 import { hashingService } from '@/lib/hashing.service'
-import { jwtService } from '@/lib/jwt.service'
+import { jwtService, TokenType } from '@/lib/jwt.service'
 import { redisService } from '@/lib/redis.service'
 import { generateSlug } from '@/lib/utils'
 import {
   IForgotPasswordReqBodyDto,
   ILoginReqBodyDto,
-  IRefreshTokenReqBodyDto,
   IRegisterReqBodyDto,
   ISendOtpReqBodyDto,
   IVerifyOtpDto,
 } from '@/routes/auth/auth.req.dto'
 import { RequestHandler } from 'express'
-import { IUserCollection, UserCollection } from '../user/user.db'
 import { userRepo } from '../user/user.repo'
 import { authMaillerService } from './auth-mailler.service'
 import { OtpType } from './otp-request.schema'
@@ -84,7 +83,8 @@ class AuthCtrl {
   verifyEmailCtrl: RequestHandler<any, any, IVerifyOtpDto> = async (req, res) => {
     const { email, otp } = req.body
     const registerToken = await this.verifyEmail(email, otp, OtpType.VerifyEmail)
-    return res.status(HttpStatusCode.Created).json({ registerToken })
+    jwtService.setCookieToClient(res, registerToken, TokenType.Otp, 'registerToken')
+    return res.status(HttpStatusCode.NoContent).json()
   }
 
   private revokeAllRefreshTokens = async (userId: string) => {
@@ -104,39 +104,48 @@ class AuthCtrl {
   }
 
   registerCtrl: RequestHandler<any, any, IRegisterReqBodyDto> = async (req, res) => {
-    const { password, registerToken, ...fields } = req.body
-    const { email, type, exp } = jwtService.verifyOtpToken(registerToken)
-    if (type !== OtpType.VerifyEmail) throw new UnauthorizedException()
-    if (Date.now() >= exp * 1000) throw new UnauthorizedException('Register token đã hết hạn')
-    const hashedPassword = await hashingService.hash(password)
-    // email và username phải là duy nhất
-    const isExistingEmail = await userRepo.findOneByEmail(email)
-    // email lấy thông qua token nên chỉ bị trùng khi client cố ý lấy token đấy gửi lại nên trả lỗi Unauthorized
-    const username = generateSlug(fields.username)
-    if (isExistingEmail) throw new UnauthorizedException('Email đã được sử dụng')
-    const isExistingUsername = await userRepo.findOneByUsername(username)
-    // username tồn tại thì trả về lỗi unprocessable entity với chi tiết lỗi để client hiển thị đúng ở field nào
-    if (isExistingUsername)
-      throw new UnprocessableEntityException([
-        {
-          message: 'Username đã được sử dụng',
-          path: ['username'],
-        },
-      ])
-    const userData: IUserCollection = {
-      ...fields,
-      email,
-      hashedPassword,
-      username,
+    try {
+      const { password, ...fields } = req.body
+      const registerToken = req.cookies['registerToken']
+      if (!registerToken) throw new UnauthorizedException('Không tìm thấy register token')
+      jwtService.deleteCookieFromClient(res, TokenType.Otp, 'registerToken')
+      const { email, type, exp } = jwtService.verifyOtpToken(registerToken)
+      if (type !== OtpType.VerifyEmail) throw new UnauthorizedException()
+      if (Date.now() >= exp * 1000) throw new UnauthorizedException('Register token đã hết hạn')
+      const hashedPassword = await hashingService.hash(password)
+      // email và username phải là duy nhất
+      const isExistingEmail = await userRepo.findOneByEmail(email)
+      // email lấy thông qua token nên chỉ bị trùng khi client cố ý lấy token đấy gửi lại nên trả lỗi Unauthorized
+      const username = generateSlug(fields.username)
+      if (isExistingEmail) throw new UnauthorizedException('Email đã được sử dụng')
+      const isExistingUsername = await userRepo.findOneByUsername(username)
+      // username tồn tại thì trả về lỗi unprocessable entity với chi tiết lỗi để client hiển thị đúng ở field nào
+      if (isExistingUsername)
+        throw new UnprocessableEntityException([
+          {
+            message: 'Username đã được sử dụng',
+            path: ['username'],
+          },
+        ])
+      const result = await userRepo.create({
+        ...fields,
+        email,
+        hashedPassword,
+        username,
+      })
+      const { accessToken, refreshToken } = jwtService.generateTokens({
+        email,
+        userId: result._id.toString(),
+      })
+      await this.addRefreshTokenToRedis(refreshToken, result._id.toString())
+      jwtService.setCookieToClient(res, refreshToken, TokenType.Refresh)
+      return res.status(HttpStatusCode.Created).json({ accessToken })
+    } catch (error) {
+      // Trường hợn đặc biệt, override lỗi khi verify và tránh mã lỗi 401 để client dễ xử lý
+      if (error instanceof UnauthorizedException)
+        throw new BadRequestException(undefined, 'Không thể làm mới token, vui lòng thử lại')
+      throw error
     }
-    const u = UserCollection.parse(userData)
-    const result = await userRepo.create(u)
-    const tokens = jwtService.generateTokens({
-      email,
-      userId: result._id.toString(),
-    })
-    await this.addRefreshTokenToRedis(tokens.refreshToken, result._id.toString())
-    return res.status(HttpStatusCode.Created).json({ ...tokens })
   }
 
   loginCtrl: RequestHandler<any, any, ILoginReqBodyDto> = async (req, res) => {
@@ -145,17 +154,19 @@ class AuthCtrl {
     if (!result) throw new UnauthorizedException('Email hoặc mật khẩu không đúng')
     const isPasswordValid = await hashingService.compare(password, result.hashedPassword)
     if (!isPasswordValid) throw new UnauthorizedException('Email hoặc mật khẩu không đúng')
-    const tokens = jwtService.generateTokens({
+    const { accessToken, refreshToken } = jwtService.generateTokens({
       email,
       userId: result._id.toString(),
     })
-    await this.addRefreshTokenToRedis(tokens.refreshToken, result._id.toString())
-    return res.status(HttpStatusCode.Created).json({ ...tokens })
+    await this.addRefreshTokenToRedis(refreshToken, result._id.toString())
+    jwtService.setCookieToClient(res, refreshToken, TokenType.Refresh)
+    return res.status(HttpStatusCode.Created).json({ accessToken })
   }
 
   // xem lại docs/refresh-token.flow.md để biết flow chi tiết
-  refreshTokenCtrl: RequestHandler<any, any, IRefreshTokenReqBodyDto> = async (req, res) => {
-    const { refreshToken } = req.body
+  refreshTokenCtrl: RequestHandler = async (req, res) => {
+    const refreshToken = req.cookies['refreshToken']
+    if (!refreshToken) throw new UnauthorizedException('Không tìm thấy refresh token')
     // 1. Verify jwt
     const { jti, exp, userId, email } = jwtService.verifyRefreshToken(refreshToken)
     // 2. Kiểm tra token có trong redis không
@@ -168,20 +179,24 @@ class AuthCtrl {
     const newRefreshToken = jwtService.signRefreshToken({ userId, email }, exp)
     // 4. Lưu refresh token mới vào redis
     await this.addRefreshTokenToRedis(newRefreshToken, userId)
-    return res
-      .status(HttpStatusCode.Created)
-      .json({ accessToken: newAccessToken, refreshToken: newRefreshToken })
+    // 5. Gửi refresh token mới về client qua cookie
+    jwtService.setCookieToClient(res, newRefreshToken, TokenType.Refresh)
+    return res.status(HttpStatusCode.Created).json({ accessToken: newAccessToken })
   }
 
-  logoutCtrl: RequestHandler<any, any, IRefreshTokenReqBodyDto> = async (req, res) => {
-    const { refreshToken } = req.body
+  logoutCtrl: RequestHandler = async (req, res) => {
+    const refreshToken = req.cookies['refreshToken']
+    if (!refreshToken) throw new UnauthorizedException('Không tìm thấy refresh token')
+    jwtService.deleteCookieFromClient(res, TokenType.Refresh)
     const { jti } = jwtService.verifyRefreshToken(refreshToken)
     await redisService.del(`${jti}`)
     return res.status(HttpStatusCode.NoContent).json({})
   }
 
-  logoutAllDeviceCtrl: RequestHandler<any, any, IRefreshTokenReqBodyDto> = async (req, res) => {
-    const { refreshToken } = req.body
+  logoutAllDeviceCtrl: RequestHandler = async (req, res) => {
+    const refreshToken = req.cookies['refreshToken']
+    if (!refreshToken) throw new UnauthorizedException('Không tìm thấy refresh token')
+    jwtService.deleteCookieFromClient(res, TokenType.Refresh)
     const { userId } = jwtService.verifyRefreshToken(refreshToken)
     await this.revokeAllRefreshTokens(userId)
     return res.status(HttpStatusCode.NoContent).json({})
@@ -198,24 +213,36 @@ class AuthCtrl {
   verifyForgotPasswordEmailCtrl: RequestHandler<any, any, IVerifyOtpDto> = async (req, res) => {
     const { email, otp } = req.body
     const forgotPasswordToken = await this.verifyEmail(email, otp, OtpType.ForgotPasswordReqBodyDto)
-    return res.status(HttpStatusCode.Created).json({ forgotPasswordToken })
+    jwtService.setCookieToClient(res, forgotPasswordToken, TokenType.Otp, 'forgotPasswordToken')
+    return res.status(HttpStatusCode.NoContent).json()
   }
 
   /**
    * @todo Ở đây cần thu hồi forgotPasswordToken sau khi đổi mật khẩu đỡ mất công bị spam nhưng lười code quá
    */
   resetPasswordCtrl: RequestHandler<any, any, IForgotPasswordReqBodyDto> = async (req, res) => {
-    const { password, forgotPasswordToken } = req.body
-    const { email, type, exp } = jwtService.verifyOtpToken(forgotPasswordToken)
-    if (type !== OtpType.ForgotPasswordReqBodyDto) throw new UnauthorizedException()
-    if (Date.now() >= exp * 1000)
-      throw new UnauthorizedException('Forgot password token đã hết hạn')
-    const hashedPassword = await hashingService.hash(password)
-    const user = await userRepo.findOneByEmail(email)
-    if (!user) throw new NotFoundException('Người dùng không tồn tại')
-    const result = await userRepo.update(user._id.toString(), { hashedPassword })
-    if (!result) throw new NotFoundException('Người dùng không tồn tại')
-    return res.status(HttpStatusCode.NoContent).json({})
+    try {
+      const { password } = req.body
+      const forgotPasswordToken = req.cookies['forgotPasswordToken']
+      if (!forgotPasswordToken)
+        throw new UnauthorizedException('Không tìm thấy forgot password token')
+      jwtService.deleteCookieFromClient(res, TokenType.Otp, 'forgotPasswordToken')
+      const { email, type, exp } = jwtService.verifyOtpToken(forgotPasswordToken)
+      if (type !== OtpType.ForgotPasswordReqBodyDto) throw new UnauthorizedException()
+      if (Date.now() >= exp * 1000)
+        throw new UnauthorizedException('Forgot password token đã hết hạn')
+      const hashedPassword = await hashingService.hash(password)
+      const user = await userRepo.findOneByEmail(email)
+      if (!user) throw new NotFoundException('Người dùng không tồn tại')
+      const result = await userRepo.update(user._id.toString(), { hashedPassword })
+      if (!result) throw new NotFoundException('Người dùng không tồn tại')
+      return res.status(HttpStatusCode.NoContent).json()
+    } catch (error) {
+      // Trường hợn đặc biệt, override lỗi khi verify và tránh mã lỗi 401 để client dễ xử lý
+      if (error instanceof UnauthorizedException)
+        throw new BadRequestException(undefined, 'Không thể làm mới token, vui lòng thử lại')
+      throw error
+    }
   }
 }
 

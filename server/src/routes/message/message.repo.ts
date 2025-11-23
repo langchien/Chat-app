@@ -2,6 +2,7 @@ import { databaseService } from '@/lib/database.service'
 import { IPaginateCursorQuery } from '@/lib/paginate-cusor.ctrl'
 import { Collection, ObjectId } from 'mongodb'
 import {
+  ICreateMessageInput,
   IMessageCollection,
   IUpdateMessageInput,
   MessageCollection,
@@ -20,7 +21,7 @@ class MessageRepo {
     return databaseService.db.collection('messages')
   }
 
-  async create(data: IMessageCollection): Promise<ICreateMessageResDto> {
+  async create(data: ICreateMessageInput): Promise<ICreateMessageResDto> {
     const parsedData = MessageCollection.parse(data)
     const result = await this.collection.insertOne(parsedData)
     return Message.parse({

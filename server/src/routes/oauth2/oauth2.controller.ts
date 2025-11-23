@@ -1,5 +1,5 @@
 import { envConfig } from '@/config/env-config'
-import { jwtService } from '@/lib/jwt.service'
+import { jwtService, TokenType } from '@/lib/jwt.service'
 import { redisService } from '@/lib/redis.service'
 import { RequestHandler } from 'express'
 import { ObjectId } from 'mongodb'
@@ -128,18 +128,20 @@ export class OAuth2Ctrl {
           email,
           userId: newUser._id.toString(),
         })
+        jwtService.setCookieToClient(res, tokens.refreshToken, TokenType.Refresh)
         await this.addRefreshTokenToRedis(tokens.refreshToken, newUser._id.toString())
         return res.redirect(
-          `${appClientRedirectUri}/?status=success&accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`,
+          `${appClientRedirectUri}/?status=success&accessToken=${tokens.accessToken}`,
         )
       }
       const tokens = jwtService.generateTokens({
         email,
         userId: result._id.toString(),
       })
+      jwtService.setCookieToClient(res, tokens.refreshToken, TokenType.Refresh)
       await this.addRefreshTokenToRedis(tokens.refreshToken, result._id.toString())
       return res.redirect(
-        `${appClientRedirectUri}/?status=success&accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`,
+        `${appClientRedirectUri}/?status=success&accessToken=${tokens.accessToken}`,
       )
     } catch (error) {
       return res.redirect(`${envConfig.googleOAuth2.appClientRedirectUri}?status=error`)

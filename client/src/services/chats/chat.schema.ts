@@ -10,9 +10,3 @@ export const Chat = BaseCollection.extend({
   ),
   lastMessage: z.string().default('Ấn để bắt đầu cuộc trò chuyện'),
 })
-
-export const ChatCollection = Chat.partial({ _id: true })
-export const UpdateChat = Chat.partial().omit({
-  _id: true,
-  createdAt: true,
-})

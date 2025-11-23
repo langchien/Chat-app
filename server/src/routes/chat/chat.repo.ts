@@ -1,16 +1,16 @@
 import { databaseService } from '@/lib/database.service'
 import { IPaginateCursorQuery } from '@/lib/paginate-cusor.ctrl'
 import { Collection, ObjectId } from 'mongodb'
-import { ChatResDto, IChatPaginateCursorRes, IChatResDto } from './chat.res.dto'
 import {
-  Chat,
   ChatCollection,
   IChat,
   IChatCollection,
   ICreateChatInp,
   IUpdateChatInp,
   UpdateChat,
-} from './chat.schema'
+} from './chat.db'
+import { ChatResDto, IChatPaginateCursorRes, IChatResDto } from './chat.res.dto'
+import { Chat } from './chat.schema'
 
 class ChatRepo {
   private get collection(): Collection<IChatCollection> {

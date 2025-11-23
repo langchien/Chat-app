@@ -13,3 +13,4 @@ export const UpdateMessage = Message.partial().omit({
 export interface IMessage extends z.infer<typeof Message> {}
 export interface IMessageCollection extends z.infer<typeof MessageCollection> {}
 export interface IUpdateMessageInput extends z.input<typeof UpdateMessage> {}
+export interface ICreateMessageInput extends z.input<typeof Message> {}

@@ -1,7 +1,7 @@
 import { databaseService } from '@/lib/database.service'
 import { Collection, ObjectId } from 'mongodb'
 import {
-  IInsertMediaInput,
+  ICreateMediaInput,
   IMedia,
   IMediaCollection,
   IUpdateMediaInput,
@@ -15,7 +15,7 @@ class MediaRepo {
     return databaseService.db.collection('media')
   }
 
-  async create(data: IInsertMediaInput): Promise<IMedia> {
+  async create(data: ICreateMediaInput): Promise<IMedia> {
     const parsedData = MediaCollection.parse(data)
     const result = await this.collection.insertOne(parsedData)
     const obj: IMedia = {
@@ -25,7 +25,7 @@ class MediaRepo {
     return obj
   }
 
-  async createMany(data: IInsertMediaInput[]): Promise<IMedia[]> {
+  async createMany(data: ICreateMediaInput[]): Promise<IMedia[]> {
     const parsedData = data.map((item) => MediaCollection.parse(item))
     const result = await this.collection.insertMany(parsedData)
     const objs: IMedia[] = Object.values(result.insertedIds).map((id, index) => ({

@@ -1,6 +1,7 @@
 import { envConfig } from '@/config/env-config'
 import { UnauthorizedException } from '@/core/exceptions'
 import { OtpType } from '@/routes/auth/otp-request.schema'
+import { Response } from 'express'
 import { JsonWebTokenError, sign, verify } from 'jsonwebtoken'
 import { ObjectId } from 'mongodb'
 
@@ -105,6 +106,21 @@ class JwtService {
     const newAccessToken = this.signAccessToken(data)
     const newRefreshToken = this.signRefreshToken(data, exp)
     return { accessToken: newAccessToken, refreshToken: newRefreshToken }
+  }
+
+  setCookieToClient(res: Response, token: string, tokenType: TokenType, tokenKey?: string) {
+    const isSecure = envConfig.clientUri.startsWith('https')
+    const cookieOptions = {
+      httpOnly: true,
+      secure: isSecure,
+      sameSite: 'strict' as const, // todo: Nếu để
+      maxAge: JWT_CONFIG[tokenType].expiresIn * 1000,
+    }
+    res.cookie(tokenKey ?? tokenType, token, cookieOptions)
+  }
+
+  deleteCookieFromClient(res: Response, tokenType: TokenType, tokenKey?: string) {
+    res.clearCookie(tokenKey ?? tokenType)
   }
 }
 

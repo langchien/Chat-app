@@ -11,4 +11,5 @@ export const UpdateUser = User.partial().omit({
 
 export interface IUser extends z.infer<typeof User> {}
 export interface IUserCollection extends z.infer<typeof UserCollection> {}
-export interface IUpdateUserInput extends z.infer<typeof UpdateUser> {}
+export interface IUpdateUserInput extends z.input<typeof UpdateUser> {}
+export interface ICreateUserInput extends z.input<typeof UserCollection> {}

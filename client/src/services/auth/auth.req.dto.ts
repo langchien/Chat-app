@@ -20,7 +20,6 @@ export const RegisterReqBodyDto = User.pick({
   avatarUrl: true,
   bio: true,
 }).extend({
-  registerToken: z.string('registerToken không được để trống'),
   password: Password,
 })
 export interface IRegisterReqBodyDto extends z.infer<typeof RegisterReqBodyDto> {}
@@ -31,13 +30,7 @@ export const LoginReqBodyDto = z.object({
 })
 export interface ILoginReqBodyDto extends z.infer<typeof LoginReqBodyDto> {}
 
-export const RefreshTokenReqBodyDto = z.object({
-  refreshToken: z.string('refreshToken không được để trống'),
-})
-export interface IRefreshTokenReqBodyDto extends z.infer<typeof RefreshTokenReqBodyDto> {}
-
 export const ForgotPasswordReqBodyDto = z.object({
   password: Password,
-  forgotPasswordToken: z.string('forgotPasswordToken không được để trống'),
 })
 export interface IForgotPasswordReqBodyDto extends z.infer<typeof ForgotPasswordReqBodyDto> {}

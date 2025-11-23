@@ -1,32 +1,25 @@
 import { databaseService } from '@/lib/database.service'
 import { logger } from '@/lib/logger.service'
 import { Collection, ObjectId } from 'mongodb'
-import {
-  ICreateUserInput,
-  IUpdateUserInput,
-  IUser,
-  IUserCollection,
-  UpdateUserSchema,
-  UserCollectionSchema,
-  UserSchema,
-} from './user.schema'
+import { IUpdateUserInput, IUser, IUserCollection, UpdateUser, UserCollection } from './user.db'
+import { User } from './user.schema'
 
 class UserRepo {
   private get collection(): Collection<IUserCollection> {
     return databaseService.db.collection('users')
   }
 
-  async create(data: ICreateUserInput): Promise<IUser> {
-    const parsedData = UserCollectionSchema.parse(data)
+  async create(data: IUserCollection): Promise<IUser> {
+    const parsedData = UserCollection.parse(data)
     const result = await this.collection.insertOne(parsedData)
-    return UserSchema.parse({
+    return User.parse({
       _id: result.insertedId,
       ...parsedData,
     })
   }
 
   async update(id: string, data: IUpdateUserInput): Promise<IUser | null> {
-    const parsedData = UpdateUserSchema.parse(data)
+    const parsedData = UpdateUser.parse(data)
     const result = await this.collection.findOneAndUpdate(
       {
         _id: new ObjectId(id),
@@ -39,30 +32,30 @@ class UserRepo {
       },
     )
     if (!result) return null
-    return UserSchema.parse(result)
+    return User.parse(result)
   }
 
   async findOneById(id: string): Promise<IUser | null> {
     const result = await this.collection.findOne({ _id: new ObjectId(id) })
     if (!result) return null
-    return UserSchema.parse(result)
+    return User.parse(result)
   }
 
   async findOneByEmail(email: string): Promise<IUser | null> {
     const result = await this.collection.findOne({ email })
     if (!result) return null
-    return UserSchema.parse(result)
+    return User.parse(result)
   }
 
   async findOneByUsername(username: string): Promise<IUser | null> {
     const result = await this.collection.findOne({ username })
     if (!result) return null
-    return UserSchema.parse(result)
+    return User.parse(result)
   }
 
   async findAll(): Promise<IUser[]> {
     const results = await this.collection.find().sort({ _id: -1 }).toArray()
-    return results.map((result) => UserSchema.parse(result))
+    return results.map((result) => User.parse(result))
   }
 
   async delete(id: string): Promise<boolean> {
@@ -75,7 +68,7 @@ class UserRepo {
       .find({ $text: { $search: query } })
       .sort({ _id: -1 })
       .toArray()
-    return results.map((result) => UserSchema.parse(result))
+    return results.map((result) => User.parse(result))
   }
 
   async initIndexes(): Promise<void> {

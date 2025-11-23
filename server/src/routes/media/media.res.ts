@@ -1,3 +1,3 @@
-import { IMedia } from './media.schema'
+import { IMedia } from './media.db'
 
 export interface IMediaRes extends IMedia {}

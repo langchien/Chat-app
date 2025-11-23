@@ -5,10 +5,10 @@ import {
   IMedia,
   IMediaCollection,
   IUpdateMediaInput,
-  MediaCollectionSchema,
-  MediaSchema,
-  UpdateMediaSchema,
-} from './media.schema'
+  MediaCollection,
+  UpdateMedia,
+} from './media.db'
+import { Media } from './media.schema'
 
 class MediaRepo {
   get collection(): Collection<IMediaCollection> {
@@ -16,7 +16,7 @@ class MediaRepo {
   }
 
   async create(data: IInsertMediaInput): Promise<IMedia> {
-    const parsedData = MediaCollectionSchema.parse(data)
+    const parsedData = MediaCollection.parse(data)
     const result = await this.collection.insertOne(parsedData)
     const obj: IMedia = {
       _id: result.insertedId,
@@ -26,7 +26,7 @@ class MediaRepo {
   }
 
   async createMany(data: IInsertMediaInput[]): Promise<IMedia[]> {
-    const parsedData = data.map((item) => MediaCollectionSchema.parse(item))
+    const parsedData = data.map((item) => MediaCollection.parse(item))
     const result = await this.collection.insertMany(parsedData)
     const objs: IMedia[] = Object.values(result.insertedIds).map((id, index) => ({
       _id: id,
@@ -36,7 +36,7 @@ class MediaRepo {
   }
 
   async update(id: string, data: IUpdateMediaInput): Promise<IMedia | null> {
-    const parsedData = UpdateMediaSchema.parse(data)
+    const parsedData = UpdateMedia.parse(data)
     const result = await this.collection.findOneAndUpdate(
       {
         _id: new ObjectId(id),
@@ -49,7 +49,7 @@ class MediaRepo {
       },
     )
     if (!result) return null
-    return MediaSchema.parse({
+    return Media.parse({
       id: result._id,
       ...result,
     })
@@ -58,7 +58,7 @@ class MediaRepo {
   async findOneById(id: string): Promise<IMedia | null> {
     const result = await this.collection.findOne({ _id: new ObjectId(id) })
     if (!result) return null
-    return MediaSchema.parse({
+    return Media.parse({
       id: result._id,
       ...result,
     })
@@ -67,7 +67,7 @@ class MediaRepo {
   async findAll(): Promise<IMedia[]> {
     const results = await this.collection.find().sort({ _id: -1 }).toArray()
     return results.map((result) =>
-      MediaSchema.parse({
+      Media.parse({
         id: result._id,
         ...result,
       }),

@@ -1,21 +1,21 @@
-import { createStringIdSchema } from '@/lib/schema.common'
+import { createStringId } from '@/lib/schema.common'
 import z from 'zod'
-import { ChatSchemma } from './chat.schema'
+import { Chat } from './chat.schema'
 
-export const ChatIdParamSchema = z.object({
-  chatId: createStringIdSchema('chatId'),
+export const ChatIdParam = z.object({
+  chatId: createStringId('chatId'),
 })
 
-export interface IChatIdParamDto extends z.infer<typeof ChatIdParamSchema> {}
-
-export const CreateChatReqSchema = ChatSchemma.pick({
+export const CreateChatReq = Chat.pick({
   lastMessage: true,
 }).extend({
-  receiverIds: z.array(createStringIdSchema('receiverId')).min(1),
+  receiverIds: z.array(createStringId('receiverId')).min(1),
 })
-export interface ICreateChatReqDto extends z.infer<typeof CreateChatReqSchema> {}
 
-export const UpdateChatReqSchema = ChatSchemma.pick({
+export const UpdateChatReq = Chat.pick({
   lastMessage: true,
 })
-export interface IUpdateChatReqDto extends z.infer<typeof UpdateChatReqSchema> {}
+
+export interface IChatIdParamDto extends z.infer<typeof ChatIdParam> {}
+export interface ICreateChatReqDto extends z.infer<typeof CreateChatReq> {}
+export interface IUpdateChatReqDto extends z.infer<typeof UpdateChatReq> {}

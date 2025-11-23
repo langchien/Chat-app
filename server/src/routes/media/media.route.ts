@@ -2,7 +2,7 @@ import { accessTokenValidate } from '@/core/access-token.middleware'
 import { zodValidate } from '@/core/validate.middleware'
 import { Router } from 'express'
 import { mediaCtrl } from './media.ctrl'
-import { GetMediaParamSchema } from './media.req'
+import { MediaIdParamDto } from './media.req'
 
 export const mediaRouter = Router()
 
@@ -21,6 +21,6 @@ mediaRouter.post('/videos-hls', accessTokenValidate, mediaCtrl.uploadVideoHls)
 mediaRouter.get(
   '/:mediaId',
   accessTokenValidate,
-  zodValidate(GetMediaParamSchema, 'params'),
+  zodValidate(MediaIdParamDto, 'params'),
   mediaCtrl.getOneById,
 )

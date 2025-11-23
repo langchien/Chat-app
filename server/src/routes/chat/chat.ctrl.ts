@@ -4,7 +4,7 @@ import { PaginateCursorCtrl } from '@/lib/paginate-cusor.ctrl'
 import { RequestHandler } from 'express'
 import { chatRepo } from './chat.repo'
 import { IChatIdParamDto, ICreateChatReqDto, IUpdateChatReqDto } from './chat.req.dto'
-import { ChatDetailsResSchema, ChatResSchema, IChatResDto } from './chat.res.dto'
+import { ChatResDto, IChatResDto } from './chat.res.dto'
 
 export class ChatCtrl extends PaginateCursorCtrl {
   create: RequestHandler<any, IChatResDto, ICreateChatReqDto> = async (req, res) => {
@@ -14,14 +14,14 @@ export class ChatCtrl extends PaginateCursorCtrl {
       lastMessage,
       participants: [{ userId }, ...receiverIds.map((id) => ({ userId: id }))],
     })
-    res.status(HttpStatusCode.Created).json(ChatResSchema.parse(result))
+    res.status(HttpStatusCode.Created).json(ChatResDto.parse(result))
   }
 
   update: RequestHandler<IChatIdParamDto, IChatResDto, IUpdateChatReqDto> = async (req, res) => {
     const { chatId } = req.params
     const result = await chatRepo.update(chatId, req.body)
     if (!result) throw new NotFoundException('Chat không tồn tại')
-    res.status(HttpStatusCode.Ok).json(ChatResSchema.parse(result))
+    res.status(HttpStatusCode.Ok).json(ChatResDto.parse(result))
   }
 
   getById: RequestHandler<IChatIdParamDto> = async (req, res) => {
@@ -29,7 +29,7 @@ export class ChatCtrl extends PaginateCursorCtrl {
     const userId = req.user.userId
     const result = await chatRepo.findOneById(chatId, userId)
     if (!result) throw new NotFoundException('Chat không tồn tại')
-    res.status(HttpStatusCode.Ok).json(ChatDetailsResSchema.parse(result))
+    res.status(HttpStatusCode.Ok).json(ChatResDto.parse(result))
   }
 
   delete: RequestHandler<IChatIdParamDto> = async (req, res) => {

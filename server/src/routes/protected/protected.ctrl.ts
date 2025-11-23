@@ -3,24 +3,25 @@ import { HttpStatusCode } from '@/core/status-code'
 import { hashingService } from '@/lib/hashing.service'
 import { RequestHandler } from 'express'
 import { userRepo } from '../user/user.repo'
-import { ChangePassworDto, UpdateProfileDto } from './protected.dto'
+import { UserResDto } from '../user/user.res.dto'
+import { IChangePassworBodyDto, IUpdateProfileBodyDto } from './protected.dto'
 
 export class ProtectedCtrl {
   getProfile: RequestHandler = async (req, res) => {
     const userId = req.user.userId
     const user = await userRepo.findOneById(userId)
     if (!user) throw new UnauthorizedException('Tài khoản không tồn tại!')
-    res.status(HttpStatusCode.Ok).json({ data: user })
+    res.status(HttpStatusCode.Ok).json(UserResDto.parse(user))
   }
 
-  updateProfile: RequestHandler<any, any, UpdateProfileDto> = async (req, res) => {
+  updateProfile: RequestHandler<any, any, IUpdateProfileBodyDto> = async (req, res) => {
     const userId = req.user.userId
     const result = await userRepo.update(userId, req.body)
     if (!result) throw new UnauthorizedException('Tài khoản không tồn tại!')
-    res.status(HttpStatusCode.Ok).json(result)
+    res.status(HttpStatusCode.Ok).json(UserResDto.parse(result))
   }
 
-  changePassword: RequestHandler<any, any, ChangePassworDto> = async (req, res) => {
+  changePassword: RequestHandler<any, any, IChangePassworBodyDto> = async (req, res) => {
     const { oldPassword, newPassword } = req.body
     const userId = req.user.userId
     const user = await userRepo.findOneById(userId)
@@ -32,7 +33,7 @@ export class ProtectedCtrl {
     const hashPassword = await hashingService.hash(newPassword)
     const result = await userRepo.update(userId, { hashedPassword: hashPassword })
     if (!result) throw new UnauthorizedException('Tài khoản không tồn tại!')
-    res.status(HttpStatusCode.Ok).json(result)
+    res.status(HttpStatusCode.Ok).json(UserResDto.parse(result))
   }
 }
 

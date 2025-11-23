@@ -1,7 +1,7 @@
-import { createStringIdSchema } from '@/lib/schema.common'
+import { createStringId } from '@/lib/schema.common'
 import z from 'zod'
 
-export const GetMediaParamSchema = z.object({
-  mediaId: createStringIdSchema('mediaId'),
+export const MediaIdParamDto = z.object({
+  mediaId: createStringId('mediaId'),
 })
-export interface IGetMediaParam extends z.infer<typeof GetMediaParamSchema> {}
+export interface IMediaIdParamDto extends z.infer<typeof MediaIdParamDto> {}

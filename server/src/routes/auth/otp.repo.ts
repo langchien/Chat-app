@@ -1,6 +1,7 @@
 import { databaseService } from '@/lib/database.service'
 import { Collection } from 'mongodb'
-import { IOtpRequestCollection, OtpRequestSchema, OtpType } from './otp-request.schema'
+import { OtpRequest, OtpType } from './otp-request.schema'
+import { IOtpRequestCollection } from './otp.db'
 
 export class OtpRepo {
   get collection(): Collection<IOtpRequestCollection> {
@@ -19,7 +20,7 @@ export class OtpRepo {
   }
 
   async create(data: any) {
-    const parsed = OtpRequestSchema.parse(data)
+    const parsed = OtpRequest.parse(data)
     return this.collection.insertOne(parsed)
   }
 }

@@ -1,13 +1,13 @@
 import { ObjectId } from 'mongodb'
 import z from 'zod'
 
-export const createStringIdSchema = (fieldName: string = 'id') =>
+export const createStringId = (fieldName: string = 'id') =>
   z.string().refine((val) => ObjectId.isValid(val), {
     // : input must be a 24 character hex string, 12 byte Uint8Array, or an integer
     message: `${fieldName} phải phù hợp với ObjectId của mongodb (có 24 ký tự hex hoặc 12 byte Uint8Array hoặc một số nguyên)`,
   })
 
-export const createObjectIdSchema = (fieldName: string = 'id') =>
+export const createObjectId = (fieldName: string = 'id') =>
   z.any().transform((val, ctx) => {
     if (!ObjectId.isValid(val)) {
       ctx.addIssue({
@@ -19,7 +19,7 @@ export const createObjectIdSchema = (fieldName: string = 'id') =>
     return new ObjectId(val)
   })
 
-export const PasswordSchema = z.string('Mật khẩu không được để trống').refine(
+export const Password = z.string('Mật khẩu không được để trống').refine(
   (val) => {
     const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/
     return regex.test(val)
@@ -30,10 +30,10 @@ export const PasswordSchema = z.string('Mật khẩu không được để trố
   },
 )
 
-export const createEmailSchema = (fieldName: string = 'email') =>
+export const createEmail = (fieldName: string = 'email') =>
   z.email({ message: `${fieldName} phải là một email` })
 
-export const createNameSchema = (fieldName: string, length: number = 500) =>
+export const createName = (fieldName: string, length: number = 500) =>
   z
     .string(`${fieldName} là phải là chuỗi`)
     .trim()
@@ -41,24 +41,24 @@ export const createNameSchema = (fieldName: string, length: number = 500) =>
     .min(1, { message: `${fieldName} không được để trống` })
     .max(length, { message: `${fieldName} không được vượt quá ${length} ký tự` })
 
-export const createStringSchema = (fieldName: string, length: number = 500) =>
+export const createString = (fieldName: string, length: number = 500) =>
   z
     .string(`${fieldName} là phải là chuỗi`)
     .trim()
     .min(1, { message: `${fieldName} không được để trống` })
     .max(length, { message: `${fieldName} không được vượt quá ${length} ký tự` })
 
-export const OtpSchema = z.string('OTP phải là chuỗi').length(6, {
+export const Otp = z.string('OTP phải là chuỗi').length(6, {
   message: 'OTP phải có độ dài 6 ký tự',
 })
 
-export const BaseCollectionSchema = z.object({
-  _id: createObjectIdSchema('id'),
+export const BaseCollection = z.object({
+  _id: createObjectId('id'),
   createdAt: z.date().default(() => new Date()),
   updatedAt: z.date().default(() => new Date()),
 })
 
-export const UsernameSchema = z
+export const Username = z
   .string()
   .min(3, 'Username phải có ít nhất 3 ký tự')
   .max(100, 'Username không được vượt quá 100 ký tự')

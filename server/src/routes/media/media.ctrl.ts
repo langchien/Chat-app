@@ -10,20 +10,21 @@ import { ObjectId } from 'mongodb'
 import path from 'path'
 import sharp from 'sharp'
 import { getFilePath, getUrlMedia, MediaDirectories } from './dir.const'
+import { IMedia } from './media.db'
 import { mediaQueue } from './media.queue'
 import { mediaRepo } from './media.repo'
-import { IGetMediaParam } from './media.req'
-import { IMedia, MediaSchema, MediaStatus, MediaType } from './media.schema'
+import { IMediaIdParamDto } from './media.req'
+import { Media, MediaStatus, MediaType } from './media.schema'
 import { uploadService } from './upload.service'
 
 const IS_LOCAL = envConfig.upload.provider === 'local'
 
 class MediaCtrl {
   // Lấy thông tin media theo id
-  getOneById: RequestHandler<IGetMediaParam, IMedia> = async (req, res) => {
+  getOneById: RequestHandler<IMediaIdParamDto, IMedia> = async (req, res) => {
     const media = await mediaRepo.findOneById(req.params.mediaId)
     if (!media) throw new NotFoundException('Không tìm thấy media')
-    res.json(MediaSchema.parse(media))
+    res.json(Media.parse(media))
   }
 
   // Upload file thường
@@ -40,7 +41,7 @@ class MediaCtrl {
       status: MediaStatus.Compileted,
       url,
     })
-    res.status(HttpStatusCode.Created).json(MediaSchema.parse(result))
+    res.status(HttpStatusCode.Created).json(Media.parse(result))
   }
 
   // Upload nhiều ảnh, chuyển sang jpg
@@ -68,7 +69,7 @@ class MediaCtrl {
         url,
       })),
     )
-    res.status(HttpStatusCode.Created).json(resultsData.map((item) => MediaSchema.parse(item)))
+    res.status(HttpStatusCode.Created).json(resultsData.map((item) => Media.parse(item)))
   }
 
   // Upload video thường
@@ -89,7 +90,7 @@ class MediaCtrl {
       status: MediaStatus.Compileted,
       url,
     })
-    res.status(HttpStatusCode.Created).json(MediaSchema.parse(result))
+    res.status(HttpStatusCode.Created).json(Media.parse(result))
   }
 
   // Upload video chuyển sang HLS
@@ -104,7 +105,7 @@ class MediaCtrl {
       url,
     })
     await mediaQueue.enqueue({ id, filename: video.newFilename })
-    res.status(HttpStatusCode.Created).json(MediaSchema.parse(result))
+    res.status(HttpStatusCode.Created).json(Media.parse(result))
   }
 
   // Phục vụ file đã upload, chỉ tải do không truyền content-type khi upload lên s3

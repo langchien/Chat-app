@@ -1,8 +1,8 @@
 import z from 'zod'
-import { UserSchema } from './user.schema'
+import { User } from './user.schema'
 
-export const UserResSchema = UserSchema.omit({
+export const UserResDto = User.omit({
   hashedPassword: true,
   friends: true,
 })
-export interface IUserResDto extends z.infer<typeof UserResSchema> {}
+export interface IUserResDto extends z.infer<typeof UserResDto> {}

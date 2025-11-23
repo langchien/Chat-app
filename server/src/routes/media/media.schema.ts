@@ -1,4 +1,4 @@
-import { BaseCollectionSchema } from '@/lib/schema.common'
+import { BaseCollection } from '@/lib/schema.common'
 import z from 'zod'
 
 export enum MediaType {
@@ -15,23 +15,8 @@ export enum MediaStatus {
   Failed = 'failed',
 }
 
-export const MediaSchema = BaseCollectionSchema.extend({
+export const Media = BaseCollection.extend({
   type: z.enum(MediaType),
   url: z.url(),
   status: z.enum(MediaStatus),
 })
-
-export const MediaCollectionSchema = MediaSchema.partial({
-  _id: true,
-})
-
-export const UpdateMediaSchema = MediaSchema.partial().omit({
-  _id: true,
-  createdAt: true,
-  type: true,
-})
-
-export interface IInsertMediaInput extends z.input<typeof MediaCollectionSchema> {}
-export interface IMedia extends z.infer<typeof MediaSchema> {}
-export interface IMediaCollection extends z.infer<typeof MediaCollectionSchema> {}
-export interface IUpdateMediaInput extends z.input<typeof UpdateMediaSchema> {}

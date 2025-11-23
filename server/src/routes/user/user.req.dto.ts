@@ -1,31 +1,31 @@
-import { createStringIdSchema, PasswordSchema } from '@/lib/schema.common'
+import { createStringId, Password } from '@/lib/schema.common'
 import z from 'zod'
-import { UserCollectionSchema } from './user.schema'
+import { User } from './user.schema'
 
-// reqest body dto
-export const CreateUserReqBodySchema = UserCollectionSchema.omit({
-  hashedPassword: true,
-  createdAt: true,
-  updatedAt: true,
+export const CreateUserReqBodyDto = User.pick({
+  username: true,
+  email: true,
+  displayName: true,
+  avatarId: true,
+  avatarUrl: true,
+  bio: true,
 }).extend({
-  password: PasswordSchema,
+  password: Password,
 })
 
-export const UpdateUserReqBodySchema = CreateUserReqBodySchema.omit({
+export const UpdateUserReqBodyDto = CreateUserReqBodyDto.omit({
   password: true,
 }).partial()
 
-// request params dto
-export const UserIdReqParamsDtoSchema = z.object({
-  userId: createStringIdSchema('userId'),
+export const UserIdReqParamsDto = z.object({
+  userId: createStringId('userId'),
 })
 
-// request query dto
-export const UserSearchReqQueryDtoSchema = z.object({
+export const UserSearchReqQueryDto = z.object({
   q: z.string().min(1).optional(),
 })
 
-export interface ICreateUserReqBodyDto extends z.infer<typeof CreateUserReqBodySchema> {}
-export interface IUpdateUserReqBodyDto extends z.infer<typeof UpdateUserReqBodySchema> {}
-export interface IUserIdReqParamsDto extends z.infer<typeof UserIdReqParamsDtoSchema> {}
-export interface IUserSearchReqQueryDto extends z.infer<typeof UserSearchReqQueryDtoSchema> {}
+export interface ICreateUserReqBodyDto extends z.infer<typeof CreateUserReqBodyDto> {}
+export interface IUpdateUserReqBodyDto extends z.infer<typeof UpdateUserReqBodyDto> {}
+export interface IUserIdReqParamsDto extends z.infer<typeof UserIdReqParamsDto> {}
+export interface IUserSearchReqQueryDto extends z.infer<typeof UserSearchReqQueryDto> {}

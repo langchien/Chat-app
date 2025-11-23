@@ -2,29 +2,25 @@ import { zodValidate } from '@/core/validate.middleware'
 import { Router } from 'express'
 import { userController } from './user.ctrl'
 import {
-  CreateUserReqBodySchema,
-  UpdateUserReqBodySchema,
-  UserIdReqParamsDtoSchema,
-  UserSearchReqQueryDtoSchema,
+  CreateUserReqBodyDto,
+  UpdateUserReqBodyDto,
+  UserIdReqParamsDto,
+  UserSearchReqQueryDto,
 } from './user.req.dto'
 
 export const userRouter = Router()
 
-userRouter.get('/:userId', zodValidate(UserIdReqParamsDtoSchema, 'params'), userController.findOne)
+userRouter.get('/:userId', zodValidate(UserIdReqParamsDto, 'params'), userController.findOne)
 
-userRouter.get('/', zodValidate(UserSearchReqQueryDtoSchema, 'query'), userController.search)
+userRouter.get('/', zodValidate(UserSearchReqQueryDto, 'query'), userController.search)
 
-userRouter.delete(
-  '/:userId',
-  zodValidate(UserIdReqParamsDtoSchema, 'params'),
-  userController.delete,
-)
+userRouter.delete('/:userId', zodValidate(UserIdReqParamsDto, 'params'), userController.delete)
 
-userRouter.post('/', zodValidate(CreateUserReqBodySchema), userController.create)
+userRouter.post('/', zodValidate(CreateUserReqBodyDto), userController.create)
 
 userRouter.patch(
   '/:userId',
-  zodValidate(UserIdReqParamsDtoSchema, 'params'),
-  zodValidate(UpdateUserReqBodySchema),
+  zodValidate(UserIdReqParamsDto, 'params'),
+  zodValidate(UpdateUserReqBodyDto),
   userController.update,
 )

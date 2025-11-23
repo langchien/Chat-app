@@ -2,13 +2,13 @@ import { accessTokenValidate } from '@/core/access-token.middleware'
 import { emailRateLimiter } from '@/core/rate-limit.middleware'
 import { zodValidate } from '@/core/validate.middleware'
 import {
-  ForgotPasswordSchema,
-  LoginSchema,
-  RefreshTokenSchema,
-  RegisterSchema,
-  SendOtpSchema,
-  VerifyOtpSchema,
-} from '@/routes/auth/auth.dto'
+  ForgotPasswordReqBodyDto,
+  LoginReqBodyDto,
+  RefreshTokenReqBodyDto,
+  RegisterReqBodyDto,
+  SendOtpReqBodyDto,
+  VerifyOtp,
+} from '@/routes/auth/auth.req.dto'
 import { Router } from 'express'
 import { authCtrl } from './auth.ctrl'
 
@@ -16,43 +16,47 @@ export const authRouter = Router()
 authRouter.post(
   '/send-verify-email',
   emailRateLimiter,
-  zodValidate(SendOtpSchema),
+  zodValidate(SendOtpReqBodyDto),
   authCtrl.sendVerifyEmailCtrl,
 )
 
-authRouter.post('/verify-email', zodValidate(VerifyOtpSchema), authCtrl.verifyEmailCtrl)
+authRouter.post('/verify-email', zodValidate(VerifyOtp), authCtrl.verifyEmailCtrl)
 
-authRouter.post('/register', zodValidate(RegisterSchema), authCtrl.registerCtrl)
+authRouter.post('/register', zodValidate(RegisterReqBodyDto), authCtrl.registerCtrl)
 
-authRouter.post('/login', zodValidate(LoginSchema), authCtrl.loginCtrl)
+authRouter.post('/login', zodValidate(LoginReqBodyDto), authCtrl.loginCtrl)
 
-authRouter.post('/refresh-token', zodValidate(RefreshTokenSchema), authCtrl.refreshTokenCtrl)
+authRouter.post('/refresh-token', zodValidate(RefreshTokenReqBodyDto), authCtrl.refreshTokenCtrl)
 
 authRouter.post(
   '/logout',
   accessTokenValidate,
-  zodValidate(RefreshTokenSchema),
+  zodValidate(RefreshTokenReqBodyDto),
   authCtrl.logoutCtrl,
 )
 
 authRouter.post(
   '/logout-all-devices',
   accessTokenValidate,
-  zodValidate(RefreshTokenSchema),
+  zodValidate(RefreshTokenReqBodyDto),
   authCtrl.logoutAllDeviceCtrl,
 )
 
 authRouter.post(
   '/password/send-verify-email',
   emailRateLimiter,
-  zodValidate(SendOtpSchema),
+  zodValidate(SendOtpReqBodyDto),
   authCtrl.sendForgotPasswordOtpCtrl,
 )
 
 authRouter.post(
   '/password/verify-email',
-  zodValidate(VerifyOtpSchema),
+  zodValidate(VerifyOtp),
   authCtrl.verifyForgotPasswordEmailCtrl,
 )
 
-authRouter.post('/password/reset', zodValidate(ForgotPasswordSchema), authCtrl.resetPasswordCtrl)
+authRouter.post(
+  '/password/reset',
+  zodValidate(ForgotPasswordReqBodyDto),
+  authCtrl.resetPasswordCtrl,
+)

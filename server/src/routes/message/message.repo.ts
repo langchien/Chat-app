@@ -2,36 +2,35 @@ import { databaseService } from '@/lib/database.service'
 import { IPaginateCursorQuery } from '@/lib/paginate-cusor.ctrl'
 import { Collection, ObjectId } from 'mongodb'
 import {
-  GetMessageResSchema,
-  ICreateMessageRes,
-  IGetMessageRes,
-  IMessagePaginateCursorRes,
-} from './message.res.dto'
-import {
-  ICreateMessageInput,
   IMessageCollection,
   IUpdateMessageInput,
-  MessageCollectionSchema,
-  MessageSchema,
-  UpdateMessageSchema,
-} from './message.schema'
+  MessageCollection,
+  UpdateMessage,
+} from './message.db'
+import {
+  GetMessageResDto,
+  ICreateMessageResDto,
+  IGetMessageResDto,
+  IMessagePaginateCursorRes,
+} from './message.res.dto'
+import { Message } from './message.schema'
 
 class MessageRepo {
   private get collection(): Collection<IMessageCollection> {
     return databaseService.db.collection('messages')
   }
 
-  async create(data: ICreateMessageInput): Promise<ICreateMessageRes> {
-    const parsedData = MessageCollectionSchema.parse(data)
+  async create(data: IMessageCollection): Promise<ICreateMessageResDto> {
+    const parsedData = MessageCollection.parse(data)
     const result = await this.collection.insertOne(parsedData)
-    return MessageSchema.parse({
+    return Message.parse({
       _id: result.insertedId,
       ...parsedData,
     })
   }
 
-  async update(id: string, data: IUpdateMessageInput): Promise<ICreateMessageRes | null> {
-    const parsedData = UpdateMessageSchema.parse(data)
+  async update(id: string, data: IUpdateMessageInput): Promise<ICreateMessageResDto | null> {
+    const parsedData = UpdateMessage.parse(data)
     const result = await this.collection.findOneAndUpdate(
       {
         _id: new ObjectId(id),
@@ -44,10 +43,10 @@ class MessageRepo {
       },
     )
     if (!result) return null
-    return MessageSchema.parse(result)
+    return Message.parse(result)
   }
 
-  async findOneById(id: string): Promise<IGetMessageRes | null> {
+  async findOneById(id: string): Promise<IGetMessageResDto | null> {
     const result = await this.collection
       .aggregate([
         { $match: { _id: new ObjectId(id) } },
@@ -62,10 +61,10 @@ class MessageRepo {
         { $unwind: { path: '$media', preserveNullAndEmptyArrays: true } },
       ])
       .toArray()
-    return result.length > 0 ? GetMessageResSchema.parse(result[0]) : null
+    return result.length > 0 ? GetMessageResDto.parse(result[0]) : null
   }
 
-  async findAllByChatId(chatId: string, limit: number): Promise<IGetMessageRes[]> {
+  async findAllByChatId(chatId: string, limit: number): Promise<IGetMessageResDto[]> {
     const results = await this.collection
       .aggregate([
         {
@@ -88,7 +87,7 @@ class MessageRepo {
         { $unwind: { path: '$media', preserveNullAndEmptyArrays: true } },
       ])
       .toArray()
-    return results.map((result) => GetMessageResSchema.parse(result))
+    return results.map((result) => GetMessageResDto.parse(result))
   }
 
   async delete(id: string): Promise<boolean> {
@@ -96,12 +95,12 @@ class MessageRepo {
     return result.deletedCount === 1
   }
 
-  async searchByText(query: string): Promise<IGetMessageRes[]> {
+  async searchByText(query: string): Promise<IGetMessageResDto[]> {
     const results = await this.collection
       .find({ $text: { $search: query } })
       .sort({ _id: -1 })
       .toArray()
-    return results.map((result) => MessageSchema.parse(result))
+    return results.map((result) => Message.parse(result))
   }
 
   async getMessagesByCursor(
@@ -131,9 +130,11 @@ class MessageRepo {
       ])
       .toArray()
     const hasMore = results.length > limit
+    const nextCursor = hasMore ? results[limit - 1]._id.toString() : undefined
     return {
       hasMore,
-      data: results.slice(0, limit).map((result) => GetMessageResSchema.parse(result)),
+      nextCursor,
+      data: results.slice(0, limit).map((result) => GetMessageResDto.parse(result)),
     }
   }
 }

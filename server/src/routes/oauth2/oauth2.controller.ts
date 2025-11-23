@@ -3,8 +3,8 @@ import { jwtService } from '@/lib/jwt.service'
 import { redisService } from '@/lib/redis.service'
 import { RequestHandler } from 'express'
 import { ObjectId } from 'mongodb'
+import { UserCollection } from '../user/user.db'
 import { userRepo } from '../user/user.repo'
-import { UserCollectionSchema } from '../user/user.schema'
 
 export interface GoogleOAuth2CallbackQuery {
   code: string
@@ -116,7 +116,7 @@ export class OAuth2Ctrl {
       const email = userInfo.email
       const result = await userRepo.findOneByEmail(email)
       if (!result) {
-        const dataTransform = UserCollectionSchema.parse({
+        const dataTransform = UserCollection.parse({
           email: userInfo.email,
           avatarUrl: userInfo.picture,
           displayName: userInfo.name,

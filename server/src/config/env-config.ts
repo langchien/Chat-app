@@ -6,14 +6,15 @@ dotenv.config()
 
 const JWT_SECRET_DEFAULT = 'your_jwt_secret_key_change_it'
 
-const JwtConfigSchema = z.object({
+const JwtConfig = z.object({
   secret: z.string(),
   expiresIn: z.coerce.number(),
 })
 
-const EnvConfigSchema = z.object({
+const EnvConfig = z.object({
   port: z.coerce.number(),
   serverUri: z.string('SERVER_URI không được để trống'),
+  clientUri: z.string('CLIENT_URI không được để trống'),
   nodeEnv: z.enum(['development', 'production', 'test']).optional(),
   dbUri: z.string('DB_URI không được để trống'),
   dbName: z.string('DB_NAME không được để trống'),
@@ -43,20 +44,21 @@ const EnvConfigSchema = z.object({
     appClientRedirectUri: z.url('APP_CLIENT_REDIRECT_URI không hợp lệ'),
   }),
   jwt: z.object({
-    accessToken: JwtConfigSchema,
-    refreshToken: JwtConfigSchema,
-    otpToken: JwtConfigSchema,
+    accessToken: JwtConfig,
+    refreshToken: JwtConfig,
+    otpToken: JwtConfig,
   }),
   redis: z.object({
     host: z.string('REDIS_HOST không được để trống'),
     port: z.coerce.number('REDIS_PORT không được để trống'),
   }),
 })
-export interface IEnvConfigInput extends z.input<typeof EnvConfigSchema> {}
+export interface IEnvConfigInput extends z.input<typeof EnvConfig> {}
 
 export const envConfigInput: IEnvConfigInput = {
   port: process.env.PORT!,
   serverUri: process.env.SERVER_URI!,
+  clientUri: process.env.CLIENT_URI!,
   nodeEnv: process.env.NODE_ENV as 'development' | 'production' | 'test' | undefined,
   dbUri: process.env.DB_URI!,
   dbName: process.env.DB_NAME!,
@@ -103,10 +105,10 @@ export const envConfigInput: IEnvConfigInput = {
 
 const verifyEnvConfig = () => {
   try {
-    return EnvConfigSchema.parse(envConfigInput)
+    return EnvConfig.parse(envConfigInput)
   } catch (error) {
     logger.error(
-      'Lỗi thiếu các biến môi trường, vui lòng kiểm tra lại file .env, xem hướng dẫn ở .env.example và src/config/env-config.ts',
+      'Lỗi thiếu các biến môi trường, vui lòng kiểm tra lại file .env, xem hướng dẫn ở .env.example và @/config/env-config.ts',
     )
     if (error instanceof z.ZodError) {
       for (const issue of error.issues) {

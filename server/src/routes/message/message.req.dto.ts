@@ -1,21 +1,23 @@
-import { createStringIdSchema } from '@/lib/schema.common'
+import { createStringId } from '@/lib/schema.common'
 import z from 'zod'
-import { MessageSchema } from './message.schema'
+import { Message } from './message.schema'
 
-export const MessageIdParamSchema = z.object({
-  messageId: createStringIdSchema('Message ID'),
+export const MessageIdParamDto = z.object({
+  messageId: createStringId('Message ID'),
 })
-export const CreateMessageBodySchema = MessageSchema.omit({
-  _id: true,
-  createdAt: true,
-  updatedAt: true,
-  senderId: true,
+export const CreateMessageBodyDto = Message.pick({
+  text: true,
+  type: true,
+}).extend({
+  chatId: createStringId('Chat ID'),
+  senderId: createStringId('Sender ID'),
+  mediaId: createStringId('Media ID').optional(),
 })
 
-export const UpdateMessageBodySchema = CreateMessageBodySchema.partial().omit({
+export const UpdateMessageBody = CreateMessageBodyDto.partial().omit({
   chatId: true,
 })
 
-export interface IMessageIdParamDto extends z.infer<typeof MessageIdParamSchema> {}
-export interface ICreateMessageBodyDto extends z.infer<typeof CreateMessageBodySchema> {}
-export interface IUpdateMessageBodyDto extends z.infer<typeof UpdateMessageBodySchema> {}
+export interface IMessageIdParamDto extends z.infer<typeof MessageIdParamDto> {}
+export interface ICreateMessageBodyDto extends z.infer<typeof CreateMessageBodyDto> {}
+export interface IUpdateMessageBodyDto extends z.infer<typeof UpdateMessageBody> {}

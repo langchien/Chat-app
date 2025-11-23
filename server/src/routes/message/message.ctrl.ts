@@ -5,10 +5,10 @@ import { RequestHandler } from 'express'
 import { IChatIdParamDto } from '../chat/chat.req.dto'
 import { messageRepo } from './message.repo'
 import { ICreateMessageBodyDto, IMessageIdParamDto, IUpdateMessageBodyDto } from './message.req.dto'
-import { IGetMessageRes, IMessagePaginateCursorRes } from './message.res.dto'
+import { IGetMessageResDto, IMessagePaginateCursorRes } from './message.res.dto'
 
 class MessageCtrl extends PaginateCursorCtrl {
-  findOneById: RequestHandler<IMessageIdParamDto, IGetMessageRes> = async (req, res) => {
+  findOneById: RequestHandler<IMessageIdParamDto, IGetMessageResDto> = async (req, res) => {
     const { messageId } = req.params
     const message = await messageRepo.findOneById(messageId)
     if (!message) throw new NotFoundException('Không tìm thấy tin nhắn')
@@ -32,15 +32,15 @@ class MessageCtrl extends PaginateCursorCtrl {
     res.json(result)
   }
 
-  create: RequestHandler<any, IGetMessageRes, ICreateMessageBodyDto> = async (req, res) => {
+  create: RequestHandler<any, IGetMessageResDto, ICreateMessageBodyDto> = async (req, res) => {
     const result = await messageRepo.create({
-      senderId: req.user.userId,
       ...req.body,
+      senderId: req.user.userId,
     })
     res.status(HttpStatusCode.Created).json(result)
   }
 
-  update: RequestHandler<IMessageIdParamDto, IGetMessageRes, IUpdateMessageBodyDto> = async (
+  update: RequestHandler<IMessageIdParamDto, IGetMessageResDto, IUpdateMessageBodyDto> = async (
     req,
     res,
   ) => {

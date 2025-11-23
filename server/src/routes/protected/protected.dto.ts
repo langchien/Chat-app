@@ -1,17 +1,17 @@
-import { PasswordSchema } from '@/lib/schema.common'
+import { Password } from '@/lib/schema.common'
 import z from 'zod'
-import { UserSchema } from '../user/user.schema'
+import { User } from '../user/user.schema'
 
-export const UpdateProfileSchema = UserSchema.pick({
+export const UpdateProfileBodyDto = User.pick({
   displayName: true,
   bio: true,
   phone: true,
 }).partial()
 
-export interface UpdateProfileDto extends z.infer<typeof UpdateProfileSchema> {}
-
-export const ChangePassworSchema = z.object({
+export const ChangePassworBodyDto = z.object({
   oldPassword: z.string(),
-  newPassword: PasswordSchema,
+  newPassword: Password,
 })
-export interface ChangePassworDto extends z.infer<typeof ChangePassworSchema> {}
+
+export interface IUpdateProfileBodyDto extends z.infer<typeof UpdateProfileBodyDto> {}
+export interface IChangePassworBodyDto extends z.infer<typeof ChangePassworBodyDto> {}

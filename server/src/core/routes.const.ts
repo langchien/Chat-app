@@ -1,4 +1,4 @@
-export const APP_ROUTES = {
+export const API_ROUTES = {
   USER: '/users',
   AUTH: '/auth',
   FRIEND_REQUEST: '/friend-requests',

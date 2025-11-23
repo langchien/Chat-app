@@ -2,22 +2,22 @@ import { accessTokenValidate } from '@/core/access-token.middleware'
 import { zodValidate } from '@/core/validate.middleware'
 import { Router } from 'express'
 import { chatCtrl } from './chat.ctrl'
-import { ChatIdParamSchema, CreateChatReqSchema, UpdateChatReqSchema } from './chat.req.dto'
+import { ChatIdParam, CreateChatReq, UpdateChatReq } from './chat.req.dto'
 
 export const chatRouter = Router()
 
 chatRouter.use(accessTokenValidate)
 
-chatRouter.post('/', zodValidate(CreateChatReqSchema), chatCtrl.create)
+chatRouter.post('/', zodValidate(CreateChatReq), chatCtrl.create)
 
 chatRouter.patch(
   '/:chatId',
-  zodValidate(ChatIdParamSchema, 'params'),
-  zodValidate(UpdateChatReqSchema),
+  zodValidate(ChatIdParam, 'params'),
+  zodValidate(UpdateChatReq),
   chatCtrl.update,
 )
-chatRouter.get('/:chatId', zodValidate(ChatIdParamSchema, 'params'), chatCtrl.getById)
+chatRouter.get('/:chatId', zodValidate(ChatIdParam, 'params'), chatCtrl.getById)
 
-chatRouter.delete('/:chatId', zodValidate(ChatIdParamSchema, 'params'), chatCtrl.delete)
+chatRouter.delete('/:chatId', zodValidate(ChatIdParam, 'params'), chatCtrl.delete)
 
 chatRouter.get('/', chatCtrl.paginate)

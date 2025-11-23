@@ -9,14 +9,14 @@ import {
   IUserIdReqParamsDto,
   IUserSearchReqQueryDto,
 } from './user.req.dto'
-import { IUserResDto, UserResSchema } from './user.res.dto'
+import { IUserResDto, UserResDto } from './user.res.dto'
 
 class UserController {
   findOne: RequestHandler<IUserIdReqParamsDto, IUserResDto> = async (req, res) => {
     const { userId } = req.params
     const user = await userRepo.findOneById(userId)
     if (!user) throw new NotFoundException()
-    res.json(UserResSchema.parse(user))
+    res.json(UserResDto.parse(user))
   }
 
   search: RequestHandler<any, IUserResDto[], any, IUserSearchReqQueryDto> = async (req, res) => {
@@ -24,7 +24,7 @@ class UserController {
     let results: IUserResDto[] = []
     if (q) results = await userRepo.searchByText(q)
     else results = await userRepo.findAll()
-    res.json(results.map((user) => UserResSchema.parse(user)))
+    res.json(results.map((user) => UserResDto.parse(user)))
   }
 
   delete: RequestHandler = async (req, res) => {
@@ -41,7 +41,7 @@ class UserController {
       hashedPassword,
       ...rest,
     })
-    res.status(HttpStatusCode.Created).json(UserResSchema.parse(newUser))
+    res.status(HttpStatusCode.Created).json(UserResDto.parse(newUser))
   }
 
   update: RequestHandler<IUserIdReqParamsDto, IUserResDto, IUpdateUserReqBodyDto> = async (
@@ -51,7 +51,7 @@ class UserController {
     const { userId } = req.params
     const updatedUser = await userRepo.update(userId, req.body)
     if (!updatedUser) throw new NotFoundException()
-    res.json(UserResSchema.parse(updatedUser))
+    res.json(UserResDto.parse(updatedUser))
   }
 }
 

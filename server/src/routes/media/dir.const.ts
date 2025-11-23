@@ -1,5 +1,5 @@
 import { envConfig } from '@/config/env-config'
-import { APP_ROUTES } from '@/core/routes.const'
+import { API_ROUTES } from '@/core/routes.const'
 import path from 'path'
 
 export const UPLOAD_LOCAL_DIR = 'uploads/'
@@ -12,7 +12,7 @@ export enum MediaDirectories {
   VideoHLS = 'videos-hls/',
 }
 
-const MEDIA_BASE_URL = envConfig.serverUri + APP_ROUTES.MEDIA + '/'
+const MEDIA_BASE_URL = envConfig.serverUri + API_ROUTES.MEDIA + '/'
 
 function createMediaPathResolver<T extends string>(
   base: string,

@@ -1,15 +1,16 @@
 import { BadRequestException } from '@/core/exceptions'
 import z from 'zod'
-import { createStringIdSchema } from './schema.common'
+import { createStringId } from './schema.common'
 
-export const PaginateCursorQuerySchema = z.object({
-  cursor: createStringIdSchema('cursor').optional(),
+export const PaginateCursorQuery = z.object({
+  cursor: createStringId('cursor').optional(),
   limit: z.coerce.number().positive().default(20),
 })
-export interface IPaginateCursorQuery extends z.infer<typeof PaginateCursorQuerySchema> {}
+export interface IPaginateCursorQuery extends z.infer<typeof PaginateCursorQuery> {}
 
-export const PaginateCursorResSchema = z.object({
+export const PaginateCursorResDto = z.object({
   hasMore: z.boolean(),
+  nextCursor: createStringId('nextCursor').nullable(),
 })
 
 export interface QueryString {
@@ -18,7 +19,7 @@ export interface QueryString {
 
 export class PaginateCursorCtrl {
   protected parsePaginationQuery(query: QueryString): IPaginateCursorQuery {
-    const result = PaginateCursorQuerySchema.safeParse(query)
+    const result = PaginateCursorQuery.safeParse(query)
     if (result.success) return result.data
     throw new BadRequestException({
       location: 'query',

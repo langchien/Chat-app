@@ -1,20 +1,15 @@
 import { databaseService } from '@/lib/database.service'
 import { IPaginateCursorQuery } from '@/lib/paginate-cusor.ctrl'
 import { Collection, ObjectId } from 'mongodb'
+import { ChatResDto, IChatPaginateCursorRes, IChatResDto } from './chat.res.dto'
 import {
-  ChatDetailsResSchema,
-  IChatDetailsResDto,
-  IChatPaginateCursorRes,
-  IChatResDto,
-} from './chat.res.dto'
-import {
-  ChatCollSchema,
-  ChatSchemma,
+  Chat,
+  ChatCollection,
   IChat,
   IChatCollection,
   ICreateChatInp,
   IUpdateChatInp,
-  UpdateChatSchema,
+  UpdateChat,
 } from './chat.schema'
 
 class ChatRepo {
@@ -23,16 +18,16 @@ class ChatRepo {
   }
 
   async create(data: ICreateChatInp): Promise<IChatResDto> {
-    const parsedData = ChatCollSchema.parse(data)
+    const parsedData = ChatCollection.parse(data)
     const result = await this.collection.insertOne(parsedData)
-    return ChatSchemma.parse({
+    return Chat.parse({
       _id: result.insertedId,
       ...parsedData,
     })
   }
 
   async update(id: string, data: IUpdateChatInp): Promise<IChatResDto | null> {
-    const parsedData = UpdateChatSchema.parse(data)
+    const parsedData = UpdateChat.parse(data)
     const result = await this.collection.findOneAndUpdate(
       {
         _id: new ObjectId(id),
@@ -45,10 +40,10 @@ class ChatRepo {
       },
     )
     if (!result) return null
-    return ChatSchemma.parse(result)
+    return Chat.parse(result)
   }
 
-  async findOneById(id: string, userId?: string): Promise<IChatDetailsResDto | null> {
+  async findOneById(id: string, userId?: string): Promise<IChatResDto | null> {
     const pipeline: any[] = [
       {
         $match: {
@@ -85,7 +80,7 @@ class ChatRepo {
       },
     ]
     const results = await this.collection.aggregate(pipeline).toArray()
-    return results.length > 0 ? ChatDetailsResSchema.parse(results[0]) : null
+    return results.length > 0 ? ChatResDto.parse(results[0]) : null
   }
 
   async delete(id: string): Promise<boolean> {
@@ -98,7 +93,7 @@ class ChatRepo {
       .find({ $text: { $search: query } })
       .sort({ _id: -1 })
       .toArray()
-    return results.map((result) => ChatSchemma.parse(result))
+    return results.map((result) => Chat.parse(result))
   }
 
   async getChatsByCursor(
@@ -145,9 +140,11 @@ class ChatRepo {
     ]
     const results = await this.collection.aggregate(pipeline).toArray()
     const hasMore = results.length > limit
+    const nextCursor = hasMore ? results[limit - 1]._id.toString() : null
     return {
       hasMore,
-      data: results.slice(0, limit).map((result) => ChatDetailsResSchema.parse(result)),
+      nextCursor,
+      data: results.slice(0, limit).map((result) => ChatResDto.parse(result)),
     }
   }
 }

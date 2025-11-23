@@ -10,16 +10,16 @@ import { jwtService } from '@/lib/jwt.service'
 import { redisService } from '@/lib/redis.service'
 import { generateSlug } from '@/lib/utils'
 import {
-  ForgotPasswordDto,
-  LoginDto,
-  RefreshTokenDto,
-  RegisterDto,
-  SendOtpDto,
-  VerifyOtpDto,
-} from '@/routes/auth/auth.dto'
+  IForgotPasswordReqBodyDto,
+  ILoginReqBodyDto,
+  IRefreshTokenReqBodyDto,
+  IRegisterReqBodyDto,
+  ISendOtpReqBodyDto,
+  IVerifyOtpDto,
+} from '@/routes/auth/auth.req.dto'
 import { RequestHandler } from 'express'
+import { IUserCollection, UserCollection } from '../user/user.db'
 import { userRepo } from '../user/user.repo'
-import { ICreateUserInput, UserCollectionSchema } from '../user/user.schema'
 import { authMaillerService } from './auth-mailler.service'
 import { OtpType } from './otp-request.schema'
 import { otpRepo } from './otp.repo'
@@ -73,7 +73,7 @@ class AuthCtrl {
    * @todo Cần có rate limit ở tầng middleware nếu không sẽ dễ bị spam
    * @note không  cần làm thêm resend vì client có thể gọi lại endpoint này
    */
-  sendVerifyEmailCtrl: RequestHandler<any, any, SendOtpDto> = async (req, res) => {
+  sendVerifyEmailCtrl: RequestHandler<any, any, ISendOtpReqBodyDto> = async (req, res) => {
     const email = req.body.email
     const existingEmail = await userRepo.findOneByEmail(email)
     if (existingEmail) throw new ConflictException('Email đã được sử dụng')
@@ -81,7 +81,7 @@ class AuthCtrl {
     return res.status(HttpStatusCode.NoContent).json({})
   }
 
-  verifyEmailCtrl: RequestHandler<any, any, VerifyOtpDto> = async (req, res) => {
+  verifyEmailCtrl: RequestHandler<any, any, IVerifyOtpDto> = async (req, res) => {
     const { email, otp } = req.body
     const registerToken = await this.verifyEmail(email, otp, OtpType.VerifyEmail)
     return res.status(HttpStatusCode.Created).json({ registerToken })
@@ -103,7 +103,7 @@ class AuthCtrl {
     await multi.exec()
   }
 
-  registerCtrl: RequestHandler<any, any, RegisterDto> = async (req, res) => {
+  registerCtrl: RequestHandler<any, any, IRegisterReqBodyDto> = async (req, res) => {
     const { password, registerToken, ...fields } = req.body
     const { email, type, exp } = jwtService.verifyOtpToken(registerToken)
     if (type !== OtpType.VerifyEmail) throw new UnauthorizedException()
@@ -123,13 +123,13 @@ class AuthCtrl {
           path: ['username'],
         },
       ])
-    const userData: ICreateUserInput = {
+    const userData: IUserCollection = {
       ...fields,
       email,
       hashedPassword,
       username,
     }
-    const u = UserCollectionSchema.parse(userData)
+    const u = UserCollection.parse(userData)
     const result = await userRepo.create(u)
     const tokens = jwtService.generateTokens({
       email,
@@ -139,7 +139,7 @@ class AuthCtrl {
     return res.status(HttpStatusCode.Created).json({ ...tokens })
   }
 
-  loginCtrl: RequestHandler<any, any, LoginDto> = async (req, res) => {
+  loginCtrl: RequestHandler<any, any, ILoginReqBodyDto> = async (req, res) => {
     const { email, password } = req.body
     const result = await userRepo.findOneByEmail(email)
     if (!result) throw new UnauthorizedException('Email hoặc mật khẩu không đúng')
@@ -154,7 +154,7 @@ class AuthCtrl {
   }
 
   // xem lại docs/refresh-token.flow.md để biết flow chi tiết
-  refreshTokenCtrl: RequestHandler<any, any, RefreshTokenDto> = async (req, res) => {
+  refreshTokenCtrl: RequestHandler<any, any, IRefreshTokenReqBodyDto> = async (req, res) => {
     const { refreshToken } = req.body
     // 1. Verify jwt
     const { jti, exp, userId, email } = jwtService.verifyRefreshToken(refreshToken)
@@ -173,41 +173,41 @@ class AuthCtrl {
       .json({ accessToken: newAccessToken, refreshToken: newRefreshToken })
   }
 
-  logoutCtrl: RequestHandler<any, any, RefreshTokenDto> = async (req, res) => {
+  logoutCtrl: RequestHandler<any, any, IRefreshTokenReqBodyDto> = async (req, res) => {
     const { refreshToken } = req.body
     const { jti } = jwtService.verifyRefreshToken(refreshToken)
     await redisService.del(`${jti}`)
     return res.status(HttpStatusCode.NoContent).json({})
   }
 
-  logoutAllDeviceCtrl: RequestHandler<any, any, RefreshTokenDto> = async (req, res) => {
+  logoutAllDeviceCtrl: RequestHandler<any, any, IRefreshTokenReqBodyDto> = async (req, res) => {
     const { refreshToken } = req.body
     const { userId } = jwtService.verifyRefreshToken(refreshToken)
     await this.revokeAllRefreshTokens(userId)
     return res.status(HttpStatusCode.NoContent).json({})
   }
 
-  sendForgotPasswordOtpCtrl: RequestHandler<any, any, SendOtpDto> = async (req, res) => {
+  sendForgotPasswordOtpCtrl: RequestHandler<any, any, ISendOtpReqBodyDto> = async (req, res) => {
     const email = req.body.email
     const existingEmail = await userRepo.findOneByEmail(email)
     if (!existingEmail) throw new NotFoundException('Email không tồn tại trong hệ thống')
-    await this.generateOtpAndSendEmail(email, OtpType.ForgotPassword)
+    await this.generateOtpAndSendEmail(email, OtpType.ForgotPasswordReqBodyDto)
     return res.status(HttpStatusCode.NoContent).json({})
   }
 
-  verifyForgotPasswordEmailCtrl: RequestHandler<any, any, VerifyOtpDto> = async (req, res) => {
+  verifyForgotPasswordEmailCtrl: RequestHandler<any, any, IVerifyOtpDto> = async (req, res) => {
     const { email, otp } = req.body
-    const forgotPasswordToken = await this.verifyEmail(email, otp, OtpType.ForgotPassword)
+    const forgotPasswordToken = await this.verifyEmail(email, otp, OtpType.ForgotPasswordReqBodyDto)
     return res.status(HttpStatusCode.Created).json({ forgotPasswordToken })
   }
 
   /**
    * @todo Ở đây cần thu hồi forgotPasswordToken sau khi đổi mật khẩu đỡ mất công bị spam nhưng lười code quá
    */
-  resetPasswordCtrl: RequestHandler<any, any, ForgotPasswordDto> = async (req, res) => {
+  resetPasswordCtrl: RequestHandler<any, any, IForgotPasswordReqBodyDto> = async (req, res) => {
     const { password, forgotPasswordToken } = req.body
     const { email, type, exp } = jwtService.verifyOtpToken(forgotPasswordToken)
-    if (type !== OtpType.ForgotPassword) throw new UnauthorizedException()
+    if (type !== OtpType.ForgotPasswordReqBodyDto) throw new UnauthorizedException()
     if (Date.now() >= exp * 1000)
       throw new UnauthorizedException('Forgot password token đã hết hạn')
     const hashedPassword = await hashingService.hash(password)

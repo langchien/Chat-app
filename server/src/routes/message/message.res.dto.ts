@@ -1,16 +1,14 @@
-import { PaginateCursorResSchema } from '@/lib/paginate-cusor.ctrl'
+import { PaginateCursorResDto } from '@/lib/paginate-cusor.ctrl'
 import z from 'zod'
-import { MediaSchema } from '../media/media.schema'
-import { MessageSchema } from './message.schema'
+import { Media } from '../media/media.schema'
+import { Message } from './message.schema'
 
-export const MessagePaginateCursorResSchema = PaginateCursorResSchema.extend({
-  data: z.array(MessageSchema),
+export const MessagePaginateCursorRes = PaginateCursorResDto.extend({
+  data: z.array(Message),
 })
 
-export interface IMessagePaginateCursorRes extends z.infer<typeof MessagePaginateCursorResSchema> {}
-
-export const GetMessageResSchema = MessageSchema.extend({
-  media: MediaSchema.omit({
+export const GetMessageResDto = Message.extend({
+  media: Media.omit({
     createdAt: true,
     updatedAt: true,
   }).optional(),
@@ -18,6 +16,6 @@ export const GetMessageResSchema = MessageSchema.extend({
   mediaId: true,
 })
 
-export interface IGetMessageRes extends z.infer<typeof GetMessageResSchema> {}
-
-export interface ICreateMessageRes extends z.infer<typeof MessageSchema> {}
+export interface IMessagePaginateCursorRes extends z.infer<typeof MessagePaginateCursorRes> {}
+export interface IGetMessageResDto extends z.infer<typeof GetMessageResDto> {}
+export interface ICreateMessageResDto extends z.infer<typeof Message> {}

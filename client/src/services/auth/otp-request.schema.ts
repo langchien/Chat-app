@@ -3,7 +3,7 @@ import z from 'zod'
 
 export enum OtpType {
   VerifyEmail = 'VERIFY_EMAIL',
-  ForgotPasswordReqBodyDto = 'FORGOT_PASSWORD',
+  ResetPasswordReqBodyDto = 'FORGOT_PASSWORD',
 }
 
 export const OtpRequest = z.object({

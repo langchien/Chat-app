@@ -1,8 +1,8 @@
 import { API_ROUTES, ApiRequest } from '../request.interface'
 import {
-  type IForgotPasswordReqBodyDto,
   type ILoginReqBodyDto,
   type IRegisterReqBodyDto,
+  type IResetPasswordReqBodyDto,
   type ISendOtpReqBodyDto,
   type IVerifyOtpDto,
 } from './auth.req.dto'
@@ -63,8 +63,11 @@ class AuthRequest extends ApiRequest {
     return response.data
   }
 
-  resetPassword = async (body: IForgotPasswordReqBodyDto) => {
-    const response = await this.httpRequest.post<null>(`${this.basePath}/password/reset`, body)
+  resetPassword = async (body: IResetPasswordReqBodyDto) => {
+    const response = await this.httpRequest.post<LoginResponseDto>(
+      `${this.basePath}/password/reset`,
+      body,
+    )
     return response.data
   }
 

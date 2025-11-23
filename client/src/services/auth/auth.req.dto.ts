@@ -19,9 +19,15 @@ export const RegisterReqBodyDto = User.pick({
   phone: true,
   avatarUrl: true,
   bio: true,
-}).extend({
-  password: Password,
 })
+  .extend({
+    password: Password,
+    confirmPassword: z.string('Xác nhận mật khẩu không được để trống'),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Mật khẩu và xác nhận mật khẩu không khớp',
+    path: ['confirmPassword'],
+  })
 export interface IRegisterReqBodyDto extends z.infer<typeof RegisterReqBodyDto> {}
 
 export const LoginReqBodyDto = z.object({
@@ -30,7 +36,13 @@ export const LoginReqBodyDto = z.object({
 })
 export interface ILoginReqBodyDto extends z.infer<typeof LoginReqBodyDto> {}
 
-export const ForgotPasswordReqBodyDto = z.object({
-  password: Password,
-})
-export interface IForgotPasswordReqBodyDto extends z.infer<typeof ForgotPasswordReqBodyDto> {}
+export const ResetPasswordReqBodyDto = z
+  .object({
+    password: Password,
+    confirmPassword: z.string('Xác nhận mật khẩu không được để trống'),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Mật khẩu và xác nhận mật khẩu không khớp',
+    path: ['confirmPassword'],
+  })
+export interface IResetPasswordReqBodyDto extends z.infer<typeof ResetPasswordReqBodyDto> {}

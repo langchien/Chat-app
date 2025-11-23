@@ -3,6 +3,14 @@ import type { IUserResDto } from '../user/user.res.dto'
 import type { IChangePassworBodyDto, IUpdateProfileBodyDto } from './protected.dto'
 
 class ProtectedRequest extends ApiRequest {
+  getProfileWithAuth = async (accessToken: string) => {
+    const response = await this.httpRequest.get<IUserResDto>(`${this.basePath}/profile`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
+    return response.data
+  }
   getProfile = async () => {
     const response = await this.httpRequest.get<IUserResDto>(`${this.basePath}/profile`)
     return response.data

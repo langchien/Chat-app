@@ -12,7 +12,7 @@ import {
   GetMessageResDto,
   ICreateMessageResDto,
   IGetMessageResDto,
-  IMessagePaginateCursorRes,
+  IMessagePaginateCursorResDto,
 } from './message.res.dto'
 import { Message } from './message.schema'
 
@@ -107,7 +107,7 @@ class MessageRepo {
   async getMessagesByCursor(
     chatId: string,
     query: IPaginateCursorQuery,
-  ): Promise<IMessagePaginateCursorRes> {
+  ): Promise<IMessagePaginateCursorResDto> {
     const { cursor, limit } = query
     const results = await this.collection
       .aggregate([

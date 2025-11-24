@@ -5,7 +5,7 @@ import { RequestHandler } from 'express'
 import { IChatIdParamDto } from '../chat/chat.req.dto'
 import { messageRepo } from './message.repo'
 import { ICreateMessageBodyDto, IMessageIdParamDto, IUpdateMessageBodyDto } from './message.req.dto'
-import { IGetMessageResDto, IMessagePaginateCursorRes } from './message.res.dto'
+import { IGetMessageResDto, IMessagePaginateCursorResDto } from './message.res.dto'
 
 class MessageCtrl extends PaginateCursorCtrl {
   findOneById: RequestHandler<IMessageIdParamDto, IGetMessageResDto> = async (req, res) => {
@@ -22,7 +22,7 @@ class MessageCtrl extends PaginateCursorCtrl {
     res.status(204).end()
   }
 
-  getMessagesByCursor: RequestHandler<IChatIdParamDto, IMessagePaginateCursorRes> = async (
+  getMessagesByCursor: RequestHandler<IChatIdParamDto, IMessagePaginateCursorResDto> = async (
     req,
     res,
   ) => {

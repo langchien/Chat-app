@@ -1,6 +1,7 @@
 import { databaseService } from '@/lib/database.service'
 import { IPaginateCursorQuery } from '@/lib/paginate-cusor.ctrl'
 import { Collection, ObjectId } from 'mongodb'
+import { userRepo } from '../user/user.repo'
 import {
   ChatCollection,
   IChat,
@@ -9,7 +10,7 @@ import {
   IUpdateChatInp,
   UpdateChat,
 } from './chat.db'
-import { ChatResDto, IChatPaginateCursorRes, IChatResDto } from './chat.res.dto'
+import { ChatResDto, IChatPaginateCursorResDto, IChatResDto } from './chat.res.dto'
 import { Chat } from './chat.schema'
 
 class ChatRepo {
@@ -19,10 +20,15 @@ class ChatRepo {
 
   async create(data: ICreateChatInp): Promise<IChatResDto> {
     const parsedData = ChatCollection.parse(data)
+    const participantIds = parsedData.participants.map((p) => p.userId.toString())
+    const users = await userRepo.findAll(participantIds)
     const result = await this.collection.insertOne(parsedData)
-    return Chat.parse({
+    return ChatResDto.parse({
       _id: result.insertedId,
       ...parsedData,
+      participants: users.map((user) => ({
+        user,
+      })),
     })
   }
 
@@ -40,6 +46,7 @@ class ChatRepo {
       },
     )
     if (!result) return null
+    // todo: Chưa xử lý phần participants khi update
     return Chat.parse(result)
   }
 
@@ -99,7 +106,7 @@ class ChatRepo {
   async getChatsByCursor(
     userId: string,
     query: IPaginateCursorQuery,
-  ): Promise<IChatPaginateCursorRes> {
+  ): Promise<IChatPaginateCursorResDto> {
     const { cursor, limit } = query
     const pipeline: any[] = [
       {

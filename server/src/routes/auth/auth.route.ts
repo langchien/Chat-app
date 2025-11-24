@@ -3,7 +3,6 @@ import { emailRateLimiter } from '@/core/rate-limit.middleware'
 import { zodValidate } from '@/core/validate.middleware'
 import {
   LoginReqBodyDto,
-  RefreshTokenReqBodyDto,
   RegisterReqBodyDto,
   ResetPasswordReqBodyDto,
   SendOtpReqBodyDto,
@@ -26,19 +25,19 @@ authRouter.post('/register', zodValidate(RegisterReqBodyDto), authCtrl.registerC
 
 authRouter.post('/login', zodValidate(LoginReqBodyDto), authCtrl.loginCtrl)
 
-authRouter.post('/refresh-token', zodValidate(RefreshTokenReqBodyDto), authCtrl.refreshTokenCtrl)
+authRouter.post('/refresh-token', authCtrl.refreshTokenCtrl)
 
 authRouter.post(
   '/logout',
   accessTokenValidate,
-  zodValidate(RefreshTokenReqBodyDto),
+
   authCtrl.logoutCtrl,
 )
 
 authRouter.post(
   '/logout-all-devices',
   accessTokenValidate,
-  zodValidate(RefreshTokenReqBodyDto),
+
   authCtrl.logoutAllDeviceCtrl,
 )
 

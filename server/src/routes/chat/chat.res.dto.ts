@@ -12,9 +12,9 @@ export const ChatResDto = Chat.extend({
   ),
 })
 
-export const ChatPaginateCursorRes = PaginateCursorResDto.extend({
+export const ChatPaginateCursorResDto = PaginateCursorResDto.extend({
   data: z.array(ChatResDto),
 })
 
-export interface IChatPaginateCursorRes extends z.infer<typeof ChatPaginateCursorRes> {}
+export interface IChatPaginateCursorResDto extends z.infer<typeof ChatPaginateCursorResDto> {}
 export interface IChatResDto extends z.infer<typeof ChatResDto> {}

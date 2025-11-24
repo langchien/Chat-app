@@ -11,9 +11,10 @@ import {
 } from './user.db'
 import { User } from './user.schema'
 
+const COLLECTION_NAME = 'users'
 class UserRepo {
   private get collection(): Collection<IUserCollection> {
-    return databaseService.db.collection('users')
+    return databaseService.db.collection(COLLECTION_NAME)
   }
 
   async create(data: ICreateUserInput): Promise<IUser> {
@@ -60,8 +61,13 @@ class UserRepo {
     return User.parse(result)
   }
 
-  async findAll(): Promise<IUser[]> {
-    const results = await this.collection.find().sort({ _id: -1 }).toArray()
+  async findAll(ids?: string[]): Promise<IUser[]> {
+    const results = await this.collection
+      .find({
+        _id: ids ? { $in: ids.map((id) => new ObjectId(id)) } : { $exists: true },
+      })
+      .sort({ _id: -1 })
+      .toArray()
     return results.map((result) => User.parse(result))
   }
 
@@ -79,6 +85,14 @@ class UserRepo {
   }
 
   async initIndexes(): Promise<void> {
+    // phần khởi tạo collection
+    const collections = await databaseService.db.listCollections().toArray()
+    const hasUsersCollection = collections.find((c) => c.name === COLLECTION_NAME)
+    if (!hasUsersCollection) {
+      await databaseService.db.createCollection(COLLECTION_NAME)
+      logger.info(`Tạo collection ${COLLECTION_NAME} trong database`)
+    }
+    // Phần tạo index
     const indexes = await this.collection.indexes()
     const hasEmailIndex = indexes.some((index) => index.name === 'email_1')
     const hasCreatedAtIndex = indexes.some((index) => index.name === 'createdAt_-1')

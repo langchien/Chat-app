@@ -8,3 +8,7 @@ export const APP_PAGES = {
   RESET_PASSWORD: '/auth/reset-password',
   CHAT: '/chat',
 } as const
+
+export const APP_IMAGES = {
+  AVATAR_DEFAULT: '/avatar.jpg',
+} as const

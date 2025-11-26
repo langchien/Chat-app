@@ -1,4 +1,3 @@
-import type { ConversationReponseDTO } from '@/services/chats/conversation.response'
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
@@ -6,12 +5,13 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+/**
+ * @description Lấy ký tự đầu tiên và ký tự cuối cùng
+ */
 export function getInitials(name: string) {
-  return name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
+  const splitName = name.split(' ')
+  if (splitName.length === 1) return splitName[0][0].toUpperCase()
+  return `${splitName[0][0].toUpperCase()}${splitName[1][0].toUpperCase()}`
 }
 
 /**
@@ -37,13 +37,4 @@ export function formatTimeAgo(createdAt: string | Date): string {
   } else {
     return `${days} ngày trước`
   }
-}
-
-export function getConversationInfo(conversation: ConversationReponseDTO) {
-  if (conversation.type === 'direct')
-    return {
-      imageUrl: conversation.participants[0]?.avatarUrl,
-      name: conversation.participants[0]?.nickName ?? conversation.participants[0]?.displayName,
-    }
-  return { imageUrl: conversation.groupAvatarUrl, name: conversation.groupName ?? 'Nhóm không tên' }
 }

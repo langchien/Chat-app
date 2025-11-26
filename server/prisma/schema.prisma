@@ -131,6 +131,8 @@ model Participant {
   chatId   String   @db.ObjectId
   chat     Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, chatId])
 }
 
 type GroupInfo {

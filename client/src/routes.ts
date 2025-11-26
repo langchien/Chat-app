@@ -11,9 +11,10 @@ export default [
     route(APP_PAGES.VERIFY_EMAIL, 'routes/unauthenticated/verify-email.tsx'),
     route(APP_PAGES.GOOGLE_OAUTH2, 'routes/unauthenticated/google-redirect.tsx'),
   ]),
-  // layout('routes/private/layout.tsx', []),
-  // route(APP_PAGES.CONVERSATIONS, './routes/conversation.layout.tsx', [
-  //   index('./routes/conversation-index.tsx'),
-  //   route(':conversationId', './routes/conversation.tsx'),
-  // ]),
+  layout('routes/private/layout.tsx', [
+    route(APP_PAGES.CHAT, 'routes/private/chat-layout.tsx', [
+      index('routes/private/chat-home.tsx'),
+      route(':chatId', 'routes/private/chat.tsx'),
+    ]),
+  ]),
 ] satisfies RouteConfig

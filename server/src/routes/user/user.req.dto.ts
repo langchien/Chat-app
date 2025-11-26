@@ -6,9 +6,9 @@ export const CreateUserReqBodyDto = User.pick({
   username: true,
   email: true,
   displayName: true,
-  avatarId: true,
   avatarUrl: true,
   bio: true,
+  phone: true,
 }).extend({
   password: Password,
 })

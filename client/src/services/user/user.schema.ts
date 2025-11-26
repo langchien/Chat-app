@@ -2,7 +2,6 @@ import {
   BaseCollection,
   createEmail,
   createName,
-  createObjectId,
   createString,
   Username,
 } from '@/lib/schema.common'
@@ -13,9 +12,7 @@ export const User = BaseCollection.extend({
   email: createEmail(),
   displayName: createName('Tên hiển thị', 100),
   hashedPassword: z.string(),
-  avatarId: createObjectId('avatarId').optional(),
-  avatarUrl: z.url().optional(),
-  bio: createString('Bio', 300).optional(),
-  phone: createString('Sổ điện thoại', 15).optional(),
-  friends: z.array(createObjectId('FriendId')).default([]),
+  avatarUrl: z.url().nullish(),
+  bio: createString('Bio', 300).nullish(),
+  phone: createString('Sổ điện thoại', 15).nullish(),
 })

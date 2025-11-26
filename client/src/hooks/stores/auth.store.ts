@@ -1,3 +1,5 @@
+import { APP_PAGES } from '@/constants/link.const'
+import type { IUser } from '@/services/api.types'
 import { authRequest } from '@/services/auth'
 import type {
   ILoginReqBodyDto,
@@ -6,22 +8,24 @@ import type {
   IVerifyOtpDto,
 } from '@/services/auth/auth.req.dto'
 import { protectedRequest } from '@/services/protected'
-import type { IUserResDto } from '@/services/user/user.res.dto'
+import { redirect } from 'react-router'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { useAppStore } from './app.store'
+import { useChatStore } from './chat.store'
 
-interface AuthState {
+interface IAuthState {
   isAuthenticated: boolean
   accessToken: string | null
-  user: IUserResDto | null
+  user: IUser | null
   isCanSignUp: boolean
   isCanResetPassword: boolean
 }
 
-interface AuthActions {
+interface IAuthActions {
   setIsAuthenticated: (isAuthenticated: boolean) => void
   setAccessToken: (accessToken: string | null) => void
-  setUser: (user: IUserResDto | null) => void
+  setUser: (user: IUser | null) => void
   clearAuthStore: () => void
   signOut: () => Promise<void>
   signIn: (body: ILoginReqBodyDto) => Promise<void>
@@ -33,7 +37,7 @@ interface AuthActions {
 
 const LOCAL_STORAGE_KEY = 'auth-storage'
 
-export const useAuthStore = create<AuthState & AuthActions>()(
+export const useAuthStore = create<IAuthState & IAuthActions>()(
   persist(
     (set, get, store) => ({
       isAuthenticated: false,
@@ -47,12 +51,13 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       setAccessToken: (accessToken: string | null) => {
         set({ accessToken })
       },
-      setUser: (user: IUserResDto | null) => {
+      setUser: (user: IUser | null) => {
         set({ user })
       },
       clearAuthStore: () => {
         set(store.getInitialState())
         localStorage.removeItem(LOCAL_STORAGE_KEY)
+        useChatStore.getState().clearChatStore()
       },
       signIn: async (body: ILoginReqBodyDto) => {
         get().clearAuthStore()
@@ -60,8 +65,9 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         try {
           const { accessToken } = await authRequest.signin(body)
           set({ accessToken })
-          const userRes = await protectedRequest.getProfileWithAuth(accessToken)
+          const userRes = await protectedRequest.getProfile()
           set({ user: userRes })
+          await useChatStore.getState().getMyChatList()
         } catch (error) {
           get().clearAuthStore()
           throw error
@@ -73,9 +79,10 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           set({ isAuthenticated: true })
           const { accessToken } = await authRequest.signup(body)
           set({ accessToken })
-          const userRes = await protectedRequest.getProfileWithAuth(accessToken)
+          const userRes = await protectedRequest.getProfile()
           set({ user: userRes })
           set({ isCanSignUp: false })
+          await useChatStore.getState().getMyChatList()
         } catch (error) {
           get().clearAuthStore()
           throw error
@@ -87,17 +94,25 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           set({ isAuthenticated: true })
           const { accessToken } = await authRequest.resetPassword(body)
           set({ accessToken })
-          const userRes = await protectedRequest.getProfileWithAuth(accessToken)
+          const userRes = await protectedRequest.getProfile()
           set({ user: userRes })
           set({ isCanResetPassword: false })
+          await useChatStore.getState().getMyChatList()
         } catch (error) {
           get().clearAuthStore()
           throw error
         }
       },
       signOut: async () => {
-        await authRequest.logout()
-        get().clearAuthStore()
+        const setLoading = useAppStore.getState().setLoading
+        setLoading(true)
+        try {
+          await authRequest.logout()
+        } finally {
+          setLoading(false)
+          get().clearAuthStore()
+          redirect(APP_PAGES.SIGNIN)
+        }
       },
       verifyEmail: async (body: IVerifyOtpDto) => {
         try {

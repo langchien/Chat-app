@@ -5,8 +5,6 @@ import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import { useAppStore } from './stores/app.store'
 
-const delayRequest = () => new Promise((resolve) => setTimeout(resolve, 500))
-
 interface UseRequestOptions<R = any> {
   redirectUrl?: string
   messageSuccess?: string
@@ -19,17 +17,11 @@ interface UseRequestOptions<R = any> {
 
 interface UseFormSubmitOptions<R = any> extends Omit<UseRequestOptions<R>, 'setError'> {}
 
-/**
- *
- * @description Truyền vào omitDelay để bỏ qua delay giả lập hiển thị toast
- * @todo xử lý type any
- */
 export const useRequest = <T extends any[], R = any>(
   cb: (...args: T) => Promise<R>,
   options: UseRequestOptions<R>,
 ) => {
-  const { redirectUrl, messageError, messageSuccess, omitDelay, onError, onSuccess, setError } =
-    options
+  const { redirectUrl, messageError, messageSuccess, onError, onSuccess, setError } = options
   const { setLoading } = useAppStore()
   const navigate = useNavigate()
   // dùng useCallback để tránh tạo lại hàm onRequest mỗi lần render
@@ -37,7 +29,6 @@ export const useRequest = <T extends any[], R = any>(
     async (...args: T) => {
       setLoading(true)
       try {
-        if (!omitDelay) await delayRequest() // fake delay to show success toast
         const res = await cb(...args)
         if (messageSuccess) toast.success(messageSuccess)
         if (redirectUrl) navigate(redirectUrl)
@@ -64,7 +55,6 @@ export const useRequest = <T extends any[], R = any>(
       messageError,
       messageSuccess,
       navigate,
-      omitDelay,
       onError,
       onSuccess,
       redirectUrl,

@@ -1,5 +1,6 @@
 import { BadRequestException } from '@/core/exceptions'
 import z from 'zod'
+import { BaseController } from './database'
 import { createStringId } from './schema.common'
 
 export const PaginateCursorQuery = z.object({
@@ -10,14 +11,14 @@ export interface IPaginateCursorQuery extends z.infer<typeof PaginateCursorQuery
 
 export const PaginateCursorResDto = z.object({
   hasMore: z.boolean(),
-  nextCursor: createStringId('nextCursor').nullable(),
+  nextCursor: createStringId('nextCursor').nullish(),
 })
 
 export interface QueryString {
   [key: string]: undefined | string | QueryString | (string | QueryString)[]
 }
 
-export class PaginateCursorCtrl {
+export class PaginateCursorCtrl extends BaseController {
   protected parsePaginationQuery(query: QueryString): IPaginateCursorQuery {
     const result = PaginateCursorQuery.safeParse(query)
     if (result.success) return result.data

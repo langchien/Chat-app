@@ -1,4 +1,5 @@
 import { envConfig } from '@/config/envConfig'
+import { useAuthStore } from '@/hooks/stores/auth.store'
 import {
   AppException,
   HTTP_STATUS_CODE,
@@ -8,18 +9,27 @@ import {
 } from '@/lib/request/request.type'
 import axios, { AxiosError, type AxiosResponse } from 'axios'
 
-const TEST_ACCESS_TOKEN =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OTEzOTdhM2MwMzAyZTI5OTBhYTBkMDgiLCJlbWFpbCI6Imxhbmd0aWVuazRAZ21haWwuY29tIiwianRpIjoiNjkyMzNhMzA1NzkxMTk4YTZhZjM0MWJlIiwiaWF0IjoxNzYzOTE2MzM2LCJleHAiOjE3NzI5MTYzMzZ9.fov855IYVsVGv1FKH4Eh0XpQLX-rkG_RqgfdpZ9GYgk'
-
 export const httpRequest = axios.create({
   baseURL: envConfig.apiBaseUrl,
   headers: {
     'Content-Type': 'application/json',
-    Authorization: `Bearer ${TEST_ACCESS_TOKEN}`,
   },
   withCredentials: true,
 })
 
+const fackeDelay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+// Tự động thêm token vào header của request
+
+httpRequest.interceptors.request.use(async (config) => {
+  await fackeDelay(500)
+  const accessToken = useAuthStore.getState().accessToken
+  if (accessToken) {
+    config.headers.Authorization = `Bearer ${accessToken}`
+  }
+  return config
+})
+
+// Response Interceptor
 const onResponseSuccess = (response: AxiosResponse<any, any, {}>) => {
   return response
 }

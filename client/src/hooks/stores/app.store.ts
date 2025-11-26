@@ -1,14 +1,14 @@
 import { create } from 'zustand'
 
-interface AppState {
+interface IAppState {
   isLoading: boolean
 }
 
-interface AppActions {
+interface IAppActions {
   setLoading: (isLoading: boolean) => void
 }
 
-export const useAppStore = create<AppState & AppActions>((set) => ({
+export const useAppStore = create<IAppState & IAppActions>((set) => ({
   isLoading: false,
   setLoading: (isLoading) => set({ isLoading }),
 }))

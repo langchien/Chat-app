@@ -6,6 +6,7 @@ import {
   UnprocessableEntityException,
 } from '@/core/exceptions'
 import { HttpStatusCode } from '@/core/status-code'
+import { BaseController } from '@/lib/database'
 import { hashingService } from '@/lib/hashing.service'
 import { jwtService, TokenType } from '@/lib/jwt.service'
 import { redisService } from '@/lib/redis.service'
@@ -23,29 +24,25 @@ import { authMaillerService } from './auth-mailler.service'
 import { OtpType } from './otp-request.schema'
 import { otpRepo } from './otp.repo'
 
-class AuthCtrl {
-  constructor() {}
-
+class AuthCtrl extends BaseController {
   private generateOtpAndSendEmail = async (email: string, type: OtpType) => {
     const otp = jwtService.generateOtp(6)
     const now = Date.now()
     const iat = new Date(now)
     const exp = new Date(now + 10 * 60 * 1000) // 10 phút
     await authMaillerService.sendOtpEmail(email, otp, type)
-    await otpRepo.updateOne(
-      { email, type },
-      {
-        $set: { otp, exp, iat },
-        $setOnInsert: { email },
-      },
-      { upsert: true },
-    )
+    await otpRepo.upsert({
+      email,
+      otp,
+      type,
+      iat,
+      exp,
+    })
     return { otp, iat, exp }
   }
 
   private async verifyEmail(email: string, otp: string, type: OtpType) {
-    const result = await otpRepo.findOneAndDelete({ email, otp })
-    if (!result) throw new NotFoundException('Mã OTP không hợp lệ hoặc đã hết hạn')
+    const result = await otpRepo.findOneAndDelete({ email, otp, type })
     const exp = new Date(result.exp)
     if (exp < new Date()) throw new NotFoundException('Mã OTP không hợp lệ hoặc đã hết hạn')
     const token = jwtService.signOtpToken({
@@ -81,10 +78,14 @@ class AuthCtrl {
   }
 
   verifyEmailCtrl: RequestHandler<any, any, IVerifyOtpDto> = async (req, res) => {
-    const { email, otp } = req.body
-    const registerToken = await this.verifyEmail(email, otp, OtpType.VerifyEmail)
-    jwtService.setCookieToClient(res, registerToken, TokenType.Otp, 'registerToken')
-    return res.status(HttpStatusCode.NoContent).json()
+    try {
+      const { email, otp } = req.body
+      const registerToken = await this.verifyEmail(email, otp, OtpType.VerifyEmail)
+      jwtService.setCookieToClient(res, registerToken, TokenType.Otp, 'registerToken')
+      return res.status(HttpStatusCode.NoContent).json()
+    } catch (error) {
+      this.handleNotFoundError(error, 'Mã OTP không hợp lệ hoặc đã hết hạn')
+    }
   }
 
   private revokeAllRefreshTokens = async (userId: string) => {
@@ -135,9 +136,9 @@ class AuthCtrl {
       })
       const { accessToken, refreshToken } = jwtService.generateTokens({
         email,
-        userId: result._id.toString(),
+        userId: result.id.toString(),
       })
-      await this.addRefreshTokenToRedis(refreshToken, result._id.toString())
+      await this.addRefreshTokenToRedis(refreshToken, result.id.toString())
       jwtService.setCookieToClient(res, refreshToken, TokenType.Refresh)
       return res.status(HttpStatusCode.Created).json({ accessToken })
     } catch (error) {
@@ -156,9 +157,9 @@ class AuthCtrl {
     if (!isPasswordValid) throw new UnauthorizedException('Email hoặc mật khẩu không đúng')
     const { accessToken, refreshToken } = jwtService.generateTokens({
       email,
-      userId: result._id.toString(),
+      userId: result.id.toString(),
     })
-    await this.addRefreshTokenToRedis(refreshToken, result._id.toString())
+    await this.addRefreshTokenToRedis(refreshToken, result.id.toString())
     jwtService.setCookieToClient(res, refreshToken, TokenType.Refresh)
     return res.status(HttpStatusCode.Created).json({ accessToken })
   }
@@ -235,12 +236,12 @@ class AuthCtrl {
       const user = await userRepo.findOneByEmail(email)
       const { accessToken, refreshToken } = jwtService.generateTokens({
         email,
-        userId: user!._id.toString(),
+        userId: user!.id.toString(),
       })
-      await this.addRefreshTokenToRedis(refreshToken, user!._id.toString())
+      await this.addRefreshTokenToRedis(refreshToken, user!.id.toString())
       jwtService.setCookieToClient(res, refreshToken, TokenType.Refresh)
       if (!user) throw new NotFoundException('Người dùng không tồn tại')
-      const result = await userRepo.update(user._id.toString(), { hashedPassword })
+      const result = await userRepo.update(user.id.toString(), { hashedPassword })
       if (!result) throw new NotFoundException('Người dùng không tồn tại')
       return res.status(HttpStatusCode.Created).json({ accessToken })
     } catch (error) {

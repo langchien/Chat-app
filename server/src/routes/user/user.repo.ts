@@ -1,121 +1,63 @@
-import { databaseService } from '@/lib/database.service'
-import { logger } from '@/lib/logger.service'
-import { Collection, ObjectId } from 'mongodb'
-import {
-  ICreateUserInput,
-  IUpdateUserInput,
-  IUser,
-  IUserCollection,
-  UpdateUser,
-  UserCollection,
-} from './user.db'
-import { User } from './user.schema'
+import { BaseRepository } from '@/lib/database'
+import { ICreateUserInput, IUpdateUserInput, IUser } from './user.db'
 
-const COLLECTION_NAME = 'users'
-class UserRepo {
-  private get collection(): Collection<IUserCollection> {
-    return databaseService.db.collection(COLLECTION_NAME)
-  }
-
-  async create(data: ICreateUserInput): Promise<IUser> {
-    const parsedData = UserCollection.parse(data)
-    const result = await this.collection.insertOne(parsedData)
-    return User.parse({
-      _id: result.insertedId,
-      ...parsedData,
+class UserRepo extends BaseRepository {
+  create(data: ICreateUserInput): Promise<IUser> {
+    return this.prismaService.user.create({
+      data,
     })
   }
 
-  async update(id: string, data: IUpdateUserInput): Promise<IUser | null> {
-    const parsedData = UpdateUser.parse(data)
-    const result = await this.collection.findOneAndUpdate(
-      {
-        _id: new ObjectId(id),
+  update(id: string, data: IUpdateUserInput): Promise<IUser> {
+    return this.prismaService.user.update({
+      where: { id },
+      data,
+    })
+  }
+
+  findOneById(id: string): Promise<IUser | null> {
+    return this.prismaService.user.findUnique({
+      where: { id },
+    })
+  }
+
+  findOneByEmail(email: string): Promise<IUser | null> {
+    return this.prismaService.user.findUnique({
+      where: { email },
+    })
+  }
+
+  findOneByUsername(username: string): Promise<IUser | null> {
+    return this.prismaService.user.findUnique({
+      where: { username },
+    })
+  }
+
+  findAll(ids?: string[]): Promise<IUser[]> {
+    return this.prismaService.user.findMany({
+      where: ids ? { id: { in: ids } } : {},
+      orderBy: { createdAt: 'desc' },
+    })
+  }
+
+  delete(id: string): Promise<IUser> {
+    return this.prismaService.user.delete({
+      where: { id },
+    })
+  }
+
+  searchByText(query: string, limmit: number = 20): Promise<IUser[]> {
+    return this.prismaService.user.findMany({
+      where: {
+        OR: [
+          { username: { contains: query, mode: 'insensitive' } },
+          { displayName: { contains: query, mode: 'insensitive' } },
+          { email: { contains: query, mode: 'insensitive' } },
+        ],
       },
-      {
-        $set: { ...parsedData },
-      },
-      {
-        returnDocument: 'after',
-      },
-    )
-    if (!result) return null
-    return User.parse(result)
-  }
-
-  async findOneById(id: string): Promise<IUser | null> {
-    const result = await this.collection.findOne({ _id: new ObjectId(id) })
-    if (!result) return null
-    return User.parse(result)
-  }
-
-  async findOneByEmail(email: string): Promise<IUser | null> {
-    const result = await this.collection.findOne({ email })
-    if (!result) return null
-    return User.parse(result)
-  }
-
-  async findOneByUsername(username: string): Promise<IUser | null> {
-    const result = await this.collection.findOne({ username })
-    if (!result) return null
-    return User.parse(result)
-  }
-
-  async findAll(ids?: string[]): Promise<IUser[]> {
-    const results = await this.collection
-      .find({
-        _id: ids ? { $in: ids.map((id) => new ObjectId(id)) } : { $exists: true },
-      })
-      .sort({ _id: -1 })
-      .toArray()
-    return results.map((result) => User.parse(result))
-  }
-
-  async delete(id: string): Promise<boolean> {
-    const result = await this.collection.deleteOne({ _id: new ObjectId(id) })
-    return result.deletedCount === 1
-  }
-
-  async searchByText(query: string): Promise<IUser[]> {
-    const results = await this.collection
-      .find({ $text: { $search: query } })
-      .sort({ _id: -1 })
-      .toArray()
-    return results.map((result) => User.parse(result))
-  }
-
-  async initIndexes(): Promise<void> {
-    // phần khởi tạo collection
-    const collections = await databaseService.db.listCollections().toArray()
-    const hasUsersCollection = collections.find((c) => c.name === COLLECTION_NAME)
-    if (!hasUsersCollection) {
-      await databaseService.db.createCollection(COLLECTION_NAME)
-      logger.info(`Tạo collection ${COLLECTION_NAME} trong database`)
-    }
-    // Phần tạo index
-    const indexes = await this.collection.indexes()
-    const hasEmailIndex = indexes.some((index) => index.name === 'email_1')
-    const hasCreatedAtIndex = indexes.some((index) => index.name === 'createdAt_-1')
-    const hasUsernameIndex = indexes.some((index) => index.name === 'username_1')
-    const hasTextIndex = indexes.some(
-      (index) => index.name === 'email_text_displayName_text_username_text',
-    )
-    if (!hasEmailIndex) {
-      await this.collection.createIndex({ email: 1 }, { unique: true })
-      logger.info('Tạo index email_1 cho collection users')
-    }
-    if (!hasCreatedAtIndex) {
-      await this.collection.createIndex({ createdAt: -1 })
-      logger.info('Tạo index createdAt_-1 cho collection users')
-    }
-    if (!hasUsernameIndex) {
-      await this.collection.createIndex({ username: 1 }, { unique: true })
-      logger.info('Tạo index username_1 cho collection users')
-    }
-    if (!hasTextIndex) {
-      await this.collection.createIndex({ email: 'text', displayName: 'text', username: 'text' })
-      logger.info('Tạo text index email_text_displayName_text_username_text cho collection users')
-    }
+      orderBy: { createdAt: 'desc' },
+      take: limmit,
+    })
   }
 }
 

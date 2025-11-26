@@ -7,15 +7,10 @@ export const MessagePaginateCursorResDto = PaginateCursorResDto.extend({
   data: z.array(Message),
 })
 
-export const GetMessageResDto = Message.extend({
-  media: Media.omit({
-    createdAt: true,
-    updatedAt: true,
-  }).optional(),
-}).omit({
-  mediaId: true,
+export const MessageResDto = Message.extend({
+  medias: z.array(Media).nullish(),
 })
 
 export interface IMessagePaginateCursorResDto extends z.infer<typeof MessagePaginateCursorResDto> {}
-export interface IGetMessageResDto extends z.infer<typeof GetMessageResDto> {}
-export interface ICreateMessageResDto extends z.infer<typeof Message> {}
+export interface IMessageResDto extends z.infer<typeof MessageResDto> {}
+export type IMessageResDto2 = z.infer<typeof MessageResDto>

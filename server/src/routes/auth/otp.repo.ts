@@ -1,28 +1,45 @@
-import { databaseService } from '@/lib/database.service'
-import { Collection } from 'mongodb'
-import { OtpRequest, OtpType } from './otp-request.schema'
-import { IOtpRequestCollection } from './otp.db'
+import { BaseRepository } from '@/lib/database'
+import { ICreateOtpRequestInput } from './otp-request.db'
+import { OtpType } from './otp-request.schema'
 
-export class OtpRepo {
-  get collection(): Collection<IOtpRequestCollection> {
-    return databaseService.db.collection('otpRequests')
-  }
-  async updateOne(filter: any, update: any, options: any) {
-    return this.collection.updateOne(filter, update, options)
-  }
-
-  async findOneAndDelete(filter: any) {
-    return this.collection.findOneAndDelete(filter)
-  }
-
-  async findByEmailAndType(email: string, type: OtpType) {
-    return this.collection.findOne({ email, type })
+export class OtpRepo extends BaseRepository {
+  upsert(data: ICreateOtpRequestInput) {
+    return this.prismaService.otpRequest.upsert({
+      where: {
+        email_type: {
+          email: data.email,
+          type: data.type,
+        },
+      },
+      create: data,
+      update: data,
+    })
   }
 
-  async create(data: any) {
-    const parsed = OtpRequest.parse(data)
-    return this.collection.insertOne(parsed)
+  findOneAndDelete({ email, type, otp }: { email: string; type: OtpType; otp: string }) {
+    return this.prismaService.otpRequest.delete({
+      where: {
+        email_type: {
+          email,
+          type,
+        },
+        otp,
+      },
+    })
   }
+
+  findByEmailAndType(email: string, type: OtpType) {
+    return this.prismaService.otpRequest.findUnique({
+      where: {
+        email_type: {
+          email,
+          type,
+        },
+      },
+    })
+  }
+
+  async create(data: any) {}
 }
 
 export const otpRepo = new OtpRepo()

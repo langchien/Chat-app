@@ -16,8 +16,6 @@ const EnvConfig = z.object({
   serverUri: z.string('SERVER_URI không được để trống'),
   clientUri: z.string('CLIENT_URI không được để trống'),
   nodeEnv: z.enum(['development', 'production', 'test']).optional(),
-  dbUri: z.string('DB_URI không được để trống'),
-  dbName: z.string('DB_NAME không được để trống'),
   mail: z.object({
     mailUser: z.string('MAIL_USER không được để trống'),
     mailPass: z.string('MAIL_PASS không được để trống'),
@@ -60,8 +58,6 @@ export const envConfigInput: IEnvConfigInput = {
   serverUri: process.env.SERVER_URI!,
   clientUri: process.env.CLIENT_URI!,
   nodeEnv: process.env.NODE_ENV as 'development' | 'production' | 'test' | undefined,
-  dbUri: process.env.DB_URI!,
-  dbName: process.env.DB_NAME!,
   mail: {
     mailUser: process.env.GMAIL_MAIL_USER!,
     mailPass: process.env.GMAIL_MAIL_PASS!,

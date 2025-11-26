@@ -1,106 +1,63 @@
-import { databaseService } from '@/lib/database.service'
+import { NotFoundException } from '@/core/exceptions'
+import { BaseRepository } from '@/lib/database'
 import { IPaginateCursorQuery } from '@/lib/paginate-cusor.ctrl'
-import { Collection, ObjectId } from 'mongodb'
-import { userRepo } from '../user/user.repo'
-import {
-  ChatCollection,
-  IChat,
-  IChatCollection,
-  ICreateChatInp,
-  IUpdateChatInp,
-  UpdateChat,
-} from './chat.db'
+import { ICreateChatInp, IUpdateChatInp } from './chat.db'
 import { ChatResDto, IChatPaginateCursorResDto, IChatResDto } from './chat.res.dto'
-import { Chat } from './chat.schema'
 
-class ChatRepo {
-  private get collection(): Collection<IChatCollection> {
-    return databaseService.db.collection('chats')
-  }
-
+class ChatRepo extends BaseRepository {
   async create(data: ICreateChatInp): Promise<IChatResDto> {
-    const parsedData = ChatCollection.parse(data)
-    const participantIds = parsedData.participants.map((p) => p.userId.toString())
-    const users = await userRepo.findAll(participantIds)
-    const result = await this.collection.insertOne(parsedData)
-    return ChatResDto.parse({
-      _id: result.insertedId,
-      ...parsedData,
-      participants: users.map((user) => ({
-        user,
-      })),
+    const { receiverIds, ...restData } = data
+    const users = await this.prismaService.user.findMany({
+      where: { id: { in: receiverIds } },
     })
-  }
-
-  async update(id: string, data: IUpdateChatInp): Promise<IChatResDto | null> {
-    const parsedData = UpdateChat.parse(data)
-    const result = await this.collection.findOneAndUpdate(
-      {
-        _id: new ObjectId(id),
-      },
-      {
-        $set: { ...parsedData },
-      },
-      {
-        returnDocument: 'after',
-      },
-    )
-    if (!result) return null
-    // todo: Chưa xử lý phần participants khi update
-    return Chat.parse(result)
-  }
-
-  async findOneById(id: string, userId?: string): Promise<IChatResDto | null> {
-    const pipeline: any[] = [
-      {
-        $match: {
-          _id: new ObjectId(id),
-          ...(userId ? { 'participants.userId': new ObjectId(userId) } : {}),
+    if (users.length !== receiverIds.length) throw new NotFoundException('Người dùng không tồn tại')
+    return this.prismaService.chat.create({
+      data: {
+        ...restData,
+        participants: {
+          createMany:
+            users.length > 0 ? { data: users.map((user) => ({ userId: user.id })) } : undefined,
         },
       },
-      { $unwind: '$participants' },
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'participants.userId',
-          foreignField: '_id',
-          as: 'userInfo',
-        },
-      },
-      { $unwind: { path: '$userInfo', preserveNullAndEmptyArrays: true } },
-      {
-        $addFields: {
-          participants: {
-            user: '$userInfo',
-            nickName: '$participants.nickName',
+      include: {
+        participants: {
+          include: {
+            user: true,
           },
         },
       },
-      {
-        $group: {
-          _id: '$_id',
-          lastMessage: { $first: '$lastMessage' },
-          participants: { $push: '$participants' },
-          createdAt: { $first: '$createdAt' },
-          updatedAt: { $first: '$updatedAt' },
+    })
+  }
+
+  async update(id: string, data: IUpdateChatInp): Promise<IChatResDto> {
+    return this.prismaService.chat.update({
+      where: { id: id },
+      data: data,
+      include: {
+        participants: {
+          include: {
+            user: true,
+          },
         },
       },
-    ]
-    const results = await this.collection.aggregate(pipeline).toArray()
-    return results.length > 0 ? ChatResDto.parse(results[0]) : null
+    })
   }
 
-  async delete(id: string): Promise<boolean> {
-    const result = await this.collection.deleteOne({ _id: new ObjectId(id) })
-    return result.deletedCount === 1
+  async findOneById(id: string, userId: string): Promise<IChatResDto | null> {
+    return this.prismaService.chat.findUnique({
+      where: { id: id, participants: { some: { userId: userId } } },
+      include: {
+        participants: {
+          include: {
+            user: true,
+          },
+        },
+      },
+    })
   }
 
-  async searchByText(query: string): Promise<IChat[]> {
-    const results = await this.collection
-      .find({ $text: { $search: query } })
-      .sort({ _id: -1 })
-      .toArray()
-    return results.map((result) => Chat.parse(result))
+  async delete(id: string) {
+    return this.prismaService.chat.delete({ where: { id: id } })
   }
 
   async getChatsByCursor(
@@ -108,46 +65,29 @@ class ChatRepo {
     query: IPaginateCursorQuery,
   ): Promise<IChatPaginateCursorResDto> {
     const { cursor, limit } = query
-    const pipeline: any[] = [
-      {
-        $match: {
-          'participants.userId': new ObjectId(userId),
-          ...(cursor ? { _id: { $lt: new ObjectId(cursor) } } : {}),
-        },
-      },
-      { $sort: { _id: -1 } },
-      { $limit: limit + 1 },
-      { $unwind: '$participants' },
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'participants.userId',
-          foreignField: '_id',
-          as: 'userInfo',
-        },
-      },
-      { $unwind: { path: '$userInfo', preserveNullAndEmptyArrays: true } },
-      {
-        $addFields: {
-          participants: {
-            user: '$userInfo',
-            nickName: '$participants.nickName',
+    const results = await this.prismaService.chat.findMany({
+      include: {
+        participants: {
+          include: {
+            user: true,
           },
         },
       },
-      {
-        $group: {
-          _id: '$_id',
-          lastMessage: { $first: '$lastMessage' },
-          participants: { $push: '$participants' },
-          createdAt: { $first: '$createdAt' },
-          updatedAt: { $first: '$updatedAt' },
+      where: {
+        participants: {
+          some: {
+            userId: userId,
+          },
         },
+        ...(cursor ? { id: { lt: cursor } } : {}),
       },
-    ]
-    const results = await this.collection.aggregate(pipeline).toArray()
+      orderBy: {
+        id: 'desc',
+      },
+      take: limit + 1,
+    })
     const hasMore = results.length > limit
-    const nextCursor = hasMore ? results[limit - 1]._id.toString() : null
+    const nextCursor = hasMore ? results[limit - 1].id.toString() : null
     return {
       hasMore,
       nextCursor,

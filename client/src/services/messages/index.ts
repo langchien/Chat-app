@@ -4,7 +4,7 @@ import type { ICreateMessageBodyDto, IUpdateMessageBodyDto } from './message.req
 import type {
   ICreateMessageResDto,
   IGetMessageResDto,
-  IMessagePaginateCursorRes,
+  IMessagePaginateCursorResDto,
 } from './message.res.dto'
 
 class MessageRequest extends ApiRequest {
@@ -32,7 +32,7 @@ class MessageRequest extends ApiRequest {
   }
 
   paginateMessagesByChatId = async (chatId: string, query: IPaginateCursorQuery) => {
-    const response = await this.httpRequest.get<IMessagePaginateCursorRes>(
+    const response = await this.httpRequest.get<IMessagePaginateCursorResDto>(
       `${this.basePath}/chat/${chatId}`,
       {
         params: query,

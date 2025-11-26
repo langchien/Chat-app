@@ -1,12 +1,33 @@
-import { BaseCollection, createObjectId, createString } from '@/lib/schema.common'
+import { BaseCollection, createStringId } from '@/lib/schema.common'
 import z from 'zod'
 
+export const ChatType = {
+  DIRECT: 'direct',
+  GROUP: 'group',
+} as const
+
+export const Participant = z.object({
+  id: createStringId(),
+  userId: createStringId('UserId'),
+  chatId: createStringId('ChatId'),
+  joinedAt: z.date(),
+  nickname: z.string().nullish(),
+})
+
+export const GroupInfo = z.object({
+  name: z.string(),
+  createdBy: createStringId('UserId'),
+})
+
+export const LastMessageInfo = z.object({
+  content: z.string(),
+  senderId: createStringId('UserId'),
+  createdAt: z.date(),
+})
+
 export const Chat = BaseCollection.extend({
-  participants: z.array(
-    z.object({
-      userId: createObjectId('userId'),
-      nickName: createString('nickName', 50).optional(),
-    }),
-  ),
-  lastMessage: z.string().default('Ấn để bắt đầu cuộc trò chuyện'),
+  type: z.enum([ChatType.DIRECT, ChatType.GROUP]),
+  participants: z.array(Participant),
+  groupInfo: GroupInfo.nullish(),
+  lastMessage: LastMessageInfo.nullish(),
 })

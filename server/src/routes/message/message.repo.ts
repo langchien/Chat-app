@@ -1,107 +1,65 @@
-import { databaseService } from '@/lib/database.service'
+import { BaseRepository } from '@/lib/database'
 import { IPaginateCursorQuery } from '@/lib/paginate-cusor.ctrl'
-import { Collection, ObjectId } from 'mongodb'
-import {
-  ICreateMessageInput,
-  IMessageCollection,
-  IUpdateMessageInput,
-  MessageCollection,
-  UpdateMessage,
-} from './message.db'
-import {
-  GetMessageResDto,
-  ICreateMessageResDto,
-  IGetMessageResDto,
-  IMessagePaginateCursorResDto,
-} from './message.res.dto'
-import { Message } from './message.schema'
+import { ICreateMessageInput, IMessage, IUpdateMessageInput } from './message.db'
+import { IMessagePaginateCursorResDto, IMessageResDto, MessageResDto } from './message.res.dto'
 
-class MessageRepo {
-  private get collection(): Collection<IMessageCollection> {
-    return databaseService.db.collection('messages')
-  }
-
-  async create(data: ICreateMessageInput): Promise<ICreateMessageResDto> {
-    const parsedData = MessageCollection.parse(data)
-    const result = await this.collection.insertOne(parsedData)
-    return Message.parse({
-      _id: result.insertedId,
-      ...parsedData,
+class MessageRepo extends BaseRepository {
+  create(data: ICreateMessageInput): Promise<IMessageResDto> {
+    const { mediaIds, ...rest } = data
+    return this.prismaService.message.create({
+      data: {
+        ...rest,
+        medias: {
+          connect: mediaIds?.map((mediaId) => ({ id: mediaId })),
+        },
+      },
+      include: {
+        medias: true,
+      },
     })
   }
 
-  async update(id: string, data: IUpdateMessageInput): Promise<ICreateMessageResDto | null> {
-    const parsedData = UpdateMessage.parse(data)
-    const result = await this.collection.findOneAndUpdate(
-      {
-        _id: new ObjectId(id),
+  update(id: string, data: IUpdateMessageInput): Promise<IMessageResDto> {
+    const { mediaIds, ...rest } = data
+    return this.prismaService.message.update({
+      where: { id },
+      data: {
+        ...rest,
+        medias: {
+          connect: mediaIds?.map((mediaId) => ({ id: mediaId })),
+        },
       },
-      {
-        $set: { ...parsedData },
+      include: {
+        medias: true,
       },
-      {
-        returnDocument: 'after',
+    })
+  }
+
+  findOneById(id: string): Promise<IMessageResDto | null> {
+    return this.prismaService.message.findUnique({
+      where: { id },
+      include: {
+        medias: true,
       },
-    )
-    if (!result) return null
-    return Message.parse(result)
+    })
   }
 
-  async findOneById(id: string): Promise<IGetMessageResDto | null> {
-    const result = await this.collection
-      .aggregate([
-        { $match: { _id: new ObjectId(id) } },
-        {
-          $lookup: {
-            from: 'media',
-            localField: 'mediaId',
-            foreignField: '_id',
-            as: 'media',
-          },
-        },
-        { $unwind: { path: '$media', preserveNullAndEmptyArrays: true } },
-      ])
-      .toArray()
-    return result.length > 0 ? GetMessageResDto.parse(result[0]) : null
+  delete(id: string): Promise<IMessage> {
+    return this.prismaService.message.delete({
+      where: { id },
+    })
   }
 
-  async findAllByChatId(chatId: string, limit: number): Promise<IGetMessageResDto[]> {
-    const results = await this.collection
-      .aggregate([
-        {
-          $match: {
-            chatId: new ObjectId(chatId),
-          },
-        },
-        {
-          $lookup: {
-            from: 'media',
-            localField: 'mediaId',
-            foreignField: '_id',
-            as: 'media',
-          },
-        },
-        {
-          $sort: { _id: -1 },
-        },
-        { $limit: limit },
-        { $unwind: { path: '$media', preserveNullAndEmptyArrays: true } },
-      ])
-      .toArray()
-    return results.map((result) => GetMessageResDto.parse(result))
-  }
-
-  async delete(id: string): Promise<boolean> {
-    const result = await this.collection.deleteOne({ _id: new ObjectId(id) })
-    return result.deletedCount === 1
-  }
-
-  async searchByText(query: string): Promise<IGetMessageResDto[]> {
-    const results = await this.collection
-      .find({ $text: { $search: query } })
-      .sort({ _id: -1 })
-      .toArray()
-    return results.map((result) => Message.parse(result))
+  searchByText(query: string): Promise<IMessageResDto[]> {
+    return this.prismaService.message.findMany({
+      where: {
+        content: { contains: query, mode: 'insensitive' },
+      },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        medias: true,
+      },
+    })
   }
 
   async getMessagesByCursor(
@@ -109,33 +67,22 @@ class MessageRepo {
     query: IPaginateCursorQuery,
   ): Promise<IMessagePaginateCursorResDto> {
     const { cursor, limit } = query
-    const results = await this.collection
-      .aggregate([
-        {
-          $match: {
-            _id: cursor ? { $lt: new ObjectId(cursor) } : { $exists: true },
-            chatId: new ObjectId(chatId),
-          },
-        },
-        { $sort: { _id: -1 } },
-        { $limit: limit + 1 },
-        {
-          $lookup: {
-            from: 'media',
-            localField: 'mediaId',
-            foreignField: '_id',
-            as: 'media',
-          },
-        },
-        { $unwind: { path: '$media', preserveNullAndEmptyArrays: true } },
-      ])
-      .toArray()
+    const results = await this.prismaService.message.findMany({
+      where: {
+        chatId: chatId,
+        ...(cursor ? { id: { lt: cursor } } : {}),
+      },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        medias: true,
+      },
+    })
     const hasMore = results.length > limit
-    const nextCursor = hasMore ? results[limit - 1]._id.toString() : undefined
+    const nextCursor = hasMore ? results[limit - 1].id : undefined
     return {
       hasMore,
       nextCursor,
-      data: results.slice(0, limit).map((result) => GetMessageResDto.parse(result)),
+      data: results.slice(0, limit).map((result) => MessageResDto.parse(result)),
     }
   }
 }

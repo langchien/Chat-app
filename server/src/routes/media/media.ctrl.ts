@@ -2,11 +2,11 @@ import { envConfig } from '@/config/env-config'
 import { BadRequestException, NotFoundException } from '@/core/exceptions'
 import { HttpStatusCode } from '@/core/status-code'
 import { s3Service } from '@/lib/s3.service'
+import { ObjectId } from 'bson'
 import { RequestHandler } from 'express'
 import fs from 'fs'
 import { unlink } from 'fs/promises'
 import mime from 'mime'
-import { ObjectId } from 'mongodb'
 import path from 'path'
 import sharp from 'sharp'
 import { getFilePath, getUrlMedia, MediaDirectories } from './dir.const'
@@ -99,7 +99,7 @@ class MediaCtrl {
     const id = new ObjectId().toString()
     const url = getUrlMedia.VideoHLS(id, '/master.m3u8')
     const result = await mediaRepo.create({
-      _id: new ObjectId(id),
+      id,
       type: MediaType.HLS,
       status: MediaStatus.Pending,
       url,

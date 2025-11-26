@@ -6,14 +6,9 @@ export const MessageIdParamDto = z.object({
   messageId: createStringId('Message ID'),
 })
 export const CreateMessageBodyDto = Message.pick({
-  text: true,
-  type: true,
-}).extend({
-  chatId: createStringId('Chat ID'),
-  senderId: createStringId('Sender ID'),
-  mediaId: createStringId('Media ID').optional(),
+  content: true,
+  chatId: true,
 })
-
 export const UpdateMessageBody = CreateMessageBodyDto.partial().omit({
   chatId: true,
 })

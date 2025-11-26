@@ -1,20 +1,55 @@
-version: "3.8"
-
 services:
-  mongo:
-    image: mongo
-    container_name: my-mongo-compose
+  mongo1:
+    image: mongo:7.0
+    container_name: mongo1
+    # BẮT BUỘC: --port phải khớp với port bên ngoài
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--port", "${MONGODB_PRIMARY_PORT}"]
     ports:
-      - "${MONGODB_PORT}:27017"
+      # Sửa lại thành PORT:PORT (Ví dụ 27021:27021)
+      - "${MONGODB_PRIMARY_PORT}:${MONGODB_PRIMARY_PORT}"
     volumes:
-      - mongo-data:/data/db
-    restart: unless-stopped # always, no, on-failure, unless-stopped
+      - mongo1_data:/data/db
+    networks:
+      - mongo-cluster
+    restart: unless-stopped
+
+  mongo2:
+    image: mongo:7.0
+    container_name: mongo2
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--port", "${MONGODB_SECONDARY1_PORT}"]
+    ports:
+      - "${MONGODB_SECONDARY1_PORT}:${MONGODB_SECONDARY1_PORT}"
+    volumes:
+      - mongo2_data:/data/db
+    networks:
+      - mongo-cluster
+    restart: unless-stopped
+
+  mongo3:
+    image: mongo:7.0
+    container_name: mongo3
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--port", "${MONGODB_SECONDARY2_PORT}"]
+    ports:
+      - "${MONGODB_SECONDARY2_PORT}:${MONGODB_SECONDARY2_PORT}"
+    volumes:
+      - mongo3_data:/data/db
+    networks:
+      - mongo-cluster
+    restart: unless-stopped
+
   redis:
     image: redis:alpine
     container_name: my-redis-compose
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT}:6379"
     restart: unless-stopped
+
+networks:
+  mongo-cluster:
+    driver: bridge
+
 volumes:
-  mongo-data: # <-- Khai báo volume ở đây để lưu trữ dữ liệu MongoDB
-    driver: local
+  mongo1_data:
+  mongo2_data:
+  mongo3_data:
+# rs.initiate({id: "rs0",members: [{ id: 0, host: "mongo1:27021" },{ id: 1, host: "mongo2:27022" },{ id: 2, host: "mongo3:27023" }]})

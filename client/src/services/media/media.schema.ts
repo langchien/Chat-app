@@ -1,32 +1,23 @@
-import { BaseCollection } from '@/lib/schema.common'
+import { BaseCollection, createStringId } from '@/lib/schema.common'
 import z from 'zod'
 
-export enum MediaType {
-  Image = 'image',
-  Video = 'video',
-  HLS = 'video-hls',
-  File = 'file',
-}
+export const MediaType = {
+  Image: 'image',
+  Video: 'video',
+  HLS: 'video_hls',
+  File: 'file',
+} as const
 
-export enum MediaStatus {
-  Pending = 'pending',
-  Processing = 'processing',
-  Compileted = 'completed',
-  Failed = 'failed',
-}
+export const MediaStatus = {
+  Pending: 'pending',
+  Processing: 'processing',
+  Compileted: 'completed',
+  Failed: 'failed',
+} as const
 
 export const Media = BaseCollection.extend({
   type: z.enum(MediaType),
   url: z.url(),
   status: z.enum(MediaStatus),
-})
-
-export const MediaCollection = Media.partial({
-  _id: true,
-})
-
-export const UpdateMedia = Media.partial().omit({
-  _id: true,
-  createdAt: true,
-  type: true,
+  messageId: createStringId('messageId').nullish(),
 })

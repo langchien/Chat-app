@@ -1,22 +1,10 @@
-import { ObjectId } from 'mongodb'
+import { ObjectId } from 'bson'
 import z from 'zod'
 
 export const createStringId = (fieldName: string = 'id') =>
   z.string().refine((val) => ObjectId.isValid(val), {
     // : input must be a 24 character hex string, 12 byte Uint8Array, or an integer
     message: `${fieldName} phải phù hợp với ObjectId của mongodb (có 24 ký tự hex hoặc 12 byte Uint8Array hoặc một số nguyên)`,
-  })
-
-export const createObjectId = (fieldName: string = 'id') =>
-  z.any().transform((val, ctx) => {
-    if (!ObjectId.isValid(val)) {
-      ctx.addIssue({
-        code: 'custom',
-        message: `${fieldName} không phải là một ObjectId hợp lệ`,
-      })
-      return z.NEVER
-    }
-    return new ObjectId(val)
   })
 
 export const Password = z.string('Mật khẩu không được để trống').refine(
@@ -53,7 +41,7 @@ export const Otp = z.string('OTP phải là chuỗi').length(6, {
 })
 
 export const BaseCollection = z.object({
-  _id: createObjectId('id'),
+  id: createStringId('id'),
   createdAt: z.date().default(() => new Date()),
   updatedAt: z.date().default(() => new Date()),
 })

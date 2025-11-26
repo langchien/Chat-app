@@ -2,12 +2,12 @@ import { createEmail, createString, Otp } from '@/lib/schema.common'
 import z from 'zod'
 
 export enum OtpType {
-  VerifyEmail = 'VERIFY_EMAIL',
-  ResetPasswordReqBodyDto = 'FORGOT_PASSWORD',
+  VerifyEmail = 'VerifyEmail',
+  ResetPasswordReqBodyDto = 'ResetPassword',
 }
 
 export const OtpRequest = z.object({
-  _id: createString('id'),
+  id: createString('id'),
   email: createEmail(),
   otp: Otp,
   type: z.enum(OtpType),

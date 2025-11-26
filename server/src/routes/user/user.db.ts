@@ -1,10 +1,10 @@
 import z from 'node_modules/zod/v4/classic/external.cjs'
 import { User } from './user.schema'
 
-export const UserCollection = User.partial({ _id: true })
+export const UserCollection = User.partial({ id: true })
 
 export const UpdateUser = User.partial().omit({
-  _id: true,
+  id: true,
   email: true,
   createdAt: true,
 })

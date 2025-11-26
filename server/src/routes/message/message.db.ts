@@ -1,16 +1,20 @@
-import z from 'node_modules/zod/v4/classic/external.cjs'
+import { createStringId } from '@/lib/schema.common'
+import z from 'zod'
 import { Message } from './message.schema'
 
-export const MessageCollection = Message.partial({ _id: true })
-
-export const UpdateMessage = Message.partial().omit({
-  _id: true,
-  createdAt: true,
-  senderId: true,
+const CreateMessageInput = Message.pick({
   chatId: true,
+  senderId: true,
+  content: true,
+}).extend({
+  mediaIds: z.array(createStringId('Media ID')).optional(),
 })
 
+export const UpdateMessageInput = CreateMessageInput.pick({
+  content: true,
+  mediaIds: true,
+}).partial()
+
 export interface IMessage extends z.infer<typeof Message> {}
-export interface IMessageCollection extends z.infer<typeof MessageCollection> {}
-export interface IUpdateMessageInput extends z.input<typeof UpdateMessage> {}
-export interface ICreateMessageInput extends z.input<typeof Message> {}
+export interface IUpdateMessageInput extends z.input<typeof UpdateMessageInput> {}
+export interface ICreateMessageInput extends z.input<typeof CreateMessageInput> {}

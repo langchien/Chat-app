@@ -2,7 +2,7 @@ import { envConfig } from '@/config/env-config'
 import { handlerExceptionDefault } from '@/core/handler-exception'
 import { apiRateLimiter } from '@/core/rate-limit.middleware'
 import { API_ROUTES } from '@/core/routes.const'
-import { databaseService, initIndexesDb } from '@/lib/database.service'
+import { prismaService } from '@/lib/database'
 import { logger } from '@/lib/logger.service'
 import { maillerService } from '@/lib/mailler.service'
 import { redisService } from '@/lib/redis.service'
@@ -28,15 +28,14 @@ const main = async () => {
   initSocketService(httpServer)
   // Khởi động các dịch vụ song song
   await Promise.all([
-    databaseService.connect(), // Kết nối đến database
+    prismaService.verifyConnection(),
     redisService.connect(), // Kết nối đến Redis
     maillerService.verifyConnection(), // Xác minh kết nối mailer
     s3Service.verifyS3Connection(), // Xác minh kết nối S3
   ])
-  await initIndexesDb() // Khởi tạo các indexes cho database
 
-  app.use(cookieParser()) // Middleware để phân tích cookie
-  app.use(express.json()) // Middleware để phân tích JSON body
+  app.use(cookieParser()) // Middleware để parser cookie
+  app.use(express.json()) // Middleware để parser JSON body
   app.use(apiRateLimiter) // Rate limiter cho toàn bộ API
   // cho phép truy cập từ các nguồn khác (CORS)
   app.use(

@@ -2,8 +2,6 @@ import z from 'zod'
 
 export const createStringId = (fieldName: string = 'id') => z.string(`${fieldName} phải là chuỗi`)
 
-export const createObjectId = (fieldName: string = 'id') => z.string(`${fieldName} phải là chuỗi`)
-
 export const Password = z.string('Mật khẩu không được để trống').refine(
   (val) => {
     const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/
@@ -38,7 +36,7 @@ export const Otp = z.string('OTP phải là chuỗi').length(6, {
 })
 
 export const BaseCollection = z.object({
-  _id: createObjectId('id'),
+  id: createStringId('id'),
   createdAt: z.string(),
   updatedAt: z.string(),
 })

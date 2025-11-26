@@ -2,7 +2,7 @@ import { envConfig } from '@/config/env-config'
 import { jwtService, TokenType } from '@/lib/jwt.service'
 import { redisService } from '@/lib/redis.service'
 import { RequestHandler } from 'express'
-import { ObjectId } from 'mongodb'
+import { nanoid } from 'nanoid'
 import { UserCollection } from '../user/user.db'
 import { userRepo } from '../user/user.repo'
 
@@ -120,26 +120,26 @@ export class OAuth2Ctrl {
           email: userInfo.email,
           avatarUrl: userInfo.picture,
           displayName: userInfo.name,
-          username: `google_${new ObjectId()}`,
+          username: `google_${nanoid()}`,
           hashedPassword: email,
         })
         const newUser = await userRepo.create(dataTransform)
         const tokens = jwtService.generateTokens({
           email,
-          userId: newUser._id.toString(),
+          userId: newUser.id.toString(),
         })
         jwtService.setCookieToClient(res, tokens.refreshToken, TokenType.Refresh)
-        await this.addRefreshTokenToRedis(tokens.refreshToken, newUser._id.toString())
+        await this.addRefreshTokenToRedis(tokens.refreshToken, newUser.id.toString())
         return res.redirect(
           `${appClientRedirectUri}/?status=success&accessToken=${tokens.accessToken}`,
         )
       }
       const tokens = jwtService.generateTokens({
         email,
-        userId: result._id.toString(),
+        userId: result.id.toString(),
       })
       jwtService.setCookieToClient(res, tokens.refreshToken, TokenType.Refresh)
-      await this.addRefreshTokenToRedis(tokens.refreshToken, result._id.toString())
+      await this.addRefreshTokenToRedis(tokens.refreshToken, result.id.toString())
       return res.redirect(
         `${appClientRedirectUri}/?status=success&accessToken=${tokens.accessToken}`,
       )

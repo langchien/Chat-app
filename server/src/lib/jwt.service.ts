@@ -3,7 +3,7 @@ import { UnauthorizedException } from '@/core/exceptions'
 import { OtpType } from '@/routes/auth/otp-request.schema'
 import { Response } from 'express'
 import { JsonWebTokenError, sign, verify } from 'jsonwebtoken'
-import { ObjectId } from 'mongodb'
+import { nanoid } from 'nanoid'
 
 export enum TokenType {
   Access = 'accessToken',
@@ -42,7 +42,7 @@ class JwtService {
 
   signToken<T>(data: T, tokenType: TokenType, exp?: number): string {
     const { expiresIn, secret } = JWT_CONFIG[tokenType]
-    const jti = new ObjectId().toString() // do token dễ trùng nhau(trong cùng thời gian 1s, 1 user), không cần thiết nếu không dùng để thu hồi token, các trường hợp liên quan đến tính duy nhất của token
+    const jti = nanoid() // do token dễ trùng nhau(trong cùng thời gian 1s, 1 user), không cần thiết nếu không dùng để thu hồi token, các trường hợp liên quan đến tính duy nhất của token
     return sign({ ...data, jti }, secret, {
       ...(exp ? { expiresIn: exp - Math.floor(Date.now() / 1000) } : { expiresIn }),
       algorithm: DEFAULT_ALGORITHM,

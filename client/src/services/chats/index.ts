@@ -1,8 +1,7 @@
 import type { IPaginateCursorQuery } from '@/lib/paginate-cusor.ctrl'
-import type { IMessagePaginateCursorRes } from '../messages/message.res.dto'
 import { API_ROUTES, ApiRequest } from '../request.interface'
 import type { ICreateChatReqDto, IUpdateChatReqDto } from './chat.req.dto'
-import type { IChatResDto } from './chat.res.dto'
+import type { IChatPaginateCursorResDto, IChatResDto } from './chat.res.dto'
 
 class ChatRequest extends ApiRequest {
   create = async (body: ICreateChatReqDto) => {
@@ -26,8 +25,18 @@ class ChatRequest extends ApiRequest {
   }
 
   paginate = async (params: IPaginateCursorQuery) => {
-    const response = await this.httpRequest.get<IMessagePaginateCursorRes>(this.basePath, {
+    const response = await this.httpRequest.get<IChatPaginateCursorResDto>(this.basePath, {
       params,
+    })
+    return response.data
+  }
+
+  paginateWithAuth = async (params: IPaginateCursorQuery, accessToken: string) => {
+    const response = await this.httpRequest.get<IChatPaginateCursorResDto>(this.basePath, {
+      params,
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
     })
     return response.data
   }

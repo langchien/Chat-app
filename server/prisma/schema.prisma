@@ -1,0 +1,173 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../node_modules/.prisma/client"
+  previewFeatures = ["fullTextIndex"]
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum MediaType {
+  image
+  video
+  video_hls
+  file
+}
+
+enum MediaStatus {
+  pending
+  processing
+  completed
+  failed
+}
+
+model Media {
+  id        String      @id @default(auto()) @map("_id") @db.ObjectId
+  type      MediaType
+  url       String
+  status    MediaStatus @default(pending)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  // Phần này prisma tự động tạo quan hệ ngược
+  message   Message?    @relation(fields: [messageId], references: [id], onDelete: SetNull)
+  messageId String?     @db.ObjectId
+}
+
+model User {
+  id                     String          @id @default(auto()) @map("_id") @db.ObjectId
+  email                  String          @unique
+  username               String          @unique
+  displayName            String
+  hashedPassword         String
+  avatarUrl              String?
+  bio                    String?
+  phone                  String?
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt
+  // relations
+  messages               Message[]
+  // 1. Xử lý cho FriendRequest (2 chiều)
+  // Phải định nghĩa 2 mảng đối ứng với from và to bên FriendRequest
+  sentFriendRequests     FriendRequest[] @relation("FriendRequestFrom")
+  receivedFriendRequests FriendRequest[] @relation("FriendRequestTo")
+
+  // 2. Xử lý cho Friend (2 chiều)
+  friends      Friend[]      @relation("UserFriends")
+  friendOf     Friend[]      @relation("UserFriendOf")
+  participants Participant[]
+
+  // indexes
+  @@fulltext([username, displayName, email])
+}
+
+enum FriendRequestStatus {
+  pending
+  accepted
+  rejected
+}
+
+model FriendRequest {
+  id        String              @id @default(auto()) @map("_id") @db.ObjectId
+  fromId    String              @db.ObjectId
+  toId      String              @db.ObjectId
+  message   String?
+  status    FriendRequestStatus @default(pending)
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+  // relations
+  from      User                @relation("FriendRequestFrom", fields: [fromId], references: [id], onDelete: Cascade)
+  to        User                @relation("FriendRequestTo", fields: [toId], references: [id], onDelete: Cascade)
+
+  @@unique([fromId, toId])
+  @@index([fromId])
+  @@index([toId])
+}
+
+model Friend {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  friendId  String   @db.ObjectId
+  createdAt DateTime @default(now())
+
+  user   User @relation("UserFriends", fields: [userId], references: [id], onDelete: Cascade)
+  friend User @relation("UserFriendOf", fields: [friendId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, friendId]) // Một người chỉ kết bạn với người kia 1 lần
+  @@index([userId]) // Index để query list friend cực nhanh
+}
+
+model Message {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  senderId  String   @db.ObjectId // Optional to allow for SetNull
+  chatId    String   @db.ObjectId
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  // relations
+  sender    User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  medias    Media[]
+}
+
+// Chat Schema
+enum ChatType {
+  direct
+  group
+}
+
+model Participant {
+  id       String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId   String   @db.ObjectId
+  joinedAt DateTime @default(now())
+  nickname String?
+  chatId   String   @db.ObjectId
+  chat     Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+type GroupInfo {
+  name      String
+  createdBy String @db.ObjectId
+}
+
+type LastMessageInfo {
+  content   String
+  senderId  String   @db.ObjectId
+  createdAt DateTime @default(now())
+}
+
+model Chat {
+  id           String           @id @default(auto()) @map("_id") @db.ObjectId
+  type         ChatType
+  groupInfo    GroupInfo?
+  lastMessage  LastMessageInfo?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  // relations
+  participants Participant[]
+  messages     Message[]
+}
+
+enum OtpType {
+  VerifyEmail
+  ResetPassword
+}
+
+model OtpRequest {
+  id    String   @id @default(auto()) @map("_id") @db.ObjectId
+  email String
+  otp   String
+  type  OtpType
+  iat   DateTime @default(now())
+  exp   DateTime
+
+  @@unique([email, type])
+}

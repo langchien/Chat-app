@@ -8,13 +8,16 @@ export const ChatIdParam = z.object({
 
 export const CreateChatReq = Chat.pick({
   lastMessage: true,
+  groupInfo: true,
+  type: true,
 }).extend({
   receiverIds: z.array(createStringId('receiverId')).min(1),
 })
 
 export const UpdateChatReq = Chat.pick({
+  groupInfo: true,
   lastMessage: true,
-})
+}).partial()
 
 export interface IChatIdParamDto extends z.infer<typeof ChatIdParam> {}
 export interface ICreateChatReqDto extends z.infer<typeof CreateChatReq> {}

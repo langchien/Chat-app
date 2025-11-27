@@ -28,7 +28,7 @@ export function ChatSidebar() {
         </SidebarFooter>
       </Sidebar>
       <SidebarInset className='overflow-x-auto overflow-y-hidden'>
-        <main className='container h-screen mx-auto'>
+        <main className='h-screen'>
           <Outlet />
         </main>
       </SidebarInset>

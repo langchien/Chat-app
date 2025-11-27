@@ -1,7 +1,8 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { messageRequest } from '@/services/messages'
-import { Image, Paperclip, Send, Video } from 'lucide-react'
+import { Film, Image, Paperclip, Send, Video } from 'lucide-react'
 import { useState } from 'react'
 import { Card } from '../ui/card'
 import { InputEmoji } from './input-imoji'
@@ -32,15 +33,47 @@ export function ChatInput({ chatId }: { chatId: string }) {
   return (
     <Card className='sticky bottom-0 z-10 rounded-none p-4 mt-auto'>
       <div className='flex gap-2'>
-        <Button variant='ghost' size='icon' className='h-9 w-9'>
-          <Video className='h-5 w-5' />
-        </Button>
-        <Button variant='ghost' size='icon' className='h-9 w-9'>
-          <Image className='h-5 w-5' />
-        </Button>
-        <Button variant='ghost' size='icon' className='h-9 w-9'>
-          <Paperclip className='h-5 w-5' />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant='ghost' size='icon' className='h-9 w-9'>
+              <Film className='h-5 w-5' />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Tải video dài(stream hls)</p>
+          </TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant='ghost' size='icon' className='h-9 w-9'>
+              <Video className='h-5 w-5' />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Tải video </p>
+          </TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant='ghost' size='icon' className='h-9 w-9'>
+              <Image className='h-5 w-5' />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Tải ảnh (Tối đa 5 ảnh)</p>
+          </TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant='ghost' size='icon' className='h-9 w-9'>
+              <Paperclip className='h-5 w-5' />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Tải tệp tin</p>
+          </TooltipContent>
+        </Tooltip>
+
         <Input
           placeholder='Aa'
           value={newMessage}

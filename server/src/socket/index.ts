@@ -4,6 +4,7 @@ import { AccessTokenPayload } from '@/lib/jwt.service'
 import express from 'express'
 import { createServer } from 'http'
 import { Server } from 'socket.io'
+import { SOCKET_EVENTS } from './event.const'
 
 const initSocketService = () => {
   const app = express()
@@ -14,6 +15,8 @@ const initSocketService = () => {
       credentials: true,
     },
   })
+  // todo: Nên dùng redis để lưu trữ danh sách user online
+  const onlineUsers = new Map<string, string>()
   io.use(authenticateSocket)
 
   io.on('connection', async (socket) => {
@@ -21,7 +24,13 @@ const initSocketService = () => {
     //   authenticateSocket(socket, next)
     // })
     const { userId }: AccessTokenPayload = socket.data.user
-    socket.on('disconnect', () => {})
+    // Xử lý chức năng online users
+    onlineUsers.set(userId, socket.id)
+    io.emit(SOCKET_EVENTS.ONLINE_USERS, Array.from(onlineUsers.keys()))
+    socket.on('disconnect', () => {
+      onlineUsers.delete(userId)
+      io.emit(SOCKET_EVENTS.ONLINE_USERS, Array.from(onlineUsers.keys()))
+    })
   })
   return { io, httpServer, app }
 }

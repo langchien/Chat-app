@@ -1,7 +1,9 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { useSocketStore } from '@/hooks/stores/socket.store'
 import { getInitials } from '@/lib/utils'
 import type { IChat } from '@/services/api.types'
 import { Ellipsis } from 'lucide-react'
+import { OnlineBadge } from './online-badge'
 
 interface ChatAvatarProps {
   chatItem: IChat
@@ -10,6 +12,7 @@ interface ChatAvatarProps {
 }
 
 export function ChatAvatar({ chatItem, userId, isGroup }: ChatAvatarProps) {
+  const onlineUsers = useSocketStore((state) => state.onlineUsers)
   const users = chatItem.participants.map((p) => p.user)
   if (isGroup) {
     if (users.length > 3) {
@@ -39,12 +42,16 @@ export function ChatAvatar({ chatItem, userId, isGroup }: ChatAvatarProps) {
     )
   }
   const firstUser = users.filter((u) => u.id !== userId)[0]
+  const isOnline = onlineUsers.includes(firstUser.id)
   return (
-    <Avatar className='size-10'>
-      {firstUser?.avatarUrl ? (
-        <AvatarImage src={firstUser.avatarUrl} alt={firstUser.displayName} />
-      ) : null}
-      <AvatarFallback>{getInitials(firstUser?.displayName) ?? 'U'}</AvatarFallback>
-    </Avatar>
+    <div className='relative'>
+      <Avatar className='size-10'>
+        {firstUser.avatarUrl ? (
+          <AvatarImage src={firstUser.avatarUrl} alt={firstUser.displayName} />
+        ) : null}
+        <AvatarFallback>{getInitials(firstUser.displayName)}</AvatarFallback>
+      </Avatar>
+      <OnlineBadge isOnline={isOnline} />
+    </div>
   )
 }

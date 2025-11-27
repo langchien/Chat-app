@@ -60,7 +60,7 @@ export function ChatList() {
               <SidebarGroupChat chatGroups={chatGroups} activeChatId={chatId} userId={user?.id} />
               <SidebarDirectChat
                 chatDirects={chatDirects}
-                activeChatId={chatId}
+                activeChatId={chatId ?? '692747b9b430e86fe1f738cb'}
                 userId={user?.id}
               />
             </>

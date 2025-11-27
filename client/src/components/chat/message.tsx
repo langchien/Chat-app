@@ -1,6 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { cn, formatMessageTime, getInitials } from '@/lib/utils'
 import type { IMessage, IUser } from '@/services/api.types'
+import { MessageMedia } from '../media/message-media'
 
 export function Message({
   message,
@@ -12,6 +13,7 @@ export function Message({
   mapUserById: Map<string, IUser>
 }) {
   const isOwnMessage = message.senderId === userId
+  const medias = message.medias || []
   return (
     <div className={cn('flex mb-5', isOwnMessage ? 'justify-end' : 'justify-start', 'gap-3')}>
       {!isOwnMessage && (
@@ -25,14 +27,17 @@ export function Message({
           </AvatarFallback>
         </Avatar>
       )}
-      <div
-        className={cn(
-          'max-w-xs px-4 py-2 rounded-2xl relative',
-          isOwnMessage ? 'bg-blue-500 text-white' : 'bg-muted text-foreground',
-        )}
-      >
-        <p className='text-sm'>{message.content}</p>
-        <span className='absolute text-xs text-foreground/60 right-2 -bottom-1 translate-y-full text-right text-nowrap'>
+      <div className='max-w-md md:max-w-lg lg:max-w-xl flex flex-col space-y-1'>
+        <MessageMedia medias={medias} />
+        <p
+          className={cn(
+            'px-4 py-2 rounded-2xl relative text-sm max-w-fit',
+            isOwnMessage ? 'bg-blue-500 text-white' : 'bg-muted text-foreground',
+          )}
+        >
+          {message.content}
+        </p>
+        <span className=' text-xs text-foreground/60 text-right text-nowrap'>
           {formatMessageTime(message.createdAt)}
         </span>
       </div>

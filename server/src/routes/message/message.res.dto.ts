@@ -3,12 +3,12 @@ import z from 'zod'
 import { Media } from '../media/media.schema'
 import { Message } from './message.schema'
 
-export const MessagePaginateCursorResDto = PaginateCursorResDto.extend({
-  data: z.array(Message),
-})
-
 export const MessageResDto = Message.extend({
   medias: z.array(Media).nullish(),
+})
+
+export const MessagePaginateCursorResDto = PaginateCursorResDto.extend({
+  data: z.array(MessageResDto),
 })
 
 export interface IMessagePaginateCursorResDto extends z.infer<typeof MessagePaginateCursorResDto> {}

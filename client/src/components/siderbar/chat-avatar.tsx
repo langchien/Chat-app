@@ -8,12 +8,12 @@ import { OnlineBadge } from './online-badge'
 interface ChatAvatarProps {
   chatItem: IChat
   userId?: string
-  isGroup?: boolean
 }
 
-export function ChatAvatar({ chatItem, userId, isGroup }: ChatAvatarProps) {
+export function ChatAvatar({ chatItem, userId }: ChatAvatarProps) {
   const onlineUsers = useSocketStore((state) => state.onlineUsers)
   const users = chatItem.participants.map((p) => p.user)
+  const isGroup = chatItem.type === 'group'
   if (isGroup) {
     if (users.length > 3) {
       return (

@@ -33,11 +33,8 @@ export const useSocketStore = create<ISocketState & ISocketActions>((set, get) =
       },
     })
     set({ socket, isConnected: true })
-    socket.on('connect', () => {
-      console.log('Socket connected:', socket.id)
-    })
+    socket.on('connect', () => {})
     socket.on('disconnect', (reason) => {
-      console.log('Socket disconnected:', reason)
       set({ socket: null, isConnected: false, onlineUsers: [] })
     })
     socket.on('connect_error', (error) => {

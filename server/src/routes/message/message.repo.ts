@@ -1,22 +1,44 @@
 import { BaseRepository } from '@/lib/database'
 import { IPaginateCursorQuery } from '@/lib/paginate-cusor.ctrl'
+import { IChatResDto } from '../chat/chat.res.dto'
 import { ICreateMessageInput, IMessage, IUpdateMessageInput } from './message.db'
 import { IMessagePaginateCursorResDto, IMessageResDto, MessageResDto } from './message.res.dto'
 
 class MessageRepo extends BaseRepository {
-  create(data: ICreateMessageInput): Promise<IMessageResDto> {
+  async create(data: ICreateMessageInput): Promise<{ message: IMessageResDto; chat: IChatResDto }> {
     const { mediaIds, ...rest } = data
-    return this.prismaService.message.create({
-      data: {
-        ...rest,
-        medias: {
-          connect: mediaIds?.map((mediaId) => ({ id: mediaId })),
+    const [message, chat] = await this.prismaService.$transaction([
+      this.prismaService.message.create({
+        data: {
+          ...rest,
+          medias: {
+            connect: mediaIds?.map((mediaId) => ({ id: mediaId })),
+          },
         },
-      },
-      include: {
-        medias: true,
-      },
-    })
+        include: {
+          medias: true,
+        },
+      }),
+      this.prismaService.chat.update({
+        where: { id: data.chatId },
+        data: {
+          lastMessage: {
+            content: data.content,
+            senderId: data.senderId,
+            createdAt: new Date(),
+          },
+        },
+        include: {
+          participants: {
+            include: { user: true },
+          },
+        },
+      }),
+    ])
+    return {
+      message,
+      chat,
+    }
   }
 
   update(id: string, data: IUpdateMessageInput): Promise<IMessageResDto> {

@@ -1,8 +1,10 @@
 import { NotFoundException } from '@/core/exceptions'
 import { HttpStatusCode } from '@/core/status-code'
 import { PaginateCursorCtrl } from '@/lib/paginate-cusor.ctrl'
+import { SOCKET_EVENTS } from '@/socket/event.const'
 import { RequestHandler } from 'express'
 import { IChatIdParamDto } from '../chat/chat.req.dto'
+import { ChatResDto, IChatResDto } from '../chat/chat.res.dto'
 import { messageRepo } from './message.repo'
 import { ICreateMessageBodyDto, IMessageIdParamDto, IUpdateMessageBodyDto } from './message.req.dto'
 import {
@@ -40,12 +42,24 @@ class MessageCtrl extends PaginateCursorCtrl {
     res.json(MessagePaginateCursorResDto.parse(result))
   }
 
-  create: RequestHandler<any, IMessageResDto, ICreateMessageBodyDto> = async (req, res) => {
-    const result = await messageRepo.create({
+  create: RequestHandler<
+    any,
+    {
+      message: IMessageResDto
+      chat: IChatResDto
+    },
+    ICreateMessageBodyDto
+  > = async (req, res) => {
+    const io = req.io
+    const { message, chat } = await messageRepo.create({
       ...req.body,
       senderId: req.user.userId,
     })
-    res.status(HttpStatusCode.Created).json(MessageResDto.parse(result))
+    const messageRes = MessageResDto.parse(message)
+    const chatRes = ChatResDto.parse(chat)
+    const resultPayload = { message: messageRes, chat: chatRes }
+    io.to(chat.id).emit(SOCKET_EVENTS.RECEIVE_MESSAGE, resultPayload)
+    res.status(HttpStatusCode.Created).json(resultPayload)
   }
 
   update: RequestHandler<IMessageIdParamDto, IMessageResDto, IUpdateMessageBodyDto> = async (

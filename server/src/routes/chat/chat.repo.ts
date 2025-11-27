@@ -60,6 +60,25 @@ class ChatRepo extends BaseRepository {
     return this.prismaService.chat.delete({ where: { id: id } })
   }
 
+  async getAllChatsByUserId(userId: string): Promise<IChatResDto[]> {
+    return this.prismaService.chat.findMany({
+      include: {
+        participants: {
+          include: {
+            user: true,
+          },
+        },
+      },
+      where: {
+        participants: {
+          some: {
+            userId: userId,
+          },
+        },
+      },
+    })
+  }
+
   async getChatsByCursor(
     userId: string,
     query: IPaginateCursorQuery,

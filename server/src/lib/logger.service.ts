@@ -14,8 +14,8 @@ const levelColor: Record<LogLevel, (msg: string) => string> = {
   [LogLevel.Success]: chalk.green,
   [LogLevel.Error]: chalk.red,
   [LogLevel.Warn]: chalk.yellow,
-  [LogLevel.Debug]: chalk.green,
-  [LogLevel.Pending]: chalk.magenta,
+  [LogLevel.Debug]: chalk.magenta,
+  [LogLevel.Pending]: chalk.cyan,
 }
 
 class Logger {

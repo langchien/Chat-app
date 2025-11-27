@@ -1,5 +1,5 @@
-import { AppTittle } from '@/components/chat/app-tittle'
 import { AccountSetting } from '@/components/siderbar/account-setting'
+import { AppTittle } from '@/components/siderbar/app-tittle'
 import { ChatList } from '@/components/siderbar/chat-list'
 import { UserSearchForm } from '@/components/siderbar/search-form'
 import {

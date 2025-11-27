@@ -13,6 +13,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { useAppStore } from './app.store'
 import { useChatStore } from './chat.store'
+import { useSocketStore } from './socket.store'
 
 interface IAuthState {
   isAuthenticated: boolean
@@ -58,6 +59,7 @@ export const useAuthStore = create<IAuthState & IAuthActions>()(
         set(store.getInitialState())
         localStorage.removeItem(LOCAL_STORAGE_KEY)
         useChatStore.getState().clearChatStore()
+        useSocketStore.getState().disconnect()
       },
       signIn: async (body: ILoginReqBodyDto) => {
         get().clearAuthStore()

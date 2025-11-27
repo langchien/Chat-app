@@ -1,9 +1,13 @@
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
 
+import { useEffect } from 'react'
 import type { Route } from './+types/root'
 import './app.css'
 import { AppLoadingOverlay } from './components/loading'
+import { ThemeProvider } from './components/theme/theme-provider'
 import { Toaster } from './components/ui/sonner'
+import { useAuthStore } from './hooks/stores/auth.store'
+import { useSocketStore } from './hooks/stores/socket.store'
 
 export const links: Route.LinksFunction = () => [
   { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -28,9 +32,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        {children} <Toaster richColors={true} position='top-center' duration={2000} />
+        <ThemeProvider defaultTheme='light' storageKey='vite-ui-theme'>
+          {children}
+          <AppLoadingOverlay />
+          <Toaster richColors={true} position='top-center' duration={2000} />
+        </ThemeProvider>
         <ScrollRestoration />
-        <AppLoadingOverlay />
         <Scripts />
       </body>
     </html>
@@ -38,6 +45,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  const accessToken = useAuthStore((state) => state.accessToken)
+  const { connect, disconnect, isConnected } = useSocketStore()
+  useEffect(() => {
+    if (accessToken) connect()
+    return () => disconnect()
+  }, [accessToken, connect, disconnect, isConnected])
   return <Outlet />
 }
 

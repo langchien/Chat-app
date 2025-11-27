@@ -5,7 +5,7 @@ import { Link } from 'react-router'
 import { Card } from '../ui/card'
 import { ChatAvatar } from './chat-avatar'
 
-function getChatName(chatItem: IChat, userId?: string) {
+export function getChatName(chatItem: IChat, userId?: string) {
   if (chatItem.type === 'group' && chatItem.groupInfo) return chatItem.groupInfo.name
   const participant = chatItem.participants.find((p) => p.user.id !== userId)
   return participant ? participant.user.displayName : 'Không xác định'
@@ -31,7 +31,7 @@ export function ChatCard({
           chatItem.id === activeChatId && 'bg-primary/10 border-l-4 border-primary',
         )}
       >
-        <ChatAvatar chatItem={chatItem} userId={userId} isGroup={chatItem.type === 'group'} />
+        <ChatAvatar chatItem={chatItem} userId={userId} />
         <div className='flex-1 text-left space-y-1'>
           <div className='font-bold text-sm line-clamp-1 min-w-0 capitalize'>{chatName}</div>
           <div className='text-xs text-muted-foreground line-clamp-1 min-w-0'>

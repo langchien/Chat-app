@@ -1,20 +1,20 @@
 import type { IPaginateCursorQuery } from '@/lib/paginate-cusor.ctrl'
+import type { IChatResDto } from '../chats/chat.res.dto'
 import { API_ROUTES, ApiRequest } from '../request.interface'
 import type { ICreateMessageBodyDto, IUpdateMessageBodyDto } from './message.req.dto'
-import type {
-  ICreateMessageResDto,
-  IGetMessageResDto,
-  IMessagePaginateCursorResDto,
-} from './message.res.dto'
+import type { IMessagePaginateCursorResDto, IMessageResDto } from './message.res.dto'
 
 class MessageRequest extends ApiRequest {
   create = async (body: ICreateMessageBodyDto) => {
-    const response = await this.httpRequest.post<ICreateMessageResDto>(`${this.basePath}`, body)
+    const response = await this.httpRequest.post<{
+      message: IMessageResDto
+      chat: IChatResDto
+    }>(`${this.basePath}`, body)
     return response.data
   }
 
   update = async (messageId: string, body: IUpdateMessageBodyDto) => {
-    const response = await this.httpRequest.patch<ICreateMessageResDto>(
+    const response = await this.httpRequest.patch<IMessageResDto>(
       `${this.basePath}/${messageId}`,
       body,
     )
@@ -27,7 +27,7 @@ class MessageRequest extends ApiRequest {
   }
 
   getById = async (messageId: string) => {
-    const response = await this.httpRequest.get<IGetMessageResDto>(`${this.basePath}/${messageId}`)
+    const response = await this.httpRequest.get<IMessageResDto>(`${this.basePath}/${messageId}`)
     return response.data
   }
 

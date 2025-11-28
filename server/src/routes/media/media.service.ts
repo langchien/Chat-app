@@ -29,7 +29,8 @@ class MediaService {
           file.newFilename,
         )
         if (keyDirectory === 'image') {
-          await sharp(file.filepath).jpeg().toFile(filePath)
+          const newFilePath = filePath.replace(path.extname(filePath), '.jpeg')
+          await sharp(file.filepath).jpeg().toFile(newFilePath)
           await unlink(file.filepath)
         }
         if (!IS_LOCAL) {

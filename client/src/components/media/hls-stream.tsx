@@ -3,7 +3,7 @@ import { PlyrLayout, plyrLayoutIcons } from '@vidstack/react/player/layouts/plyr
 import '@vidstack/react/player/styles/base.css'
 import '@vidstack/react/player/styles/plyr/theme.css'
 
-export function MediaHlsStream({
+export function StreamVideoHLS({
   className,
   src,
   poster,
@@ -34,7 +34,7 @@ export function MediaHlsStream({
  * @description Component dùng để stream video bình thường (không phải HLS)
  * @description Hiện tại chỉ cho phép định dạng mp4 và webm
  */
-export function MediaStreamDefault({
+export function StreamVideo({
   width,
   height,
   className,

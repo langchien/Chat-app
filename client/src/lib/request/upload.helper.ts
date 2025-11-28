@@ -1,5 +1,7 @@
 import { envConfig } from '@/config/envConfig'
-import axios, { type AxiosProgressEvent } from 'axios'
+import { useAuthStore } from '@/hooks/stores/auth.store'
+import axios from 'axios'
+import { responseError } from './axios.helper'
 
 export const uploadRequest = axios.create({
   baseURL: envConfig.apiBaseUrl,
@@ -9,17 +11,14 @@ export const uploadRequest = axios.create({
   withCredentials: true,
 })
 
-export async function uploadFile(
-  path: string,
-  key: string,
-  files: File[],
-  onUploadProgress?: (progressEvent: AxiosProgressEvent) => void,
-) {
-  const formData = new FormData()
-  files.forEach((file) => formData.append(key, file))
-  const response = await uploadRequest.post(path, formData, {
-    onUploadProgress,
-  })
+uploadRequest.interceptors.request.use(async (config) => {
+  const accessToken = useAuthStore.getState().accessToken
+  if (accessToken) {
+    config.headers.Authorization = `Bearer ${accessToken}`
+  }
+  return config
+})
 
-  return response.data
-}
+uploadRequest.interceptors.response.use((response) => {
+  return response
+}, responseError)

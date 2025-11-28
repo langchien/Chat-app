@@ -97,7 +97,7 @@ class MediaCtrl {
         return res.sendFile(filePath, (err) => {
           if (err) next(new NotFoundException('Không tìm thấy file'))
         })
-      return await s3Service.sendFileFromS3(res, MediaDirectories.file + fileName)
+      return await s3Service.sendFileFromS3(res, filePath)
     } catch (error) {
       next(new NotFoundException('Không tìm thấy file'))
     }

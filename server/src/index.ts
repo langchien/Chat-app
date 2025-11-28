@@ -1,5 +1,6 @@
 import { envConfig } from '@/config/env-config'
 import { handlerExceptionDefault } from '@/core/handler-exception'
+import { localFileService } from '@/core/local-file.service'
 import { apiRateLimiter } from '@/core/rate-limit.middleware'
 import { API_ROUTES } from '@/core/routes.const'
 import { prismaService } from '@/lib/database'
@@ -10,7 +11,6 @@ import { s3Service } from '@/lib/s3.service'
 import { authRouter } from '@/routes/auth/auth.route'
 import { chatRouter } from '@/routes/chat/chat.route'
 import { mediaRouter } from '@/routes/media/media.route'
-import { uploadService } from '@/routes/media/upload.service'
 import { messageRouter } from '@/routes/message/message.route'
 import { oauth2Router } from '@/routes/oauth2/oauth2.route'
 import { protectedRouter } from '@/routes/protected/protected.route'
@@ -19,9 +19,8 @@ import { app, httpServer, io } from '@/socket'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
 import express from 'express'
-
 const main = async () => {
-  await uploadService.initFolder() // khởi tạo các thư mục cần thiết trước khi chạy ứng dụng
+  await localFileService.initFolder() // khởi tạo các thư mục cần thiết trước khi chạy ứng dụng
   // Khởi động các dịch vụ song song
   await Promise.all([
     prismaService.verifyConnection(),

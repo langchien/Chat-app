@@ -48,65 +48,63 @@ httpRequest.interceptors.request.use(async (config) => {
 })
 
 // Response Interceptor
-httpRequest.interceptors.response.use(
-  (response: AxiosResponse) => response,
-  async (error: AxiosError) => {
-    const originalRequest = error.config as any
 
-    // Nếu lỗi không phải 401 hoặc request này đã được retry -> Trả lỗi luôn
-    if (error.response?.status !== 401 || originalRequest._retry) {
-      if (error.response && error.response.data) {
-        const response = error.response.data as ResponseErrorPayload
-        if (error.response.status === HTTP_STATUS_CODE.UNPROCESSABLE_ENTITY) {
-          return Promise.reject(
-            new UnprocessableEntityException(response as ValidationErrorPayload),
-          )
-        }
-        return Promise.reject(new AppException(response))
+export const responseError = async (error: AxiosError) => {
+  const originalRequest = error.config as any
+
+  // Nếu lỗi không phải 401 hoặc request này đã được retry -> Trả lỗi luôn
+  if (error.response?.status !== 401 || originalRequest._retry) {
+    if (error.response && error.response.data) {
+      const response = error.response.data as ResponseErrorPayload
+      if (error.response.status === HTTP_STATUS_CODE.UNPROCESSABLE_ENTITY) {
+        return Promise.reject(new UnprocessableEntityException(response as ValidationErrorPayload))
       }
-      return Promise.reject(error)
+      return Promise.reject(new AppException(response))
     }
+    return Promise.reject(error)
+  }
 
-    // --- LOGIC REFRESH TOKEN ---
-    if (isRefreshing) {
-      return new Promise((resolve, reject) => {
-        failedQueue.push({
-          resolve: (token: string) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`
-            resolve(httpRequest(originalRequest))
-          },
-          reject: (err: any) => {
-            reject(err)
-          },
-        })
+  // --- LOGIC REFRESH TOKEN ---
+  if (isRefreshing) {
+    return new Promise((resolve, reject) => {
+      failedQueue.push({
+        resolve: (token: string) => {
+          originalRequest.headers.Authorization = `Bearer ${token}`
+          resolve(httpRequest(originalRequest))
+        },
+        reject: (err: any) => {
+          reject(err)
+        },
       })
-    }
+    })
+  }
 
-    // Nếu chưa có ai refresh, bắt đầu refresh
-    originalRequest._retry = true
-    isRefreshing = true
+  // Nếu chưa có ai refresh, bắt đầu refresh
+  originalRequest._retry = true
+  isRefreshing = true
 
-    try {
-      // Gọi API refresh token (Backend sẽ đọc cookie refreshToken)
-      // Lưu ý: Không dùng instance 'httpRequest' để gọi cái này để tránh lặp vô tận
-      const response = await axios.post<{
-        accessToken: string
-      }>(
-        `${envConfig.apiBaseUrl}/auth/refresh-token`,
-        {},
-        { withCredentials: true }, // Bắt buộc để gửi cookie đi
-      )
-      const { accessToken } = response.data
-      useAuthStore.getState().setAccessToken(accessToken)
-      processQueue(null, accessToken)
-      originalRequest.headers.Authorization = `Bearer ${accessToken}`
-      return httpRequest(originalRequest)
-    } catch (refreshError) {
-      processQueue(refreshError, null)
-      useAuthStore.getState().signOut()
-      return Promise.reject(refreshError)
-    } finally {
-      isRefreshing = false
-    }
-  },
-)
+  try {
+    // Gọi API refresh token (Backend sẽ đọc cookie refreshToken)
+    // Lưu ý: Không dùng instance 'httpRequest' để gọi cái này để tránh lặp vô tận
+    const response = await axios.post<{
+      accessToken: string
+    }>(
+      `${envConfig.apiBaseUrl}/auth/refresh-token`,
+      {},
+      { withCredentials: true }, // Bắt buộc để gửi cookie đi
+    )
+    const { accessToken } = response.data
+    useAuthStore.getState().setAccessToken(accessToken)
+    processQueue(null, accessToken)
+    originalRequest.headers.Authorization = `Bearer ${accessToken}`
+    return httpRequest(originalRequest)
+  } catch (refreshError) {
+    processQueue(refreshError, null)
+    useAuthStore.getState().signOut()
+    return Promise.reject(refreshError)
+  } finally {
+    isRefreshing = false
+  }
+}
+
+httpRequest.interceptors.response.use((response: AxiosResponse) => response, responseError)

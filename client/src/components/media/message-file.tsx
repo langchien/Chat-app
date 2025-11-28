@@ -7,26 +7,23 @@ import { Link } from 'react-router'
  * It shows the filename and provides a download button.
  * @param media - The media object containing the file url.
  */
-export function MessageFile({ medias }: { medias: IMedia[] }) {
-  const files = medias.filter((media) => media.type === 'file')
-  const file = files[0]
-  if (!file) return null
-  // Extract filename from URL.
-  const fileName = file.url.split('/').pop() || 'File'
-
+export function MessageFile({ files }: { files: IMedia[] }) {
   return (
-    <Link
-      to={file.url}
-      rel='noopener noreferrer'
-      target='_blank'
-      className='flex max-w-sm items-center rounded-lg bg-gray-100 p-2 dark:bg-gray-800'
-    >
-      <div className='shrink-0'>
-        <FileDownIcon className='h-8 w-8 text-gray-500' />
-      </div>
-      <div className='ml-3 flex-1 min-w-0'>
-        <p className='truncate text-sm font-medium text-gray-900 dark:text-white'>{fileName}</p>
-      </div>
-    </Link>
+    <div className='flex flex-col space-y-2'>
+      {files.map((file) => (
+        <Link
+          key={file.id}
+          to={file.url}
+          rel='noopener noreferrer'
+          target='_blank'
+          className='flex w-min space-x-2 items-center rounded-lg bg-gray-200 p-2 dark:bg-gray-800'
+        >
+          <p className='max-w-40 truncate text-sm font-medium text-gray-900 dark:text-white'>
+            {file.originalName}
+          </p>
+          <FileDownIcon className='size-7 text-gray-500' />
+        </Link>
+      ))}
+    </div>
   )
 }

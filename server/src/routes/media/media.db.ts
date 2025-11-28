@@ -7,6 +7,7 @@ const CreateMedia = Media.pick({
   url: true,
   status: true,
   messageId: true,
+  originalName: true,
 }).partial({
   id: true,
 })
@@ -14,6 +15,7 @@ const CreateMedia = Media.pick({
 export const UpdateMedia = Media.pick({
   status: true,
   messageId: true,
+  originalName: true,
 }).partial()
 
 export interface IMedia extends z.infer<typeof Media> {}

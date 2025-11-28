@@ -25,20 +25,21 @@ enum MediaType {
 enum MediaStatus {
   pending
   processing
-  completed
+  compileted
   failed
 }
 
 model Media {
-  id        String      @id @default(auto()) @map("_id") @db.ObjectId
-  type      MediaType
-  url       String
-  status    MediaStatus @default(pending)
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  id           String      @id @default(auto()) @map("_id") @db.ObjectId
+  type         MediaType
+  originalName String
+  url          String
+  status       MediaStatus @default(pending)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
   // Phần này prisma tự động tạo quan hệ ngược
-  message   Message?    @relation(fields: [messageId], references: [id], onDelete: SetNull)
-  messageId String?     @db.ObjectId
+  message      Message?    @relation(fields: [messageId], references: [id], onDelete: SetNull)
+  messageId    String?     @db.ObjectId
 }
 
 model User {

@@ -7,7 +7,7 @@ import {
   type ResponseErrorPayload,
   type ValidationErrorPayload,
 } from '@/lib/request/request.type'
-import axios, { AxiosError, type AxiosResponse } from 'axios'
+import axios, { type AxiosError, type AxiosResponse } from 'axios'
 
 export const httpRequest = axios.create({
   baseURL: envConfig.apiBaseUrl,
@@ -17,9 +17,27 @@ export const httpRequest = axios.create({
   withCredentials: true,
 })
 
-const fackeDelay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
-// Tự động thêm token vào header của request
+// --- BIẾN ĐỂ XỬ LÝ CONCURRENCY (QUAN TRỌNG) ---
+// Biến đánh dấu đang trong quá trình refresh token
+let isRefreshing = false
+// Hàng đợi chứa các request bị lỗi 401 đang chờ token mới
+let failedQueue: any[] = []
 
+// Hàm xử lý hàng đợi sau khi refresh xong (thành công hoặc thất bại)
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error)
+    } else {
+      prom.resolve(token)
+    }
+  })
+  failedQueue = []
+}
+
+const fackeDelay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+// Tự động thêm token vào header của request
 httpRequest.interceptors.request.use(async (config) => {
   if (config.method === 'get') await fackeDelay(500)
   const accessToken = useAuthStore.getState().accessToken
@@ -30,18 +48,65 @@ httpRequest.interceptors.request.use(async (config) => {
 })
 
 // Response Interceptor
-const onResponseSuccess = (response: AxiosResponse<any, any, {}>) => {
-  return response
-}
+httpRequest.interceptors.response.use(
+  (response: AxiosResponse) => response,
+  async (error: AxiosError) => {
+    const originalRequest = error.config as any
 
-const onResponseFailure = (error: AxiosError) => {
-  if (error.response && error.response.data) {
-    const response = error.response.data as ResponseErrorPayload
-    if (error.status === HTTP_STATUS_CODE.UNPROCESSABLE_ENTITY)
-      throw new UnprocessableEntityException(response as ValidationErrorPayload)
-    throw new AppException(response)
-  }
-  throw error
-}
+    // Nếu lỗi không phải 401 hoặc request này đã được retry -> Trả lỗi luôn
+    if (error.response?.status !== 401 || originalRequest._retry) {
+      if (error.response && error.response.data) {
+        const response = error.response.data as ResponseErrorPayload
+        if (error.response.status === HTTP_STATUS_CODE.UNPROCESSABLE_ENTITY) {
+          return Promise.reject(
+            new UnprocessableEntityException(response as ValidationErrorPayload),
+          )
+        }
+        return Promise.reject(new AppException(response))
+      }
+      return Promise.reject(error)
+    }
 
-httpRequest.interceptors.response.use(onResponseSuccess, onResponseFailure)
+    // --- LOGIC REFRESH TOKEN ---
+    if (isRefreshing) {
+      return new Promise((resolve, reject) => {
+        failedQueue.push({
+          resolve: (token: string) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`
+            resolve(httpRequest(originalRequest))
+          },
+          reject: (err: any) => {
+            reject(err)
+          },
+        })
+      })
+    }
+
+    // Nếu chưa có ai refresh, bắt đầu refresh
+    originalRequest._retry = true
+    isRefreshing = true
+
+    try {
+      // Gọi API refresh token (Backend sẽ đọc cookie refreshToken)
+      // Lưu ý: Không dùng instance 'httpRequest' để gọi cái này để tránh lặp vô tận
+      const response = await axios.post<{
+        accessToken: string
+      }>(
+        `${envConfig.apiBaseUrl}/auth/refresh-token`,
+        {},
+        { withCredentials: true }, // Bắt buộc để gửi cookie đi
+      )
+      const { accessToken } = response.data
+      useAuthStore.getState().setAccessToken(accessToken)
+      processQueue(null, accessToken)
+      originalRequest.headers.Authorization = `Bearer ${accessToken}`
+      return httpRequest(originalRequest)
+    } catch (refreshError) {
+      processQueue(refreshError, null)
+      useAuthStore.getState().signOut()
+      return Promise.reject(refreshError)
+    } finally {
+      isRefreshing = false
+    }
+  },
+)

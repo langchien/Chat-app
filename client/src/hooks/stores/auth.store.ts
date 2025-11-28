@@ -142,7 +142,6 @@ export const useAuthStore = create<IAuthState & IAuthActions>()(
         user: state.user,
         isCanSignUp: state.isCanSignUp,
         isCanResetPassword: state.isCanResetPassword,
-        accessToken: state.accessToken,
       }),
     },
   ),

@@ -4,7 +4,7 @@ import { Media } from '../media/media.schema'
 import { Message } from './message.schema'
 
 export const MessageResDto = Message.extend({
-  medias: z.array(Media).nullish(),
+  medias: z.array(Media).optional(),
 })
 
 export const MessagePaginateCursorResDto = PaginateCursorResDto.extend({

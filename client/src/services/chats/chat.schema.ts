@@ -11,7 +11,7 @@ export const Participant = z.object({
   userId: createStringId('UserId'),
   chatId: createStringId('ChatId'),
   joinedAt: z.date(),
-  nickname: z.string().nullish(),
+  nickname: z.string().optional(),
 })
 
 export const GroupInfo = z.object({
@@ -28,6 +28,6 @@ export const LastMessageInfo = z.object({
 export const Chat = BaseCollection.extend({
   type: z.enum([ChatType.DIRECT, ChatType.GROUP]),
   participants: z.array(Participant),
-  groupInfo: GroupInfo.nullish(),
-  lastMessage: LastMessageInfo.nullish(),
+  groupInfo: GroupInfo.optional(),
+  lastMessage: LastMessageInfo.optional(),
 })

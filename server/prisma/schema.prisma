@@ -49,9 +49,9 @@ model User {
   username               String          @unique
   displayName            String
   hashedPassword         String
-  avatarUrl              String?
-  bio                    String?
-  phone                  String?
+  avatarUrl              String          @default("")
+  bio                    String          @default("")
+  phone                  String          @default("")
   createdAt              DateTime        @default(now())
   updatedAt              DateTime        @updatedAt
   // relations
@@ -80,7 +80,7 @@ model FriendRequest {
   id        String              @id @default(auto()) @map("_id") @db.ObjectId
   fromId    String              @db.ObjectId
   toId      String              @db.ObjectId
-  message   String?
+  message   String              @default("")
   status    FriendRequestStatus @default(pending)
   createdAt DateTime            @default(now())
   updatedAt DateTime            @updatedAt
@@ -110,7 +110,7 @@ model Message {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   senderId  String   @db.ObjectId // Optional to allow for SetNull
   chatId    String   @db.ObjectId
-  content   String
+  content   String   @default("")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   // relations
@@ -129,7 +129,7 @@ model Participant {
   id       String   @id @default(auto()) @map("_id") @db.ObjectId
   userId   String   @db.ObjectId
   joinedAt DateTime @default(now())
-  nickname String?
+  nickname String   @default("")
   chatId   String   @db.ObjectId
   chat     Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)

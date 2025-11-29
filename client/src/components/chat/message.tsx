@@ -29,14 +29,16 @@ export function Message({
       )}
       <div className='max-w-md md:max-w-lg lg:max-w-xl flex flex-col space-y-1'>
         <MessageMedia medias={medias} />
-        <p
-          className={cn(
-            'px-4 py-2 rounded-2xl relative text-sm max-w-fit',
-            isOwnMessage ? 'bg-blue-500 text-white' : 'bg-muted text-foreground',
-          )}
-        >
-          {message.content}
-        </p>
+        {message.content && (
+          <p
+            className={cn(
+              'px-4 py-2 rounded-2xl relative text-sm max-w-fit',
+              isOwnMessage ? 'bg-blue-500 text-white' : 'bg-muted text-foreground',
+            )}
+          >
+            {message.content}
+          </p>
+        )}
         <span className=' text-xs text-foreground/60 text-right text-nowrap'>
           {formatMessageTime(message.createdAt)}
         </span>

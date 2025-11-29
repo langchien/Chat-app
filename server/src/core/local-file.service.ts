@@ -1,4 +1,5 @@
 import { envConfig } from '@/config/env-config'
+import { MediaType } from '@/routes/media/media.schema'
 import { existsSync } from 'fs'
 import { mkdir } from 'fs/promises'
 import path from 'path'
@@ -7,17 +8,16 @@ import { API_ROUTES } from './routes.const'
 
 export const UPLOAD_LOCAL_DIR = 'uploads/'
 
-export const MediaDirectories = {
+export const MediaDirectories: Record<MediaType, string> = {
   file: 'files/',
   image: 'images/',
   video: 'videos/',
   video_hls: 'videos_hls/',
-} as const
+  audio: 'audios/',
+}
 
-export type KeyDirectory = keyof typeof MediaDirectories
-export type MediaDirectory = (typeof MediaDirectories)[KeyDirectory]
+export type MediaDirectory = (typeof MediaDirectories)[keyof typeof MediaDirectories]
 
-const MEDIA_BASE_URL = envConfig.serverUri + API_ROUTES.MEDIA + '/'
 class LocalFileService {
   async initFolder() {
     if (!existsSync(UPLOAD_LOCAL_DIR)) await mkdir(path.resolve(UPLOAD_LOCAL_DIR))
@@ -41,29 +41,16 @@ class LocalFileService {
     }
     return files
   }
-  private createMediaPathResolver<T extends string>(
-    base: string,
-    dirs: Record<T, string>,
-    joinFn: (base: string, dir: string, ...inputs: string[]) => string,
-  ): Record<T, (...inputs: string[]) => string> {
-    return Object.keys(dirs).reduce(
-      (acc, key) => {
-        acc[key as T] = (...inputs: string[]) => joinFn(base, dirs[key as T], ...inputs)
-        return acc
-      },
-      {} as Record<T, (...inputs: string[]) => string>,
-    )
+
+  getFilePath = (mediaType: MediaType, ...inputs: string[]) => {
+    return path.resolve(UPLOAD_LOCAL_DIR, MediaDirectories[mediaType], ...inputs)
   }
 
-  getFilePath = this.createMediaPathResolver(
-    UPLOAD_LOCAL_DIR,
-    MediaDirectories,
-    (base, dir, ...inputs) => path.resolve(base, dir, ...inputs),
-  )
-  getUrlMedia = this.createMediaPathResolver(
-    MEDIA_BASE_URL,
-    MediaDirectories,
-    (base, dir, ...inputs) => base + dir + inputs.join(''),
-  )
+  getUrlMedia = (mediaType: MediaType, ...inputs: string[]) => {
+    const isStatic = MediaType.video_hls !== mediaType
+    const API_PATH = isStatic ? '/static/' : '/stream/'
+    const MEDIA_BASE_URL = envConfig.serverUri + API_ROUTES.MEDIA + API_PATH
+    return MEDIA_BASE_URL + mediaType + '/' + inputs.join('/')
+  }
 }
 export const localFileService = new LocalFileService()

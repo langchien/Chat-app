@@ -6,14 +6,19 @@ export const MediaType = {
   video: 'video',
   video_hls: 'video_hls',
   file: 'file',
+  audio: 'audio',
 } as const
+
+export type MediaType = (typeof MediaType)[keyof typeof MediaType]
 
 export const MediaStatus = {
   pending: 'pending',
   processing: 'processing',
-  compileted: 'compileted',
+  completed: 'completed',
   failed: 'failed',
 } as const
+
+export type MediaStatus = (typeof MediaStatus)[keyof typeof MediaStatus]
 
 export const Media = BaseCollection.extend({
   type: z.enum(MediaType),

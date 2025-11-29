@@ -1,5 +1,5 @@
 import { accessTokenValidate } from '@/core/access-token.middleware'
-import { formDataParser } from '@/core/form-data.middleware'
+import { formDataParser, singleVideoMiddleware } from '@/core/form-data.middleware'
 import { zodValidate } from '@/core/validate.middleware'
 import { Router } from 'express'
 import { ChatIdParam } from '../chat/chat.req.dto'
@@ -8,12 +8,34 @@ import { GetFileReqParamsDto, MediaIdParamDto, UpdateMediaDto } from './media.re
 
 export const mediaRouter = Router()
 
-mediaRouter.get('/videos/:videoName', mediaCtrl.serveVideoStream)
+// upload và serve file media
+mediaRouter.post(
+  '/chats/:chatId',
+  accessTokenValidate,
+  zodValidate(ChatIdParam, 'params'),
+  formDataParser(),
+  mediaCtrl.muiltiUploadMedia,
+)
+mediaRouter.get('/static/video/:videoName', mediaCtrl.serveVideoStream)
+mediaRouter.get(
+  '/static/:mediaType/:fileName',
+  zodValidate(GetFileReqParamsDto, 'params'),
+  mediaCtrl.serveFile,
+)
 
 // HLS video routes
-mediaRouter.post('/videos-hls', accessTokenValidate, mediaCtrl.uploadVideoHls)
-mediaRouter.get('/videos-hls/:id/master.m3u8', mediaCtrl.serveVideoM3u8)
-mediaRouter.get('/videos-hls/:id/:v/:segment', mediaCtrl.serveVideoHlsPlaylist)
+// Route này để test
+mediaRouter.post('/video_hls', accessTokenValidate, singleVideoMiddleware, mediaCtrl.uploadVideoHls)
+// Route này để upload video HLS kèm tin nhắn trong chat
+mediaRouter.post(
+  '/video_hls/chats/:chatId',
+  accessTokenValidate,
+  zodValidate(ChatIdParam, 'params'),
+  singleVideoMiddleware,
+  mediaCtrl.createMessageWithVideoHLS,
+)
+mediaRouter.get('/stream/video_hls/:id/master.m3u8', mediaCtrl.serveVideoM3u8)
+mediaRouter.get('/stream/video_hls/:id/:v/:segment', mediaCtrl.serveVideoHlsPlaylist)
 
 mediaRouter.get(
   '/:mediaId',
@@ -28,16 +50,3 @@ mediaRouter.patch(
   zodValidate(UpdateMediaDto),
   mediaCtrl.updateMedia,
 )
-
-mediaRouter.post(
-  '/chats/:chatId',
-  accessTokenValidate,
-  zodValidate(ChatIdParam, 'params'),
-  formDataParser(),
-  mediaCtrl.muiltiUploadMedia,
-)
-mediaRouter.get(
-  '/:mediaDirectory/:fileName',
-  zodValidate(GetFileReqParamsDto, 'params'),
-  mediaCtrl.serveFile,
-) // Phải để cuối cùng vì có thể trùng với các route khác

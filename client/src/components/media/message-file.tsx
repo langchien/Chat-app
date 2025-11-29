@@ -2,11 +2,6 @@ import type { IMedia } from '@/services/api.types'
 import { FileDownIcon } from 'lucide-react'
 import { Link } from 'react-router'
 
-/**
- * A component to display a file attachment in a message.
- * It shows the filename and provides a download button.
- * @param media - The media object containing the file url.
- */
 export function MessageFile({ files }: { files: IMedia[] }) {
   return (
     <div className='flex flex-col space-y-2'>

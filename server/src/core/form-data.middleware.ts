@@ -53,3 +53,16 @@ export const formDataParser = (options?: FormDataParserOptions) => {
     }
   }
 }
+
+/**
+ * Middleware để parse multipart/form-data với 1 file video.
+ */
+export const singleVideoMiddleware = formDataParser({
+  maxFileSize: 500 * 1024 * 1024, // 500MB
+  maxTotalFileSize: 500 * 1024 * 1024, // 500MB
+  maxFiles: 1,
+  multiples: false,
+  filter: (p) => {
+    return Boolean(p.name === 'video' && p.mimetype?.startsWith('video/'))
+  },
+})

@@ -50,3 +50,14 @@ mediaRouter.patch(
   zodValidate(UpdateMediaDto),
   mediaCtrl.updateMedia,
 )
+
+mediaRouter.post(
+  '/avatar',
+  accessTokenValidate,
+  formDataParser({
+    multiples: false,
+    maxFiles: 1,
+    filter: (part) => Boolean(part.name === 'image' && part.mimetype?.startsWith('image/')),
+  }),
+  mediaCtrl.uploadAvatar,
+)

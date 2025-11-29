@@ -39,7 +39,8 @@ const fackeDelay = (ms: number) => new Promise((resolve) => setTimeout(resolve, 
 
 // Tự động thêm token vào header của request
 httpRequest.interceptors.request.use(async (config) => {
-  if (config.method === 'get') await fackeDelay(500)
+  const isCreateMessage = config.url?.endsWith('/messages') && config.method === 'post'
+  if (!isCreateMessage) await fackeDelay(500)
   const accessToken = useAuthStore.getState().accessToken
   if (accessToken) {
     config.headers.Authorization = `Bearer ${accessToken}`

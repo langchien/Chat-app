@@ -13,6 +13,7 @@ import { IChatIdParamDto } from '../chat/chat.req.dto'
 import { ChatResDto, IChatResDto } from '../chat/chat.res.dto'
 import { messageRepo } from '../message/message.repo'
 import { IMessageResDto, MessageResDto } from '../message/message.res.dto'
+import { UserResDto } from '../user/user.res.dto'
 import { IMedia } from './media.db'
 import { mediaQueue } from './media.queue'
 import { mediaRepo } from './media.repo'
@@ -74,6 +75,13 @@ class MediaCtrl {
     return this.sendMessageSocket(req, res, response)
   }
 
+  uploadAvatar: RequestHandler = async (req, res) => {
+    const images = req.files?.image
+    if (!images || (Array.isArray(images) && images.length === 0))
+      throw new BadRequestException(undefined, 'Chưa có ảnh để upload, hoặc các ảnh không hợp lệ')
+    const result = await mediaService.handleTransformAvatar(images[0], IS_LOCAL, req.user.userId)
+    res.status(HttpStatusCode.Created).json(UserResDto.parse(result))
+  }
   // Upload video chuyển sang HLS
   uploadVideoHls: RequestHandler = async (req, res) => {
     const videos = req.files?.video

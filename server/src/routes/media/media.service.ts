@@ -33,13 +33,18 @@ class MediaService {
           await unlink(file.filepath)
         }
         if (!isLocal) {
-          const _filePath = isNeedMove ? file.filepath : filePath
+          let filePathToUpload = file.filepath
+          let fileNameToUpload = file.newFilename
+          if (mediaType === MediaType.image) {
+            filePathToUpload = filePath.replace(path.extname(filePath), '.jpeg')
+            fileNameToUpload = file.newFilename.replace(path.extname(file.newFilename), '.jpeg')
+          }
           await s3Service.upload(
-            MediaDirectories[mediaType] + file.newFilename,
-            _filePath,
+            MediaDirectories[mediaType] + fileNameToUpload,
+            filePathToUpload,
             contentType,
           )
-          await unlink(_filePath)
+          await unlink(filePathToUpload)
         } else if (isNeedMove) {
           await rename(file.filepath, filePath)
         }

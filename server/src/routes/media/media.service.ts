@@ -6,6 +6,7 @@ import { rename, unlink } from 'fs/promises'
 import mime from 'mime'
 import path from 'path'
 import sharp from 'sharp'
+import { userRepo } from '../user/user.repo'
 import { IMedia } from './media.db'
 import { mediaRepo } from './media.repo'
 import { MediaStatus, MediaType } from './media.schema'
@@ -64,6 +65,28 @@ class MediaService {
     return results
   }
 
+  handleTransformAvatar = async (image: File, isLocal: boolean, userId: string) => {
+    const contentType = 'image/jpeg'
+    const newFilename = image.newFilename.replace(path.extname(image.newFilename), '.jpeg')
+    const url = localFileService.getUrlMedia(MediaType.image, newFilename)
+    const filePath = localFileService.getFilePath(MediaType.image, newFilename)
+    await sharp(image.filepath).resize(300, 300).jpeg().toFile(filePath)
+    await unlink(image.filepath)
+    if (!isLocal) {
+      await s3Service.upload(MediaDirectories[MediaType.image] + newFilename, filePath, contentType)
+      await unlink(filePath)
+    }
+    const [user] = await Promise.all([
+      userRepo.update(userId, { avatarUrl: url }),
+      mediaRepo.create({
+        url,
+        type: MediaType.image,
+        originalName: image.originalFilename ?? newFilename,
+        status: MediaStatus.completed,
+      }),
+    ])
+    return user
+  }
   handleVideoToHLS = async (video: File): Promise<IMedia> => {
     const id = new ObjectId().toString()
     const url = localFileService.getUrlMedia(MediaType.video_hls, id, 'master.m3u8')

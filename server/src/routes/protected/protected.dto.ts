@@ -6,6 +6,7 @@ export const UpdateProfileBodyDto = User.pick({
   displayName: true,
   bio: true,
   phone: true,
+  avatarUrl: true,
 }).partial()
 
 export const ChangePassworBodyDto = z.object({

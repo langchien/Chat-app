@@ -1,4 +1,5 @@
 import { uploadRequest } from '@/lib/request'
+import type { IUser } from '../api.types'
 import { API_ROUTES } from '../request.interface'
 
 class MediaUploadRequest {
@@ -32,6 +33,13 @@ class MediaUploadRequest {
     formData.append('video', file)
     if (content) formData.append('contents', content)
     return uploadRequest.post(`${API_ROUTES.MEDIA}/video_hls/chats/${chatId}`, formData)
+  }
+
+  async uploadAvatar(file: File) {
+    const formData = new FormData()
+    formData.append('image', file)
+    const res = await uploadRequest.post<IUser>(`${API_ROUTES.MEDIA}/avatar`, formData)
+    return res.data
   }
 }
 

@@ -34,6 +34,7 @@ interface IAuthActions {
   resetPassword: (body: IResetPasswordReqBodyDto) => Promise<void>
   verifyEmail: (body: IVerifyOtpDto) => Promise<void>
   verifyResetPasswordEmail: (body: IVerifyOtpDto) => Promise<void>
+  signOutAllDevices: () => Promise<void>
 }
 
 const LOCAL_STORAGE_KEY = 'auth-storage'
@@ -110,6 +111,17 @@ export const useAuthStore = create<IAuthState & IAuthActions>()(
         setLoading(true)
         try {
           await authRequest.logout()
+        } finally {
+          setLoading(false)
+          get().clearAuthStore()
+          redirect(APP_PAGES.SIGNIN)
+        }
+      },
+      signOutAllDevices: async () => {
+        const setLoading = useAppStore.getState().setLoading
+        setLoading(true)
+        try {
+          await authRequest.logoutAllDevices()
         } finally {
           setLoading(false)
           get().clearAuthStore()

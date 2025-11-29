@@ -33,7 +33,6 @@ export const createString = (fieldName: string, length: number = 500) =>
   z
     .string(`${fieldName} là phải là chuỗi`)
     .trim()
-    .min(1, { message: `${fieldName} không được để trống` })
     .max(length, { message: `${fieldName} không được vượt quá ${length} ký tự` })
 
 export const Otp = z.string('OTP phải là chuỗi').length(6, {

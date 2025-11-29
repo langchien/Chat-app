@@ -11,7 +11,7 @@ export const Participant = z.object({
   userId: createStringId('UserId'),
   chatId: createStringId('ChatId'),
   joinedAt: z.date(),
-  nickname: z.string().nullish(),
+  nickname: z.string().optional(),
 })
 
 export const GroupInfo = z.object({

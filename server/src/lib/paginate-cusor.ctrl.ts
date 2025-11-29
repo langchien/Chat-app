@@ -11,7 +11,7 @@ export interface IPaginateCursorQuery extends z.infer<typeof PaginateCursorQuery
 
 export const PaginateCursorResDto = z.object({
   hasMore: z.boolean(),
-  nextCursor: createStringId('nextCursor').nullish(),
+  nextCursor: createStringId('nextCursor').nullable(),
 })
 
 export interface QueryString {

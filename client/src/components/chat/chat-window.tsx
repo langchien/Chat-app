@@ -36,16 +36,17 @@ export function ChatWindow({ paginateMessages }: { paginateMessages: IMessagePag
   const { data, setChatList } = useChatStore()
   useEffect(() => {
     if (!socket) return
-    socket.on(SOCKET_EVENTS.RECEIVE_MESSAGE, (payload: { message: IMessage; chat: IChat }) => {
+    const handleReceiveMessage = (payload: { message: IMessage; chat: IChat }) => {
       if (payload.chat.id !== chat.id) return
       setMessages((prevMessages) => [payload.message, ...prevMessages])
       const _data = data.filter((c) => c.id !== payload.chat.id)
       setChatList([payload.chat, ..._data])
-    })
-    return () => {
-      socket.off(SOCKET_EVENTS.RECEIVE_MESSAGE)
     }
-  }, [socket, chat.id])
+    socket.on(SOCKET_EVENTS.RECEIVE_MESSAGE, handleReceiveMessage)
+    return () => {
+      socket.off(SOCKET_EVENTS.RECEIVE_MESSAGE, handleReceiveMessage)
+    }
+  }, [socket, chat.id, data, setChatList])
   const allUserInChat = chat.participants.map((p) => p.user)
   const mapUserById = new Map<string, IUser>(allUserInChat.map((user) => [user.id, user]))
   const user = useAuthStore((state) => state.user)

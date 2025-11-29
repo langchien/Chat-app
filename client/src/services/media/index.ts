@@ -26,6 +26,13 @@ class MediaUploadRequest {
     })
     return uploadRequest.post(`${API_ROUTES.MEDIA}/chats/${chatId}`, formData)
   }
+
+  uploadSingleVideoToHls(file: File, chatId: string, content?: string) {
+    const formData = new FormData()
+    formData.append('video', file)
+    if (content) formData.append('contents', content)
+    return uploadRequest.post(`${API_ROUTES.MEDIA}/video_hls/chats/${chatId}`, formData)
+  }
 }
 
 export const mediaUploadRequest = new MediaUploadRequest()

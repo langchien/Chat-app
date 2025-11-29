@@ -20,12 +20,13 @@ enum MediaType {
   video
   video_hls
   file
+  audio
 }
 
 enum MediaStatus {
   pending
   processing
-  compileted
+  completed
   failed
 }
 

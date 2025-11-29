@@ -4,47 +4,67 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { useChatUpload } from '@/hooks/use-chat-upload'
 import { cn } from '@/lib/utils'
 import { File, Film, Paperclip, Send, X } from 'lucide-react'
+import { useEffect, useRef } from 'react'
 import { Card } from '../ui/card'
 import { Label } from '../ui/label'
 import { InputEmoji } from './input-imoji'
 
 export function ChatInput({ chatId }: { chatId: string }) {
+  const inputRef = useRef<HTMLInputElement>(null)
+
   const {
     files,
     isSending,
     handleFileChange,
     handleDeleteFile,
-    handleSendMessage,
+    onSubmmit,
     newMessage,
     setNewMessage,
+    handleSetBigVideo,
   } = useChatUpload({
     chatId,
   })
-  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+
+  useEffect(() => {
+    inputRef.current?.focus()
+  }, [])
+
+  useEffect(() => {
+    if (!isSending) {
+      inputRef.current?.focus()
+    }
+  }, [isSending])
+
+  const onKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
-      handleSendMessage()
+      await onSubmmit()
     }
+  }
+
+  const handleOnSubmmit = async () => {
+    await onSubmmit()
   }
   const addEmoji = (emoji: string) => {
     setNewMessage((prev) => prev + emoji)
   }
+
   return (
     <Card className='sticky bottom-0 z-10 rounded-none p-4 mt-auto'>
       <div className='flex gap-2'>
-        <Input type='file' accept='video/*' id='film-input' hidden onChange={handleFileChange} />
+        <Input type='file' accept='video/*' id='big-video' hidden onChange={handleSetBigVideo} />
         <Input type='file' multiple id='file-input' hidden onChange={handleFileChange} />
         <Tooltip>
           <TooltipTrigger asChild>
             <Label
-              htmlFor='film-input'
+              htmlFor='big-video'
               className={cn(buttonVariants({ variant: 'ghost', size: 'icon-lg' }))}
             >
               <Film className='size-5' />
             </Label>
           </TooltipTrigger>
           <TooltipContent>
-            <p>Tải video dài(stream hls)</p>
+            <p>Tải 1 video tối đa 500MB</p>
           </TooltipContent>
         </Tooltip>
         <Tooltip>
@@ -64,6 +84,7 @@ export function ChatInput({ chatId }: { chatId: string }) {
         </Tooltip>
         <div className='flex-1 relative'>
           <Input
+            ref={inputRef}
             placeholder='Aa'
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
@@ -111,7 +132,7 @@ export function ChatInput({ chatId }: { chatId: string }) {
         </div>
         <InputEmoji addEmoji={addEmoji} />
         <Button
-          onClick={handleSendMessage}
+          onClick={handleOnSubmmit}
           size='icon'
           className='h-9 w-9 bg-blue-500 hover:bg-blue-600'
           disabled={isSending}

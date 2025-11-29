@@ -3,20 +3,24 @@ import { MediaDirectories, localFileService } from '@/core/local-file.service'
 import { logger } from '@/lib/logger.service'
 import { s3Service } from '@/lib/s3.service'
 import { ffmpegService } from '@/routes/media/ffmpeg.service'
+import { io } from '@/socket'
+import { SOCKET_EVENTS } from '@/socket/event.const'
+import { File } from 'formidable'
 import fs from 'fs'
 import { unlink } from 'fs/promises'
 import mime from 'mime'
 import { mediaRepo } from './media.repo'
-import { MediaStatus } from './media.schema'
+import { MediaStatus, MediaType } from './media.schema'
 
 class MediaQueue {
   items: {
     id: string
-    filename: string
+    chatId: string
+    video: File
   }[] = []
   encoding: boolean = false
 
-  async enqueue(item: { id: string; filename: string }) {
+  enqueue(item: { id: string; chatId: string; video: File }) {
     this.items.push(item)
     this.processQueue()
   }
@@ -31,36 +35,35 @@ class MediaQueue {
         status: MediaStatus.processing,
       })
       logger.info(`Bắt đầu mã hóa HLS cho video: ${r?.url}`)
-      const folderPath = localFileService.getFilePath.VideoHLS(item.id)
-      const fileOriginPath = localFileService.getFilePath.VideoHLS(item.filename)
+      const folderPath = localFileService.getFilePath(MediaType.video_hls, item.id)
+      const fileOriginPath = item.video.filepath
+      const fileName = item.video.originalFilename ?? item.video.newFilename
       if (!fs.existsSync(folderPath)) fs.mkdirSync(folderPath)
-      await ffmpegService.encodeHLSWithMultipleVideoStreams(fileOriginPath, item.id)
-      logger.info(`Đã mã hóa HLS cho video: ${item.filename}`)
+      await ffmpegService.encodeHLSWithMultipleVideoStreams(fileOriginPath, folderPath)
+      logger.info(`Đã mã hóa HLS cho video: ${fileName}`)
       const isLocal = envConfig.upload.provider === 'local'
       if (!isLocal) {
         const files = await localFileService.getFiles(folderPath)
         await Promise.all(
           files.map((filePath) => {
             const relativePath = item.id + filePath.replace(folderPath, '').replace(/\\/g, '/')
-            const fileName = MediaDirectories.videoHLS + relativePath
+            const fileName = MediaDirectories.video_hls + relativePath
             return s3Service.upload(fileName, filePath, mime.getType(filePath) as string)
           }),
         )
         // xóa file và folder chứa video đã mã hóa sau khi upload lên s3
         await Promise.all([unlink(fileOriginPath), fs.rmdirSync(folderPath, { recursive: true })])
       } else await unlink(fileOriginPath)
-      await mediaRepo.update(item.id, {
-        status: MediaStatus.compileted,
+      const uploadResult = await mediaRepo.update(item.id, {
+        status: MediaStatus.completed,
       })
+      io.to(item.chatId).emit(SOCKET_EVENTS.MEDIA_PROCESSING_UPDATE, uploadResult)
     } catch (error) {
       logger.error('Lỗi trong quá trình xử lý mục hàng đợi:', error)
-      await mediaRepo
-        .update(item.id, {
-          status: MediaStatus.failed,
-        })
-        .catch((err) => {
-          logger.error('Lỗi khi cập nhật trạng thái thất bại cho mục hàng đợi:', err)
-        })
+      const failedResult = await mediaRepo.update(item.id, {
+        status: MediaStatus.failed,
+      })
+      io.to(item.chatId).emit(SOCKET_EVENTS.MEDIA_PROCESSING_UPDATE, failedResult)
     } finally {
       this.encoding = false
       this.processQueue()

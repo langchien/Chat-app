@@ -1,6 +1,6 @@
 import { createString, createStringId } from '@/lib/schema.common'
 import z from 'zod'
-import { Media } from './media.schema'
+import { Media, MediaType } from './media.schema'
 
 export const MediaIdParamDto = z.object({
   mediaId: createStringId('mediaId'),
@@ -19,6 +19,6 @@ export interface IUpdateMediaDto extends z.infer<typeof UpdateMediaDto> {}
 
 export const GetFileReqParamsDto = z.object({
   fileName: createString('fileName'),
-  mediaDirectory: z.enum(['videos', 'images', 'files']),
+  mediaType: z.enum(MediaType),
 })
 export interface IGetFileReqParamsDto extends z.infer<typeof GetFileReqParamsDto> {}

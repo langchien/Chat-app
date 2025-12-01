@@ -1,42 +1,15 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { useAppStore } from '@/hooks/stores/app.store'
-import { useAuthStore } from '@/hooks/stores/auth.store'
+import { useProfileInfo } from '@/hooks/use-profile-info'
 import { getInitials } from '@/lib/utils'
-import { mediaUploadRequest } from '@/services/media'
 import { Camera, Upload } from 'lucide-react'
-import { useState, type ChangeEvent } from 'react'
-import { toast } from 'sonner'
 import { Label } from '../ui/label'
 import { UpdateProfileForm } from './update-profile'
 
 export function ProfileInfo() {
-  const profile = useAuthStore((state) => state.user)
-  const { isLoading, setLoading } = useAppStore()
-  const [image, setImage] = useState<File | null>(null)
-  const setUser = useAuthStore((state) => state.setUser)
-  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
-    const newFiles = e.target.files
-    if (!newFiles || newFiles.length === 0) return
-    setImage(newFiles[0])
-    e.target.value = ''
-  }
-  const handleChangeAvatar = async () => {
-    if (!image) return
-    setLoading(true)
-    try {
-      const updatedUser = await mediaUploadRequest.uploadAvatar(image)
-      setUser(updatedUser)
-      setImage(null)
-    } catch (error) {
-      if (error instanceof Error) toast.error(error.message)
-      else toast.error('Đã có lỗi xảy ra khi tải ảnh đại diện')
-      throw error
-    } finally {
-      setLoading(false)
-    }
-  }
+  const { profile, isLoading, image, setImage, handleFileChange, handleChangeAvatar } =
+    useProfileInfo()
   return (
     <div className='space-x-3 flex flex-row w-full'>
       {/* Avatar Section */}

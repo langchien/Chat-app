@@ -1,4 +1,4 @@
-import { createStringId } from '@/lib/schema.common'
+import { createName, createStringId } from '@/lib/schema.common'
 import z from 'zod'
 import { Chat } from './chat.schema'
 
@@ -19,6 +19,12 @@ export const UpdateChatReq = Chat.pick({
   lastMessage: true,
 }).partial()
 
+export const UpdateChatDisplayNameReqBodyDto = z.object({
+  displayName: createName('Tên đoạn chat', 50),
+})
+
 export interface IChatIdParamDto extends z.infer<typeof ChatIdParam> {}
 export interface ICreateChatReqDto extends z.infer<typeof CreateChatReq> {}
 export interface IUpdateChatReqDto extends z.infer<typeof UpdateChatReq> {}
+export interface IUpdateChatDisplayNameReqBodyDto
+  extends z.infer<typeof UpdateChatDisplayNameReqBodyDto> {}

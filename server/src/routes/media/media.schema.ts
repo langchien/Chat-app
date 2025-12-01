@@ -25,5 +25,5 @@ export const Media = BaseCollection.extend({
   url: z.url(),
   originalName: z.string(),
   status: z.enum(MediaStatus),
-  messageId: createStringId('messageId').optional(),
+  messageId: createStringId('messageId').nullish(),
 })

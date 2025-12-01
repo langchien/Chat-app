@@ -100,7 +100,7 @@ class MessageRepo extends BaseRepository {
       },
     })
     const hasMore = results.length > limit
-    const nextCursor = hasMore ? results[limit - 1].id : undefined
+    const nextCursor = hasMore ? results[limit - 1].id : null
     return {
       hasMore,
       nextCursor,

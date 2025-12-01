@@ -1,6 +1,10 @@
 import type { IPaginateCursorQuery } from '@/lib/paginate-cusor.ctrl'
 import { API_ROUTES, ApiRequest } from '../request.interface'
-import type { ICreateChatReqDto, IUpdateChatReqDto } from './chat.req.dto'
+import type {
+  ICreateChatReqDto,
+  IUpdateChatDisplayNameReqBodyDto,
+  IUpdateChatReqDto,
+} from './chat.req.dto'
 import type { IChatPaginateCursorResDto, IChatResDto } from './chat.res.dto'
 
 class ChatRequest extends ApiRequest {
@@ -14,6 +18,13 @@ class ChatRequest extends ApiRequest {
     return response.data
   }
 
+  updateChatDisplayName = async (chatId: string, body: IUpdateChatDisplayNameReqBodyDto) => {
+    const response = await this.httpRequest.patch<IChatResDto>(
+      `${this.basePath}/${chatId}/display-name`,
+      body,
+    )
+    return response.data
+  }
   getById = async (chatId: string) => {
     const response = await this.httpRequest.get<IChatResDto>(`${this.basePath}/${chatId}`)
     return response.data

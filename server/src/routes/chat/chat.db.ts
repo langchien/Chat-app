@@ -1,6 +1,6 @@
 import { createStringId } from '@/lib/schema.common'
 import z from 'zod'
-import { Chat } from './chat.schema'
+import { Chat, GroupInfo, Participant } from './chat.schema'
 
 export const CreateChatInp = Chat.pick({
   type: true,
@@ -15,6 +15,13 @@ export const UpdateChatInp = Chat.pick({
   lastMessage: true,
 }).partial()
 
+export const UpdatePaticipantsInp = Participant.pick({
+  nickname: true,
+})
+
 export interface IChat extends z.infer<typeof Chat> {}
 export interface ICreateChatInp extends z.input<typeof CreateChatInp> {}
 export interface IUpdateChatInp extends z.input<typeof UpdateChatInp> {}
+export interface IUpdateParticipantsInp extends z.input<typeof UpdatePaticipantsInp> {}
+export interface IParticipant extends z.infer<typeof Participant> {}
+export interface IChatGroupInfo extends z.infer<typeof GroupInfo> {}

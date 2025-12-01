@@ -1,53 +1,27 @@
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { useChatUpload } from '@/hooks/use-chat-upload'
+import { useChatInput } from '@/hooks/use-chat-input'
 import { cn } from '@/lib/utils'
 import { File, Film, Paperclip, Send, X } from 'lucide-react'
-import { useEffect, useRef } from 'react'
 import { Card } from '../ui/card'
 import { Label } from '../ui/label'
 import { InputEmoji } from './input-imoji'
 
 export function ChatInput({ chatId }: { chatId: string }) {
-  const inputRef = useRef<HTMLInputElement>(null)
-
   const {
+    inputRef,
     files,
     isSending,
     handleFileChange,
     handleDeleteFile,
-    onSubmmit,
     newMessage,
     setNewMessage,
     handleSetBigVideo,
-  } = useChatUpload({
-    chatId,
-  })
-
-  useEffect(() => {
-    inputRef.current?.focus()
-  }, [])
-
-  useEffect(() => {
-    if (!isSending) {
-      inputRef.current?.focus()
-    }
-  }, [isSending])
-
-  const onKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      await onSubmmit()
-    }
-  }
-
-  const handleOnSubmmit = async () => {
-    await onSubmmit()
-  }
-  const addEmoji = (emoji: string) => {
-    setNewMessage((prev) => prev + emoji)
-  }
+    onKeyDown,
+    handleOnSubmmit,
+    addEmoji,
+  } = useChatInput({ chatId })
 
   return (
     <Card className='sticky bottom-0 z-10 rounded-none p-4 mt-auto'>

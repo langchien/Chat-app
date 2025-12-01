@@ -1,4 +1,8 @@
-import type { IChatPaginateCursorResDto, IChatResDto } from './chats/chat.res.dto'
+import type {
+  IChatPaginateCursorResDto,
+  IChatResDto,
+  IParticipantResDto,
+} from './chats/chat.res.dto'
 import type { IMediaResDto } from './media/media.res'
 import type { IMessagePaginateCursorResDto, IMessageResDto } from './messages/message.res.dto'
 import type { IUserResDto } from './user/user.res.dto'
@@ -10,3 +14,4 @@ export interface IChat extends IChatResDto {}
 export interface IMedia extends IMediaResDto {}
 export interface IChatPaginate extends IChatPaginateCursorResDto {}
 export interface IMessagePaginate extends IMessagePaginateCursorResDto {}
+export interface IParticipant extends IParticipantResDto {}

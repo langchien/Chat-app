@@ -1,8 +1,8 @@
-import { BaseRepository } from '@/lib/database'
+import { BaseService } from '@/lib/database'
 import { ICreateOtpRequestInput } from './otp-request.db'
 import { OtpType } from './otp-request.schema'
 
-export class OtpRepo extends BaseRepository {
+export class OtpService extends BaseService {
   upsert(data: ICreateOtpRequestInput) {
     return this.prismaService.otpRequest.upsert({
       where: {
@@ -42,4 +42,4 @@ export class OtpRepo extends BaseRepository {
   async create(data: any) {}
 }
 
-export const otpRepo = new OtpRepo()
+export const otpService = new OtpService()

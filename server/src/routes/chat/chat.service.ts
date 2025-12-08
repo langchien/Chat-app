@@ -1,10 +1,10 @@
 import { NotFoundException } from '@/core/exceptions'
-import { BaseRepository } from '@/lib/database'
+import { BaseService } from '@/lib/database'
 import { IPaginateCursorQuery } from '@/lib/paginate-cusor.ctrl'
 import { IChat, ICreateChatInp, IParticipant, IUpdateChatInp } from './chat.db'
 import { ChatResDto, IChatPaginateCursorResDto } from './chat.res.dto'
 
-class ChatRepo extends BaseRepository {
+class ChatService extends BaseService {
   async create(data: ICreateChatInp): Promise<IChat> {
     const { receiverIds, ...restData } = data
     const users = await this.prismaService.user.findMany({
@@ -122,4 +122,4 @@ class ChatRepo extends BaseRepository {
   }
 }
 
-export const chatRepo = new ChatRepo()
+export const chatService = new ChatService()

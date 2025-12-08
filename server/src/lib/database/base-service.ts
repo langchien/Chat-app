@@ -1,5 +1,5 @@
 import { prismaService } from './prisma.service'
 
-export class BaseRepository {
+export class BaseService {
   protected prismaService = prismaService
 }

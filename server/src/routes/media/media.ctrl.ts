@@ -11,12 +11,12 @@ import mime from 'mime'
 import path from 'path'
 import { IChatIdParamDto } from '../chat/chat.req.dto'
 import { ChatResDto, IChatResDto } from '../chat/chat.res.dto'
-import { messageRepo } from '../message/message.repo'
 import { IMessageResDto, MessageResDto } from '../message/message.res.dto'
+import { messageService } from '../message/message.service'
 import { UserResDto } from '../user/user.res.dto'
 import { IMedia } from './media.db'
 import { mediaQueue } from './media.queue'
-import { mediaRepo } from './media.repo'
+
 import { IGetFileReqParamsDto, IMediaIdParamDto, IUpdateMediaDto } from './media.req'
 import { IMediaResDto } from './media.res'
 import { Media, MediaType } from './media.schema'
@@ -40,7 +40,7 @@ class MediaCtrl {
   }
   // Lấy thông tin media theo id
   getOneById: RequestHandler<IMediaIdParamDto, IMedia> = async (req, res) => {
-    const media = await mediaRepo.findOneById(req.params.mediaId)
+    const media = await mediaService.findOneById(req.params.mediaId)
     if (!media) throw new NotFoundException('Không tìm thấy media')
     res.json(Media.parse(media))
   }
@@ -48,7 +48,7 @@ class MediaCtrl {
   updateMedia: RequestHandler<any, IMediaResDto, IUpdateMediaDto> = async (req, res) => {
     const mediaId = req.params.mediaId
     const updateData = req.body
-    const updatedMedia = await mediaRepo.update(mediaId, updateData)
+    const updatedMedia = await mediaService.update(mediaId, updateData)
     if (!updatedMedia) throw new NotFoundException('Không tìm thấy media để cập nhật')
     res.json(Media.parse(updatedMedia))
   }
@@ -66,7 +66,7 @@ class MediaCtrl {
     if (allFiles.length === 0)
       throw new BadRequestException(undefined, 'Chưa có file để upload, hoặc các file không hợp lệ')
     const medias = await mediaService.handleTransformFile(allFiles, IS_LOCAL)
-    const response = await messageRepo.create({
+    const response = await messageService.create({
       chatId,
       senderId: user.userId,
       content,
@@ -108,7 +108,7 @@ class MediaCtrl {
     const contents = req.body.contents
     const content = contents && contents.length > 0 ? contents[0] : ''
     const media = await mediaService.handleVideoToHLS(videos[0])
-    const response = await messageRepo.create({
+    const response = await messageService.create({
       chatId,
       senderId,
       content,

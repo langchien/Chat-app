@@ -1,10 +1,10 @@
-import { BaseRepository } from '@/lib/database'
+import { BaseService } from '@/lib/database'
 import { IPaginateCursorQuery } from '@/lib/paginate-cusor.ctrl'
 import { IChatResDto } from '../chat/chat.res.dto'
 import { ICreateMessageInput, IMessage, IUpdateMessageInput } from './message.db'
 import { IMessagePaginateCursorResDto, IMessageResDto, MessageResDto } from './message.res.dto'
 
-class MessageRepo extends BaseRepository {
+class MessageService extends BaseService {
   async create(data: ICreateMessageInput): Promise<{ message: IMessageResDto; chat: IChatResDto }> {
     const { mediaIds, ...rest } = data
     const [message, chat] = await this.prismaService.$transaction([
@@ -109,4 +109,4 @@ class MessageRepo extends BaseRepository {
   }
 }
 
-export const messageRepo = new MessageRepo()
+export const messageService = new MessageService()

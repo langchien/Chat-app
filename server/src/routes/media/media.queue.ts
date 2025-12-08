@@ -9,8 +9,8 @@ import { File } from 'formidable'
 import fs from 'fs'
 import { unlink } from 'fs/promises'
 import mime from 'mime'
-import { mediaRepo } from './media.repo'
 import { MediaStatus, MediaType } from './media.schema'
+import { mediaService } from './media.service'
 
 class MediaQueue {
   items: {
@@ -31,7 +31,7 @@ class MediaQueue {
     if (!item) return
     this.encoding = true
     try {
-      const r = await mediaRepo.update(item.id, {
+      const r = await mediaService.update(item.id, {
         status: MediaStatus.processing,
       })
       logger.info(`Bắt đầu mã hóa HLS cho video: ${r?.url}`)
@@ -54,13 +54,13 @@ class MediaQueue {
         // xóa file và folder chứa video đã mã hóa sau khi upload lên s3
         await Promise.all([unlink(fileOriginPath), fs.rmdirSync(folderPath, { recursive: true })])
       } else await unlink(fileOriginPath)
-      const uploadResult = await mediaRepo.update(item.id, {
+      const uploadResult = await mediaService.update(item.id, {
         status: MediaStatus.completed,
       })
       io.to(item.chatId).emit(SOCKET_EVENTS.MEDIA_PROCESSING_UPDATE, uploadResult)
     } catch (error) {
       logger.error('Lỗi trong quá trình xử lý mục hàng đợi:', error)
-      const failedResult = await mediaRepo.update(item.id, {
+      const failedResult = await mediaService.update(item.id, {
         status: MediaStatus.failed,
       })
       io.to(item.chatId).emit(SOCKET_EVENTS.MEDIA_PROCESSING_UPDATE, failedResult)

@@ -50,3 +50,9 @@ export const Username = z
   .min(3, 'Username phải có ít nhất 3 ký tự')
   .max(100, 'Username không được vượt quá 100 ký tự')
   .regex(/^[a-zA-Z0-9_-]+$/, 'Username chỉ được chứa chữ cái, số và gạch dưới')
+
+export const IdParamDto = z.object({
+  id: createStringId('id'),
+})
+
+export interface IIdParamDto extends z.infer<typeof IdParamDto> {}

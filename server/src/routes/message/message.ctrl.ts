@@ -5,7 +5,6 @@ import { SOCKET_EVENTS } from '@/socket/event.const'
 import { RequestHandler } from 'express'
 import { IChatIdParamDto } from '../chat/chat.req.dto'
 import { ChatResDto, IChatResDto } from '../chat/chat.res.dto'
-import { messageRepo } from './message.repo'
 import { ICreateMessageBodyDto, IMessageIdParamDto, IUpdateMessageBodyDto } from './message.req.dto'
 import {
   IMessagePaginateCursorResDto,
@@ -13,11 +12,12 @@ import {
   MessagePaginateCursorResDto,
   MessageResDto,
 } from './message.res.dto'
+import { messageService } from './message.service'
 
 class MessageCtrl extends PaginateCursorCtrl {
   findOneById: RequestHandler<IMessageIdParamDto, IMessageResDto> = async (req, res) => {
     const { messageId } = req.params
-    const message = await messageRepo.findOneById(messageId)
+    const message = await messageService.findOneById(messageId)
     if (!message) throw new NotFoundException('Không tìm thấy tin nhắn')
     res.json(MessageResDto.parse(message))
   }
@@ -25,7 +25,7 @@ class MessageCtrl extends PaginateCursorCtrl {
   deleteOneById: RequestHandler<IMessageIdParamDto> = async (req, res) => {
     try {
       const { messageId } = req.params
-      await messageRepo.delete(messageId)
+      await messageService.delete(messageId)
       res.status(204).json()
     } catch (e) {
       this.handleNotFoundError(e, 'Không tìm thấy tin nhắn')
@@ -38,7 +38,7 @@ class MessageCtrl extends PaginateCursorCtrl {
   ) => {
     const { chatId } = req.params
     const { limit, cursor } = this.parsePaginationQuery(req.query)
-    const result = await messageRepo.getMessagesByCursor(chatId, { limit, cursor })
+    const result = await messageService.getMessagesByCursor(chatId, { limit, cursor })
     res.json(MessagePaginateCursorResDto.parse(result))
   }
 
@@ -51,7 +51,7 @@ class MessageCtrl extends PaginateCursorCtrl {
     ICreateMessageBodyDto
   > = async (req, res) => {
     const io = req.io
-    const { message, chat } = await messageRepo.create({
+    const { message, chat } = await messageService.create({
       ...req.body,
       senderId: req.user.userId,
     })
@@ -68,7 +68,7 @@ class MessageCtrl extends PaginateCursorCtrl {
   ) => {
     try {
       const { messageId } = req.params
-      const result = await messageRepo.update(messageId, req.body)
+      const result = await messageService.update(messageId, req.body)
       res.json(MessageResDto.parse(result))
     } catch (e) {
       this.handleNotFoundError(e, 'Không tìm thấy tin nhắn')

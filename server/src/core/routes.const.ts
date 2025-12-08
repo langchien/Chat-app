@@ -1,7 +1,7 @@
 export const API_ROUTES = {
   USER: '/users',
   AUTH: '/auth',
-  FRIEND_REQUEST: '/friend-requests',
+  FRIEND: '/friends',
   OAUTH: '/oauth2',
   PROTECTED: '/protected',
   CHAT: '/chats',

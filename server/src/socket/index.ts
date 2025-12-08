@@ -1,7 +1,7 @@
 import { envConfig } from '@/config/env-config'
 import { authenticateSocket } from '@/core/access-token.middleware'
 import { AccessTokenPayload } from '@/lib/jwt.service'
-import { chatRepo } from '@/routes/chat/chat.repo'
+import { chatService } from '@/routes/chat/chat.service'
 import express from 'express'
 import { createServer } from 'http'
 import { Server } from 'socket.io'
@@ -34,7 +34,7 @@ const initSocketService = () => {
       io.emit(SOCKET_EVENTS.ONLINE_USERS, Array.from(onlineUsers.keys()))
     })
     // Chức năng join các room chat của user
-    const allChat = await chatRepo.getAllChatsByUserId(userId)
+    const allChat = await chatService.getAllChatsByUserId(userId)
     allChat.forEach((chat) => {
       socket.join(chat.id)
     })

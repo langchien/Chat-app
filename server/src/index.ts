@@ -10,6 +10,7 @@ import { redisService } from '@/lib/redis.service'
 import { s3Service } from '@/lib/s3.service'
 import { authRouter } from '@/routes/auth/auth.route'
 import { chatRouter } from '@/routes/chat/chat.route'
+import { friendRoute } from '@/routes/friend/friend.route'
 import { mediaRouter } from '@/routes/media/media.route'
 import { messageRouter } from '@/routes/message/message.route'
 import { oauth2Router } from '@/routes/oauth2/oauth2.route'
@@ -19,6 +20,7 @@ import { app, httpServer, io } from '@/socket'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
 import express from 'express'
+
 const main = async () => {
   await localFileService.initFolder() // khởi tạo các thư mục cần thiết trước khi chạy ứng dụng
   // Khởi động các dịch vụ song song
@@ -52,6 +54,8 @@ const main = async () => {
   app.use(API_ROUTES.CHAT, chatRouter)
   app.use(API_ROUTES.MESSAGE, messageRouter)
   app.use(API_ROUTES.MEDIA, mediaRouter)
+  app.use(API_ROUTES.FRIEND, friendRoute)
+
   // Phải đặt sau tất cả các route khác
   app.use(handlerExceptionDefault) // Middleware xử lý ngoại lệ
 

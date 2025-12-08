@@ -4,7 +4,7 @@ import { redisService } from '@/lib/redis.service'
 import { RequestHandler } from 'express'
 import { nanoid } from 'nanoid'
 import { UserCollection } from '../user/user.db'
-import { userRepo } from '../user/user.repo'
+import { userService } from '../user/user.service'
 
 export interface GoogleOAuth2CallbackQuery {
   code: string
@@ -114,7 +114,7 @@ export class OAuth2Ctrl {
       if (!code) return res.status(400).json({ error: 'Missing authorization code' })
       const userInfo = await this.handleOAuth2Callback(code)
       const email = userInfo.email
-      const result = await userRepo.findOneByEmail(email)
+      const result = await userService.findOneByEmail(email)
       if (!result) {
         const dataTransform = UserCollection.parse({
           email: userInfo.email,
@@ -123,7 +123,7 @@ export class OAuth2Ctrl {
           username: `google_${nanoid()}`,
           hashedPassword: email,
         })
-        const newUser = await userRepo.create(dataTransform)
+        const newUser = await userService.create(dataTransform)
         const tokens = jwtService.generateTokens({
           email,
           userId: newUser.id.toString(),

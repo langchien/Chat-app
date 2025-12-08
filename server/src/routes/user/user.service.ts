@@ -1,7 +1,7 @@
-import { BaseRepository } from '@/lib/database'
+import { BaseService } from '@/lib/database'
 import { ICreateUserInput, IUpdateUserInput, IUser } from './user.db'
 
-class UserRepo extends BaseRepository {
+class UserService extends BaseService {
   create(data: ICreateUserInput): Promise<IUser> {
     return this.prismaService.user.create({
       data,
@@ -46,7 +46,7 @@ class UserRepo extends BaseRepository {
     })
   }
 
-  searchByText(query: string, limmit: number = 20): Promise<IUser[]> {
+  searchByText(query: string, limmit: number): Promise<IUser[]> {
     return this.prismaService.user.findMany({
       where: {
         OR: [
@@ -59,6 +59,37 @@ class UserRepo extends BaseRepository {
       take: limmit,
     })
   }
+
+  // search excluding a user id
+  async searchExcludeFriend(query: string, excludeId: string, limmit: number): Promise<IUser[]> {
+    const allFiends = await this.prismaService.friend.findMany({
+      select: {
+        friendId: true,
+        userId: true,
+      },
+      where: {
+        OR: [{ userId: excludeId }, { friendId: excludeId }],
+      },
+    })
+    const excludeIds = allFiends.map((f) => (f.userId === excludeId ? f.friendId : f.userId))
+    excludeIds.push(excludeId)
+    return this.prismaService.user.findMany({
+      where: {
+        AND: [
+          {
+            OR: [
+              { username: { contains: query, mode: 'insensitive' } },
+              { displayName: { contains: query, mode: 'insensitive' } },
+              { email: { contains: query, mode: 'insensitive' } },
+            ],
+          },
+          { id: { notIn: excludeIds } },
+        ],
+      },
+      orderBy: { createdAt: 'desc' },
+      take: limmit,
+    })
+  }
 }
 
-export const userRepo = new UserRepo()
+export const userService = new UserService()

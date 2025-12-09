@@ -2,6 +2,7 @@ import { BadRequestException } from '@/core/exceptions'
 import { HttpStatusCode } from '@/core/status-code'
 import { BaseController } from '@/lib/database'
 import { IIdParamDto } from '@/lib/schema.common'
+import { SOCKET_EVENTS } from '@/socket/event.const'
 import { FriendRequestStatus } from '@prisma/client'
 import { RequestHandler } from 'express'
 import { IUserIdReqParamsDto } from '../user/user.req.dto'
@@ -12,7 +13,15 @@ import {
   IUpdateFriendRequestBodyDto,
   SearchFriendReqQueryDto,
 } from './friend.req.dto'
-import { IFriendRequestResDto } from './friend.res.dto'
+import {
+  IFriendRequestResDto,
+  IFriendStatusResDto,
+  IReceivedFriendRequestResDto,
+  ISentFriendRequestResDto,
+  ReceivedFriendRequestResDto,
+  SentFriendRequestResDto,
+} from './friend.res.dto'
+
 import { friendService } from './friend.service'
 
 class FriendController extends BaseController {
@@ -56,14 +65,17 @@ class FriendController extends BaseController {
     }
   }
 
-  getListFriendRequest: RequestHandler<any, IFriendRequestResDto[]> = async (req, res) => {
-    const result = await friendService.getListFriendRequest(req.user.userId)
-    res.json(result)
+  getReceivedFriendRequests: RequestHandler<any, IReceivedFriendRequestResDto[]> = async (
+    req,
+    res,
+  ) => {
+    const result = await friendService.getReceivedFriendRequests(req.user.userId)
+    res.json(ReceivedFriendRequestResDto.array().parse(result))
   }
 
-  getListFriendRequestFrom: RequestHandler<any, IFriendRequestResDto[]> = async (req, res) => {
-    const result = await friendService.getListFriendRequestFrom(req.user.userId)
-    res.json(result)
+  getSentFriendRequests: RequestHandler<any, ISentFriendRequestResDto[]> = async (req, res) => {
+    const result = await friendService.getSentFriendRequests(req.user.userId)
+    res.json(SentFriendRequestResDto.array().parse(result))
   }
 
   deleteFriendRequest: RequestHandler<IIdParamDto> = async (req, res) => {
@@ -80,7 +92,15 @@ class FriendController extends BaseController {
   unfriend: RequestHandler<IUserIdReqParamsDto> = async (req, res) => {
     const { userId } = req.params
     await friendService.unfriend(req.user.userId, userId)
+    req.io.to(userId).emit(SOCKET_EVENTS.UNFRIEND, req.user.userId)
+    req.io.to(req.user.userId).emit(SOCKET_EVENTS.UNFRIEND, userId)
     res.status(HttpStatusCode.NoContent).json(null)
+  }
+
+  getFriendStatus: RequestHandler<IUserIdReqParamsDto, IFriendStatusResDto> = async (req, res) => {
+    const { userId } = req.params
+    const status = await friendService.getFriendStatus(req.user.userId, userId)
+    res.json({ status })
   }
 }
 

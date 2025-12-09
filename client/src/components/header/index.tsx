@@ -3,12 +3,12 @@ import { SidebarMenu, SidebarMenuItem } from '@/components/ui/sidebar'
 import { APP_PAGES } from '@/constants/link.const'
 import {
   CircleQuestionMark,
-  Contact2,
   Home,
   Maximize,
   MessageCircle,
   Minimize,
   Minus,
+  Users,
   X,
   Zap,
   type LucideProps,
@@ -31,8 +31,8 @@ const titleMap: Record<
     icon: MessageCircle,
   },
   [APP_PAGES.FRIENDS]: {
-    title: 'Danh bạ',
-    icon: Contact2,
+    title: 'Bạn bè',
+    icon: Users,
   },
   default: {
     title: 'Chào mừng đến với Hust Cha',

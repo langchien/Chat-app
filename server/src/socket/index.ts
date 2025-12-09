@@ -26,6 +26,8 @@ const initSocketService = () => {
     //   authenticateSocket(socket, next)
     // })
     const { userId }: AccessTokenPayload = socket.data.user
+    // Join room theo userId để server có thể emit event tới user cụ thể
+    socket.join(userId)
     // Xử lý chức năng online users
     onlineUsers.set(userId, socket.id)
     io.emit(SOCKET_EVENTS.ONLINE_USERS, Array.from(onlineUsers.keys()))
@@ -42,6 +44,9 @@ const initSocketService = () => {
       allChat.forEach((chat) => {
         socket.leave(chat.id)
       })
+    })
+    socket.on(SOCKET_EVENTS.JOIN_CHAT, (chatId: string) => {
+      socket.join(chatId)
     })
   })
   return { io, httpServer, app }

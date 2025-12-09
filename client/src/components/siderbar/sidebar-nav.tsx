@@ -7,14 +7,14 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
 import { APP_PAGES } from '@/constants/link.const'
-import { Contact2 } from 'lucide-react'
+import { Users } from 'lucide-react'
 import { Link } from 'react-router'
 
 const items = [
   {
-    title: 'Danh bạ',
+    title: 'Bạn bè',
     url: APP_PAGES.FRIENDS,
-    icon: Contact2,
+    icon: Users,
   },
 ]
 export function SidebarNav() {

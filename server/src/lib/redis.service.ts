@@ -8,10 +8,7 @@ class RedisService {
   private client: RedisClientType
   private constructor() {
     this.client = createClient({
-      socket: {
-        host: envConfig.redis.host,
-        port: envConfig.redis.port,
-      },
+      url: envConfig.redisUrl,
     })
   }
   static getInstance(): RedisService {

@@ -24,7 +24,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 
 export default function ChatPage({ loaderData }: Route.ComponentProps) {
   return (
-    <div className='relative h-screen bg-background flex flex-col'>
+    <div className='h-full flex-1 flex flex-col overflow-auto'>
       <ChatHeader chat={loaderData.chat} />
       <Suspense key={loaderData.chat.id} fallback={<ChatWindowSkeleton />}>
         <Await resolve={loaderData.messages}>

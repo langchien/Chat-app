@@ -68,6 +68,52 @@ class ChatService extends BaseService {
     return this.prismaService.chat.delete({ where: { id: id } })
   }
 
+  async updateChatDisplayName(
+    chatId: string,
+    userId: string,
+    displayName: string,
+  ): Promise<IChatIncludeParticipants> {
+    const chat = await this.findOneById(chatId, userId)
+    if (!chat) throw new NotFoundException('Chat không tồn tại')
+
+    const groupInfo = chat.groupInfo
+    let result: IChatIncludeParticipants
+
+    if (groupInfo) {
+      result = await this.update(chatId, {
+        groupInfo: {
+          ...groupInfo,
+          name: displayName,
+        },
+      })
+    } else {
+      const members = chat.participants.filter((p) => p.userId !== userId)
+      const member = members[0]
+      // Note: This logic seems to assume direct chat has only 2 participants.
+      // If it's a direct chat, changing "display name" usually means changing nickname for the OTHER person?
+      // Or for the current user?
+      // Original code: const members = chat.participants.filter((p) => p.userId !== userId)
+      // updatedParticipant = updateParticipantsNickname(member.id, displayName)
+      // logical implication: I am renaming the OTHER person in my view?
+      // Or renaming myself?
+      // Actually typically in direct chat, you nickname the other person.
+
+      const updatedParticipant = await this.updateParticipantsNickname(member.id, displayName)
+
+      // We need to return the full chat with updated participant info simulating the result
+      // forcing type cast or refetching. Refetching is safer but one extra query.
+      // Let's modify the chat object in memory as original code did.
+
+      result = {
+        ...chat,
+        participants: chat.participants.map((p) =>
+          p.id === updatedParticipant.id ? { ...p, nickname: updatedParticipant.nickname } : p,
+        ),
+      }
+    }
+    return result
+  }
+
   async getAllChatsByUserId(userId: string): Promise<IChatIncludeParticipants[]> {
     return this.prismaService.chat.findMany({
       include: {

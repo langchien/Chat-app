@@ -6,11 +6,28 @@ import {
   isUniqueConstraintError,
 } from '@/lib/database'
 import { IUser } from '../user/user.db'
+import { userService } from '../user/user.service'
 import { ICreateFriendRequestInput, IFriend, IFriendRequest } from './friend.db'
 import { FriendStatus } from './friend.res.dto'
 import { FriendRequestStatus } from './friend.schema'
 
 class FriendService extends BaseService {
+  async searchNewFriends(q: string, fromId: string, limit?: number) {
+    return userService.searchExcludeFriend(q, fromId, limit ?? 20)
+  }
+
+  async updateFriendRequestStatus(requestId: string, userId: string, status: FriendRequestStatus) {
+    if (status === FriendRequestStatus.pending) throw new BadRequestException()
+
+    if (status === FriendRequestStatus.accepted) {
+      const result = await this.acceptFriendRequest(requestId, userId)
+      return result.friendRequest
+    } else if (status === FriendRequestStatus.rejected) {
+      return this.rejectFriendRequest(requestId, userId)
+    }
+    throw new BadRequestException(undefined, 'Trạng thái không hợp lệ')
+  }
+
   async createFriendRequest(data: ICreateFriendRequestInput): Promise<IFriendRequest> {
     if (data.fromId === data.toId)
       throw new BadRequestException(undefined, 'Không thể gửi lời mời kết bạn với chính mình')

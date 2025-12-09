@@ -23,13 +23,9 @@ class MessageCtrl extends PaginateCursorCtrl {
   }
 
   deleteOneById: RequestHandler<IMessageIdParamDto> = async (req, res) => {
-    try {
-      const { messageId } = req.params
-      await messageService.delete(messageId)
-      res.status(204).json()
-    } catch (e) {
-      this.handleNotFoundError(e, 'Không tìm thấy tin nhắn')
-    }
+    const { messageId } = req.params
+    await messageService.delete(messageId)
+    res.status(204).json()
   }
 
   getMessagesByCursor: RequestHandler<IChatIdParamDto, IMessagePaginateCursorResDto> = async (
@@ -66,13 +62,9 @@ class MessageCtrl extends PaginateCursorCtrl {
     req,
     res,
   ) => {
-    try {
-      const { messageId } = req.params
-      const result = await messageService.update(messageId, req.body)
-      res.json(MessageResDto.parse(result))
-    } catch (e) {
-      this.handleNotFoundError(e, 'Không tìm thấy tin nhắn')
-    }
+    const { messageId } = req.params
+    const result = await messageService.update(messageId, req.body)
+    res.json(MessageResDto.parse(result))
   }
 }
 

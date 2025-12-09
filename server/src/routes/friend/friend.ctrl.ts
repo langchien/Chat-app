@@ -3,11 +3,9 @@ import { HttpStatusCode } from '@/core/status-code'
 import { BaseController } from '@/lib/database'
 import { IIdParamDto } from '@/lib/schema.common'
 import { SOCKET_EVENTS } from '@/socket/event.const'
-import { FriendRequestStatus } from '@prisma/client'
 import { RequestHandler } from 'express'
 import { IUserIdReqParamsDto } from '../user/user.req.dto'
 import { IUserResDto, UserResDto } from '../user/user.res.dto'
-import { userService } from '../user/user.service'
 import {
   ICreateFriendRequestBodyDto,
   IUpdateFriendRequestBodyDto,
@@ -34,7 +32,7 @@ class FriendController extends BaseController {
       })
     const { q, limit } = parseQuery.data
     const fromId = req.user!.userId
-    const result = await userService.searchExcludeFriend(q, fromId, limit)
+    const result = await friendService.searchNewFriends(q, fromId, limit)
     res.json(UserResDto.array().parse(result))
   }
 
@@ -55,14 +53,8 @@ class FriendController extends BaseController {
   > = async (req, res) => {
     const { id } = req.params
     const status = req.body.status
-    if (status === FriendRequestStatus.pending) throw new BadRequestException()
-    if (status === FriendRequestStatus.accepted) {
-      const result = await friendService.acceptFriendRequest(id, req.user.userId)
-      res.json(result.friendRequest)
-    } else if (status === FriendRequestStatus.rejected) {
-      const result = await friendService.rejectFriendRequest(id, req.user.userId)
-      res.json(result)
-    }
+    const result = await friendService.updateFriendRequestStatus(id, req.user.userId, status)
+    res.json(result)
   }
 
   getReceivedFriendRequests: RequestHandler<any, IReceivedFriendRequestResDto[]> = async (

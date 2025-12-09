@@ -1,7 +1,8 @@
+import { ChatSidebar } from '@/components/siderbar'
 import { APP_PAGES } from '@/constants/link.const'
 import { useAuthStore } from '@/hooks/stores/auth.store'
 import { useEffect } from 'react'
-import { Outlet, useNavigate } from 'react-router'
+import { useNavigate } from 'react-router'
 
 export default function PrivateLayout() {
   const user = useAuthStore((state) => state.user)
@@ -9,5 +10,5 @@ export default function PrivateLayout() {
   useEffect(() => {
     if (!user) navigate(APP_PAGES.SIGNIN)
   }, [user, navigate])
-  return <Outlet />
+  return <ChatSidebar />
 }

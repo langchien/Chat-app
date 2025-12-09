@@ -16,39 +16,33 @@ const features = [
     description:
       'Ứng dụng chat hiện đại với tin nhắn tức thời và cuộc gọi video chất lượng cao. Kết nối với bạn bè và đồng nghiệp một cách dễ dàng.',
     icon: Zap,
-    image: '🌐',
   },
   {
     title: 'Chat Real-time',
     description:
       'Gửi và nhận tin nhắn tức thời với độ trễ cực thấp. Hỗ trợ văn bản, emoji, hình ảnh và file đính kèm.',
     icon: MessageCircle,
-    image: '🗨️',
   },
   {
     title: 'Gọi Video Trực Tuyến',
     description:
       'Cuộc gọi video HD với chất lượng ổn định. Hỗ trợ gọi 1-1 và gọi nhóm với nhiều người tham gia.',
     icon: Video,
-    image: '📹',
   },
   {
     title: 'Siêu nhanh',
     description: 'Tối ưu hiệu suất để mang lại trải nghiệm mượt mà, không gián đoạn.',
     icon: Rocket,
-    image: '⚡',
   },
   {
     title: 'Bảo mật',
     description: 'Dữ liệu của bạn được bảo vệ an toàn với các tiêu chuẩn mã hóa cao nhất.',
     icon: Lock,
-    image: '🔒',
   },
   {
     title: 'Đa nền tảng',
     description: 'Sử dụng trên mọi thiết bị, từ điện thoại, máy tính bảng đến máy tính.',
     icon: Smartphone,
-    image: '📱',
   },
 ]
 
@@ -56,7 +50,7 @@ const ChatHome: React.FC = () => {
   const plugin = React.useRef(Autoplay({ delay: 2000 }))
 
   return (
-    <div className='h-screen w-full dark:text-white bg-linear-to-br dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex flex-col space-y-6 items-center justify-center'>
+    <div className='h-full w-full dark:text-white bg-linear-to-br dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex flex-col space-y-6 items-center justify-center px-5'>
       <div className='inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 mb-6'>
         <Zap className='w-4 h-4 text-blue-400' />
         <span className='text-sm text-blue-400 font-medium'>Kết nối mọi lúc, mọi nơi</span>
@@ -65,7 +59,7 @@ const ChatHome: React.FC = () => {
         Ứng dụng chat hiện đại với tin nhắn tức thời và cuộc gọi video chất lượng cao. Kết nối với
         bạn bè và đồng nghiệp một cách dễ dàng.
       </h1>
-      <div className=' flex items-center justify-center px-20'>
+      <div className=' flex items-center justify-center px-10 w-full'>
         <Carousel
           plugins={[plugin.current]}
           className='w-full '
@@ -78,8 +72,8 @@ const ChatHome: React.FC = () => {
             {features.map((feature, index) => {
               const IconComponent = feature.icon
               return (
-                <CarouselItem key={index} className='basis-full xl:basis-1/3 p-2'>
-                  <div className='p-1'>
+                <CarouselItem key={index} className='basis-full md:basis-2/3 xl:basis-1/3 p-2'>
+                  <div className='px-5'>
                     <Item
                       variant={'outline'}
                       className='h-full group mb-6 dark:bg-blue-300/20 border border-blue-300/60 dark:border-blue-500/60 hover:bg-blue-400/30 hover:border-blue-500/80 transition-all shadow-lg'

@@ -23,7 +23,12 @@ export class ChatCtrl extends PaginateCursorCtrl {
       ...restData,
       receiverIds: [...new Set([...receiverIds, userId])],
     })
-    res.status(HttpStatusCode.Created).json(ChatResDto.parse(result))
+    const parseData = ChatResDto.parse(result)
+    req.io.to(userId).emit(SOCKET_EVENTS.UPDATE_CHAT, parseData)
+    receiverIds.forEach((receiverId) => {
+      req.io.to(receiverId).emit(SOCKET_EVENTS.UPDATE_CHAT, parseData)
+    })
+    res.status(HttpStatusCode.Created).json(parseData)
   }
 
   update: RequestHandler<IChatIdParamDto, IChatResDto, IUpdateChatReqDto> = async (req, res) => {

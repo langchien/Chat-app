@@ -51,6 +51,11 @@ class ChatRequest extends ApiRequest {
     })
     return response.data
   }
+
+  getOrCreateChatByUserId = async (userId: string) => {
+    const response = await this.httpRequest.get<IChatResDto>(`${this.basePath}/user/${userId}`)
+    return response.data
+  }
 }
 
 export const chatRequest = new ChatRequest(API_ROUTES.CHAT)

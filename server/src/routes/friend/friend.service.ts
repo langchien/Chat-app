@@ -7,6 +7,7 @@ import {
 } from '@/lib/database'
 import { IUser } from '../user/user.db'
 import { ICreateFriendRequestInput, IFriend, IFriendRequest } from './friend.db'
+import { FriendStatus } from './friend.res.dto'
 import { FriendRequestStatus } from './friend.schema'
 
 class FriendService extends BaseService {
@@ -36,18 +37,24 @@ class FriendService extends BaseService {
       throw error
     }
   }
-  getListFriendRequest(toId: string): Promise<IFriendRequest[]> {
+  getReceivedFriendRequests(toId: string): Promise<IFriendRequest[]> {
     return this.prismaService.friendRequest.findMany({
       where: {
         toId,
       },
+      include: {
+        from: true,
+      },
     })
   }
 
-  getListFriendRequestFrom(fromId: string): Promise<IFriendRequest[]> {
+  getSentFriendRequests(fromId: string): Promise<IFriendRequest[]> {
     return this.prismaService.friendRequest.findMany({
       where: {
         fromId,
+      },
+      include: {
+        to: true,
       },
     })
   }
@@ -103,12 +110,12 @@ class FriendService extends BaseService {
       include: {
         friends: {
           include: {
-            user: true,
+            friend: true,
           },
         },
       },
     })
-    return user.friends.map((friend) => friend.user)
+    return user.friends.map((friend) => friend.friend)
   }
 
   async unfriend(userAId: string, userBId: string): Promise<void> {
@@ -151,6 +158,46 @@ class FriendService extends BaseService {
       if (isRecordNotFoundError(error)) throw new NotFoundException('Không tìm thấy bạn bè')
       throw error
     }
+  }
+
+  async getFriendStatus(myId: string, otherId: string): Promise<FriendStatus> {
+    if (myId === otherId) return FriendStatus.NOT_FRIEND
+
+    // 1. Check if friends
+    const isFriend = await this.prismaService.friend.findUnique({
+      where: {
+        userId_friendId: {
+          userId: myId,
+          friendId: otherId,
+        },
+      },
+      select: { id: true },
+    })
+    if (isFriend) return FriendStatus.FRIEND
+
+    // 2. Check for pending request sent by me
+    const requestSent = await this.prismaService.friendRequest.findFirst({
+      where: {
+        fromId: myId,
+        toId: otherId,
+        status: FriendRequestStatus.pending,
+      },
+      select: { id: true },
+    })
+    if (requestSent) return FriendStatus.REQUEST_SENT
+
+    // 3. Check for pending request received from them
+    const requestReceived = await this.prismaService.friendRequest.findFirst({
+      where: {
+        fromId: otherId,
+        toId: myId,
+        status: FriendRequestStatus.pending,
+      },
+      select: { id: true },
+    })
+    if (requestReceived) return FriendStatus.REQUEST_RECEIVED
+
+    return FriendStatus.NOT_FRIEND
   }
 }
 

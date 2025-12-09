@@ -16,6 +16,11 @@ export default [
       index('routes/private/chat-home.tsx'),
       route(':chatId', 'routes/private/chat.tsx'),
     ]),
-    route(APP_PAGES.FRIENDS, 'routes/private/friend.tsx'),
+    route(APP_PAGES.FRIENDS, 'routes/private/friend.tsx', [
+      index('routes/private/friend/list.tsx'),
+      route('add', 'routes/private/friend/add.tsx'),
+      route('request', 'routes/private/friend/request.tsx'),
+      route('receive', 'routes/private/friend/receive.tsx'),
+    ]),
   ]),
 ] satisfies RouteConfig

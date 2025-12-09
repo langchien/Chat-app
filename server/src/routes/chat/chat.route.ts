@@ -1,6 +1,7 @@
 import { accessTokenValidate } from '@/core/access-token.middleware'
 import { zodValidate } from '@/core/validate.middleware'
 import { Router } from 'express'
+import { UserIdReqParamsDto } from '../user/user.req.dto'
 import { chatCtrl } from './chat.ctrl'
 import {
   ChatIdParam,
@@ -34,3 +35,9 @@ chatRouter.get('/:chatId', zodValidate(ChatIdParam, 'params'), chatCtrl.getById)
 chatRouter.delete('/:chatId', zodValidate(ChatIdParam, 'params'), chatCtrl.delete)
 
 chatRouter.get('/', chatCtrl.paginate)
+
+chatRouter.get(
+  '/user/:userId',
+  zodValidate(UserIdReqParamsDto, 'params'),
+  chatCtrl.getOrCreateChatByUserId,
+)

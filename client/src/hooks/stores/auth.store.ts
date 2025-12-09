@@ -8,7 +8,6 @@ import type {
   IVerifyOtpDto,
 } from '@/services/auth/auth.req.dto'
 import { protectedRequest } from '@/services/protected'
-import { redirect } from 'react-router'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { useAppStore } from './app.store'
@@ -117,11 +116,13 @@ export const useAuthStore = create<IAuthState & IAuthActions>()(
         const setLoading = useAppStore.getState().setLoading
         setLoading(true)
         try {
-          await authRequest.logout()
+          if (get().accessToken) {
+            await authRequest.logout()
+          }
         } finally {
           setLoading(false)
           get().clearAuthStore()
-          redirect(APP_PAGES.SIGNIN)
+          window.location.href = APP_PAGES.SIGNIN
         }
       },
       signOutAllDevices: async () => {
@@ -132,7 +133,7 @@ export const useAuthStore = create<IAuthState & IAuthActions>()(
         } finally {
           setLoading(false)
           get().clearAuthStore()
-          redirect(APP_PAGES.SIGNIN)
+          window.location.href = APP_PAGES.SIGNIN
         }
       },
       verifyEmail: async (body: IVerifyOtpDto) => {

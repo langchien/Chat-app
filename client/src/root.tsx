@@ -46,11 +46,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   const accessToken = useAuthStore((state) => state.accessToken)
-  const { connect, disconnect, isConnected } = useSocketStore()
+  const { connect, disconnect } = useSocketStore()
   useEffect(() => {
     if (accessToken) connect()
     return () => disconnect()
-  }, [accessToken, connect, disconnect, isConnected])
+  }, [accessToken, connect, disconnect])
   return <Outlet />
 }
 

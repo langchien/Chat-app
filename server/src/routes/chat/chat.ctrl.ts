@@ -4,6 +4,7 @@ import { isRecordNotFoundError } from '@/lib/database'
 import { PaginateCursorCtrl } from '@/lib/paginate-cusor.ctrl'
 import { SOCKET_EVENTS } from '@/socket/event.const'
 import { RequestHandler } from 'express'
+import { IUserIdReqParamsDto } from '../user/user.req.dto'
 import { IChat } from './chat.db'
 import {
   IChatIdParamDto,
@@ -71,7 +72,7 @@ export class ChatCtrl extends PaginateCursorCtrl {
     }
     const restulParsed = ChatResDto.parse(result)
     io.to(chatId).emit(SOCKET_EVENTS.UPDATE_CHAT, restulParsed)
-    res.status(HttpStatusCode.Ok).json(restulParsed)
+    res.json(restulParsed)
   }
 
   getById: RequestHandler<IChatIdParamDto> = async (req, res) => {
@@ -98,6 +99,17 @@ export class ChatCtrl extends PaginateCursorCtrl {
     const query = this.parsePaginationQuery(req.query)
     const results = await chatService.getChatsByCursor(req.user.userId, query)
     res.json(results)
+  }
+
+  getOrCreateChatByUserId: RequestHandler<IUserIdReqParamsDto, IChatResDto> = async (req, res) => {
+    const { userId } = req.params
+    const result = await chatService.getOrCreateChatByUserId(userId, req.user.userId)
+    const restulParsed = ChatResDto.parse(result.chat)
+    if (result.isCreate) {
+      req.io.to(userId).emit(SOCKET_EVENTS.UPDATE_CHAT, restulParsed)
+      req.io.to(req.user.userId).emit(SOCKET_EVENTS.UPDATE_CHAT, restulParsed)
+    }
+    res.json(restulParsed)
   }
 }
 

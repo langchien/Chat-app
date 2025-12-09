@@ -7,7 +7,10 @@ export const APP_PAGES = {
   FORGOT_PASSWORD: '/auth/forgot-password',
   RESET_PASSWORD: '/auth/reset-password',
   CHAT: '/chat',
+  FRIENDS: '/friends',
 } as const
+
+export type AppPages = (typeof APP_PAGES)[keyof typeof APP_PAGES]
 
 export const APP_IMAGES = {
   AVATAR_DEFAULT: '/avatar.jpg',

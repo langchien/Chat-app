@@ -53,7 +53,7 @@ export function ChatDisplayName({ chat }: { chat: IChat }) {
                 <DialogDescription></DialogDescription>
               </DialogHeader>
               <div className='w-full flex flex-col items-center justify-center space-y-3 py-3'>
-                <ChatAvatar chatItem={chat} isBigSize />
+                <ChatAvatar chatItem={chat} />
                 {groupInfo ? (
                   <p className='text-center text-sm'>
                     Bạn có chắc chắn muốn đổi tên nhóm, khi xác nhận tên nhóm sẽ được thay đổi cho

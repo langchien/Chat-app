@@ -48,7 +48,7 @@ export function ChatInfo({ chat }: { chat: IChat }) {
         </DrawerHeader>
 
         <div className='p-3 border-border w-full flex flex-col space-y-2 justify-center items-center border-b'>
-          <ChatAvatar chatItem={chat} isBigSize />
+          <ChatAvatar chatItem={chat} size='lg' />
           <ChatDisplayName chat={chat} />
         </div>
 

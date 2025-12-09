@@ -28,12 +28,12 @@ export function AccountSetting() {
   const signOut = useAuthStore((state) => state.signOut)
   if (!user) return null
   return (
-    <div className='flex items-center justify-between w-full h-full group'>
+    <div className='flex items-center justify-between w-full h-full group/settings'>
       <UserInfo user={user} />
       <Dialog>
         <DialogTrigger asChild>
           <Button variant={'ghost'} size={'icon-lg'}>
-            <Settings className='size-6 group-hover:animate-spin' />
+            <Settings className='size-6 group-hover/settings:animate-spin' />
           </Button>
         </DialogTrigger>
         <DialogContent className='max-w-xl md:max-w-3xl lg:max-w-4xl min-h-[400px]'>

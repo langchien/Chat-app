@@ -13,7 +13,7 @@ export function SidebarDirectChat({ chatDirects, activeChatId }: SidebarDirectCh
   return (
     <SidebarGroup className='space-y-2'>
       <SidebarGroupLabel className='text-base flex justify-between items-center'>
-        Bạn bè
+        Trò chuyện trực tiếp
         <User className='size-12' />
       </SidebarGroupLabel>
       {chatDirects.map((chatItem) => (

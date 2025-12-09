@@ -1,4 +1,4 @@
-import { type RouteConfig, index, layout, route } from '@react-router/dev/routes'
+import { type RouteConfig, index, layout, prefix, route } from '@react-router/dev/routes'
 import { APP_PAGES } from './constants/link.const'
 
 export default [
@@ -12,9 +12,10 @@ export default [
     route(APP_PAGES.GOOGLE_OAUTH2, 'routes/unauthenticated/google-redirect.tsx'),
   ]),
   layout('routes/private/layout.tsx', [
-    route(APP_PAGES.CHAT, 'routes/private/chat-layout.tsx', [
+    ...prefix(APP_PAGES.CHAT, [
       index('routes/private/chat-home.tsx'),
       route(':chatId', 'routes/private/chat.tsx'),
     ]),
+    route(APP_PAGES.FRIENDS, 'routes/private/friend.tsx'),
   ]),
 ] satisfies RouteConfig

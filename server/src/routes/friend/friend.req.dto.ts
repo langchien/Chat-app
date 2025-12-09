@@ -7,16 +7,14 @@ export const SearchFriendReqQueryDto = z.object({
   limit: z.coerce.number(),
 })
 
-export const CreateFriendRequestBodyDto = z
-  .object({
-    toId: createStringId('Id người nhận'),
-    message: createString('Lời nhắn'),
-  })
-  .strict()
+export const CreateFriendRequestBodyDto = z.object({
+  toId: createStringId('Id người nhận'),
+  message: createString('Lời nhắn'),
+})
 
 export const UpdateFriendRequestBodyDto = FriendRequest.pick({
   status: true,
-}).strict()
+})
 
 export interface ISearchFriendReqQueryDto extends z.infer<typeof SearchFriendReqQueryDto> {}
 

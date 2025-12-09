@@ -8,10 +8,10 @@ import { OnlineBadge } from './online-badge'
 
 interface ChatAvatarProps {
   chatItem: IChat
-  isBigSize?: boolean
+  size?: 'sm' | 'md' | 'lg'
 }
 
-export function ChatAvatar({ chatItem, isBigSize }: ChatAvatarProps) {
+export function ChatAvatar({ chatItem, size = 'md' }: ChatAvatarProps) {
   const onlineUsers = useSocketStore((state) => state.onlineUsers)
   const users = chatItem.participants.map((p) => p.user)
   const isGroup = chatItem.type === 'group'
@@ -23,14 +23,30 @@ export function ChatAvatar({ chatItem, isBigSize }: ChatAvatarProps) {
           {users.slice(0, 2).map((user) => (
             <Avatar
               key={user.id}
-              className={cn('size-9 border-2 border-white', { 'size-14': isBigSize })}
+              className={cn('size-9 border-2 border-white', {
+                'size-14': size === 'lg',
+                'size-8': size === 'sm',
+              })}
             >
               {user.avatarUrl ? <AvatarImage src={user.avatarUrl} alt={user.displayName} /> : null}
               <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
             </Avatar>
           ))}
-          <Avatar className='size-9 border-2 border-white bg-blue-50 flex items-center justify-center'>
-            <Ellipsis size={20} className='text-blue-600 mx-auto my-auto' />
+          <Avatar
+            className={cn(
+              'border-2 size-9 border-white bg-blue-50 flex items-center justify-center',
+              {
+                'size-14': size === 'lg',
+                'size-8': size === 'sm',
+              },
+            )}
+          >
+            <Ellipsis
+              className={cn('text-blue-600 mx-auto my-auto', {
+                'size-6': size === 'lg',
+                'size-4': size === 'sm',
+              })}
+            />
           </Avatar>
         </div>
       )
@@ -40,7 +56,10 @@ export function ChatAvatar({ chatItem, isBigSize }: ChatAvatarProps) {
         {users.slice(0, 3).map((user) => (
           <Avatar
             key={user.id}
-            className={cn('size-9 border-2 border-white', { 'size-11': isBigSize })}
+            className={cn('size-9 border-2 border-white', {
+              'size-14': size === 'lg',
+              'size-8': size === 'sm',
+            })}
           >
             {user.avatarUrl ? <AvatarImage src={user.avatarUrl} alt={user.displayName} /> : null}
             <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
@@ -52,7 +71,12 @@ export function ChatAvatar({ chatItem, isBigSize }: ChatAvatarProps) {
   const isOnline = onlineUsers.includes(directChatMember.user.id)
   return (
     <div className='relative w-fit'>
-      <Avatar className={cn('size-11 border-2 border-white', { 'size-15': isBigSize })}>
+      <Avatar
+        className={cn('size-11 border-2 border-white', {
+          'size-15': size === 'lg',
+          'size-8': size === 'sm',
+        })}
+      >
         {directChatMember.user.avatarUrl ? (
           <AvatarImage
             src={directChatMember.user.avatarUrl}

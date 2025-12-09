@@ -1,4 +1,5 @@
-import { BaseService } from '@/lib/database'
+import { NotFoundException } from '@/core/exceptions'
+import { BaseService, isRecordNotFoundError } from '@/lib/database'
 import { IPaginateCursorQuery } from '@/lib/paginate-cusor.ctrl'
 import { IChatResDto } from '../chat/chat.res.dto'
 import { ICreateMessageInput, IMessage, IUpdateMessageInput } from './message.db'
@@ -41,20 +42,25 @@ class MessageService extends BaseService {
     }
   }
 
-  update(id: string, data: IUpdateMessageInput): Promise<IMessageResDto> {
-    const { mediaIds, ...rest } = data
-    return this.prismaService.message.update({
-      where: { id },
-      data: {
-        ...rest,
-        medias: {
-          connect: mediaIds?.map((mediaId) => ({ id: mediaId })),
+  async update(id: string, data: IUpdateMessageInput): Promise<IMessageResDto> {
+    try {
+      const { mediaIds, ...rest } = data
+      return await this.prismaService.message.update({
+        where: { id },
+        data: {
+          ...rest,
+          medias: {
+            connect: mediaIds?.map((mediaId) => ({ id: mediaId })),
+          },
         },
-      },
-      include: {
-        medias: true,
-      },
-    })
+        include: {
+          medias: true,
+        },
+      })
+    } catch (error) {
+      if (isRecordNotFoundError(error)) throw new NotFoundException('Không tìm thấy tin nhắn')
+      throw error
+    }
   }
 
   findOneById(id: string): Promise<IMessageResDto | null> {
@@ -66,10 +72,15 @@ class MessageService extends BaseService {
     })
   }
 
-  delete(id: string): Promise<IMessage> {
-    return this.prismaService.message.delete({
-      where: { id },
-    })
+  async delete(id: string): Promise<IMessage> {
+    try {
+      return await this.prismaService.message.delete({
+        where: { id },
+      })
+    } catch (error) {
+      if (isRecordNotFoundError(error)) throw new NotFoundException('Không tìm thấy tin nhắn')
+      throw error
+    }
   }
 
   searchByText(query: string): Promise<IMessageResDto[]> {

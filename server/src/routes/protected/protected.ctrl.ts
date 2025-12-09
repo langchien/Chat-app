@@ -1,38 +1,25 @@
-import { ConflictException, UnauthorizedException } from '@/core/exceptions'
 import { HttpStatusCode } from '@/core/status-code'
-import { hashingService } from '@/lib/hashing.service'
 import { RequestHandler } from 'express'
 import { UserResDto } from '../user/user.res.dto'
-import { userService } from '../user/user.service'
 import { IChangePassworBodyDto, IUpdateProfileBodyDto } from './protected.dto'
+import { protectedService } from './protected.service'
 
 export class ProtectedCtrl {
   getProfile: RequestHandler = async (req, res) => {
     const userId = req.user.userId
-    const user = await userService.findOneById(userId)
-    if (!user) throw new UnauthorizedException('Tài khoản không tồn tại!')
+    const user = await protectedService.getProfile(userId)
     res.status(HttpStatusCode.Ok).json(UserResDto.parse(user))
   }
 
   updateProfile: RequestHandler<any, any, IUpdateProfileBodyDto> = async (req, res) => {
     const userId = req.user.userId
-    const result = await userService.update(userId, req.body)
-    if (!result) throw new UnauthorizedException('Tài khoản không tồn tại!')
+    const result = await protectedService.updateProfile(userId, req.body)
     res.status(HttpStatusCode.Ok).json(UserResDto.parse(result))
   }
 
   changePassword: RequestHandler<any, any, IChangePassworBodyDto> = async (req, res) => {
-    const { oldPassword, newPassword } = req.body
     const userId = req.user.userId
-    const user = await userService.findOneById(userId)
-    if (!user) throw new UnauthorizedException('Tài khoản không tồn tại!')
-    const isPasswordMatch = await hashingService.compare(oldPassword, user.hashedPassword)
-    if (!isPasswordMatch) throw new ConflictException('Mật khẩu cũ không đúng')
-    if (oldPassword === newPassword)
-      throw new ConflictException('Mật khẩu mới không được trùng với mật khẩu cũ')
-    const hashPassword = await hashingService.hash(newPassword)
-    const result = await userService.update(userId, { hashedPassword: hashPassword })
-    if (!result) throw new UnauthorizedException('Tài khoản không tồn tại!')
+    const result = await protectedService.changePassword(userId, req.body)
     res.status(HttpStatusCode.Ok).json(UserResDto.parse(result))
   }
 }

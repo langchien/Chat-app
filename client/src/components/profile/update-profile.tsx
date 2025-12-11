@@ -17,11 +17,11 @@ import {
 } from '@/components/ui/input-group'
 import { useAuthStore } from '@/hooks/stores/auth.store'
 import { useRequest } from '@/hooks/use-request'
-import { protectedRequest } from '@/services/protected'
 import {
+  protectedRequest,
   UpdateProfileBodyDto,
   type IUpdateProfileBodyDto,
-} from '@/services/protected/protected.dto'
+} from '@/services/protected'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Info } from 'lucide-react'
 import { useForm } from 'react-hook-form'

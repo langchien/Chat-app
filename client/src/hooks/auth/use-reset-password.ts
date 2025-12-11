@@ -1,8 +1,5 @@
 import { useAuthStore } from '@/hooks/stores/auth.store'
-import {
-  type IResetPasswordReqBodyDto,
-  ResetPasswordReqBodyDto,
-} from '@/services/auth/auth.req.dto'
+import { type IResetPasswordReqBodyDto, ResetPasswordReqBodyDto } from '@/services/auth'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'

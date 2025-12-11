@@ -10,11 +10,11 @@ import {
 } from '@/components/ui/form'
 import { useAuthStore } from '@/hooks/stores/auth.store'
 import { useRequest } from '@/hooks/use-request'
-import { protectedRequest } from '@/services/protected'
 import {
   ChangePassworBodyDto,
+  protectedRequest,
   type IChangePassworBodyDto,
-} from '@/services/protected/protected.dto'
+} from '@/services/protected'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { LogOut, Shield } from 'lucide-react'
 import { useForm } from 'react-hook-form'

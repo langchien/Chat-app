@@ -15,7 +15,7 @@ import { useAuthStore } from '@/hooks/stores/auth.store'
 import { useRequest } from '@/hooks/use-request'
 import { getInitials } from '@/lib/utils'
 import type { IUser } from '@/services/api.types'
-import { chatRequest } from '@/services/chats'
+import { chatRequest } from '@/services/chat'
 import { useState } from 'react'
 import { toast } from 'sonner'
 

@@ -2,14 +2,14 @@ import type {
   IChatPaginateCursorResDto,
   IChatResDto,
   IParticipantResDto,
-} from './chats/chat.res.dto'
+} from './chat/chat.res.dto'
 import type {
   IFriendRequestResDto,
   IFriendResDto,
   IReceivedFriendRequestResDto,
   ISentFriendRequestResDto,
 } from './friend/friend.res.dto'
-import type { IMediaResDto } from './media/media.res'
+import type { IMediaResDto } from './media/media.res.dto'
 import type { IMessagePaginateCursorResDto, IMessageResDto } from './messages/message.res.dto'
 import type { IUserResDto } from './user/user.res.dto'
 

@@ -1,7 +1,7 @@
 import { ChatHeader } from '@/components/chat/chat-header'
 import { ChatWindow } from '@/components/chat/chat-window'
 import { ChatWindowSkeleton } from '@/components/chat/chat-window-skeleton'
-import { chatRequest } from '@/services/chats'
+import { chatRequest } from '@/services/chat'
 import { messageRequest } from '@/services/messages'
 import { Suspense } from 'react'
 import { Await } from 'react-router'

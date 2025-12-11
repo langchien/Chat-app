@@ -1,5 +1,5 @@
 import type { IChat } from '@/services/api.types'
-import { chatRequest } from '@/services/chats'
+import { chatRequest } from '@/services/chat'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 

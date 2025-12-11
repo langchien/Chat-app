@@ -1,7 +1,7 @@
 import { APP_PAGES } from '@/constants/link.const'
 import { useAppStore } from '@/hooks/stores/app.store'
 import { useRequest } from '@/hooks/use-request'
-import { type IRegisterReqBodyDto, RegisterReqBodyDto } from '@/services/auth/auth.req.dto'
+import { type IRegisterReqBodyDto, RegisterReqBodyDto } from '@/services/auth'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { useAuthStore } from '../stores/auth.store'

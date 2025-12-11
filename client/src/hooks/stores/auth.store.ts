@@ -1,12 +1,12 @@
 import { APP_PAGES } from '@/constants/link.const'
 import type { IUser } from '@/services/api.types'
-import { authRequest } from '@/services/auth'
 import type {
   ILoginReqBodyDto,
   IRegisterReqBodyDto,
   IResetPasswordReqBodyDto,
   IVerifyOtpDto,
-} from '@/services/auth/auth.req.dto'
+} from '@/services/auth'
+import { authRequest } from '@/services/auth'
 import { protectedRequest } from '@/services/protected'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'

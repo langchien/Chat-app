@@ -1,13 +1,13 @@
 import { APP_PAGES } from '@/constants/link.const'
 import { useAppStore } from '@/hooks/stores/app.store'
 import { useRequest } from '@/hooks/use-request'
-import { authRequest } from '@/services/auth'
 import {
+  authRequest,
   type ISendOtpReqBodyDto,
   type IVerifyOtpDto,
   SendOtpReqBodyDto,
   VerifyOtp,
-} from '@/services/auth/auth.req.dto'
+} from '@/services/auth'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'

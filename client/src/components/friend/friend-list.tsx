@@ -30,7 +30,6 @@ export function FriendList({ friends }: { friends: IUser[] }) {
   const handleGoChat = useRequest((userId: string) => chatRequest.getOrCreateChatByUserId(userId), {
     onSuccess: (data) => {
       navigate(APP_PAGES.CHAT + `/${data.id}`)
-      if (socket) socket.emit(SOCKET_EVENTS.JOIN_CHAT, data.id)
     },
   })
   const [listFriend, setListFriend] = useState<IUser[]>(friends)

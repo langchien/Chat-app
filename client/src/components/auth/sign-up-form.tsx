@@ -6,7 +6,7 @@ import { APP_PAGES } from '@/constants/link.const'
 import { useSignupForm } from '@/hooks/auth/use-signup'
 import { Controller } from 'react-hook-form'
 import { Link } from 'react-router'
-import { PasswordInput } from '../ui/custom-input'
+import { InputPassword } from '../ui/custom-input'
 
 export function SignUpForm() {
   const { form, isLoading, onSubmit } = useSignupForm()
@@ -93,11 +93,10 @@ export function SignUpForm() {
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldLabel htmlFor='password'>Mật khẩu</FieldLabel>
-              <PasswordInput
+              <InputPassword
                 {...field}
                 id='password'
                 name='password'
-                type='password'
                 placeholder='Nhập mật khẩu của bạn'
                 aria-invalid={fieldState.invalid}
                 autoComplete='off'
@@ -112,11 +111,10 @@ export function SignUpForm() {
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldLabel htmlFor='confirmPassword'>Xác nhận mật khẩu</FieldLabel>
-              <PasswordInput
+              <InputPassword
                 {...field}
                 id='confirmPassword'
                 name='confirmPassword'
-                type='password'
                 placeholder='Nhập lại mật khẩu'
                 aria-invalid={fieldState.invalid}
                 autoComplete='off'

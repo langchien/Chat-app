@@ -1,5 +1,6 @@
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useChatInput } from '@/hooks/use-chat-input'
 import { cn } from '@/lib/utils'
@@ -57,15 +58,20 @@ export function ChatInput({ chatId }: { chatId: string }) {
           </TooltipContent>
         </Tooltip>
         <div className='flex-1 relative'>
-          <Input
-            ref={inputRef}
-            placeholder='Aa'
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyDown={onKeyDown}
-            className='w-full'
-            disabled={isSending}
-          />
+          <InputGroup>
+            <InputGroupInput
+              ref={inputRef}
+              placeholder='Aa'
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyDown={onKeyDown}
+              className='w-full'
+              disabled={isSending}
+            />
+            <InputGroupAddon align='inline-end'>
+              <InputEmoji addEmoji={addEmoji} />
+            </InputGroupAddon>
+          </InputGroup>
           <Card
             className={cn(
               'absolute w-full -top-1 left-0 right-0 -translate-y-full p-2 pt-3 bg-card rounded-2xl overflow-auto flex flex-row flex-nowrap gap-2',
@@ -104,7 +110,6 @@ export function ChatInput({ chatId }: { chatId: string }) {
             ))}
           </Card>
         </div>
-        <InputEmoji addEmoji={addEmoji} />
         <Button
           onClick={handleOnSubmmit}
           size='icon'

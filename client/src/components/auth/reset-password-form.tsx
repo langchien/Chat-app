@@ -6,7 +6,7 @@ import { useResetPassword } from '@/hooks/auth/use-reset-password'
 import { CheckCircle2 } from 'lucide-react'
 import { Controller } from 'react-hook-form'
 import { Link } from 'react-router'
-import { PasswordInput } from '../ui/custom-input'
+import { InputPassword } from '../ui/custom-input'
 
 export function ResetPasswordForm() {
   const { form, onSubmit, isLoading, success } = useResetPassword()
@@ -38,11 +38,10 @@ export function ResetPasswordForm() {
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldLabel htmlFor='password'>Mật khẩu mới</FieldLabel>
-              <PasswordInput
+              <InputPassword
                 {...field}
                 id='password'
                 name='password'
-                type='password'
                 placeholder='Nhập mật khẩu mới'
                 aria-invalid={fieldState.invalid}
                 autoComplete='new-password'
@@ -58,11 +57,10 @@ export function ResetPasswordForm() {
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldLabel htmlFor='confirmPassword'>Xác nhận mật khẩu</FieldLabel>
-              <PasswordInput
+              <InputPassword
                 {...field}
                 id='confirmPassword'
                 name='confirmPassword'
-                type='password'
                 placeholder='Nhập lại mật khẩu'
                 aria-invalid={fieldState.invalid}
                 autoComplete='off'

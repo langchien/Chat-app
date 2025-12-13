@@ -3,7 +3,7 @@ import { Eye, EyeOff } from 'lucide-react'
 import { type ComponentProps, forwardRef, useState } from 'react'
 import { Button } from './button'
 
-export const PasswordInput = forwardRef<HTMLInputElement, ComponentProps<'input'>>(
+export const InputPassword = forwardRef<HTMLInputElement, ComponentProps<'input'>>(
   ({ disabled, ...props }, ref) => {
     const [type, setType] = useState<'password' | 'text'>('password')
     const onClickButton = () => {
@@ -15,8 +15,8 @@ export const PasswordInput = forwardRef<HTMLInputElement, ComponentProps<'input'
           placeholder='Nhập mật khẩu'
           disabled={disabled}
           ref={ref}
-          type={type}
           {...props}
+          type={type}
         />
         <InputGroupAddon align='inline-end'>
           <Button
@@ -33,4 +33,4 @@ export const PasswordInput = forwardRef<HTMLInputElement, ComponentProps<'input'
     )
   },
 )
-PasswordInput.displayName = 'PasswordInput'
+InputPassword.displayName = 'PasswordInput'

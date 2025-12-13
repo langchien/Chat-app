@@ -1,4 +1,5 @@
 import { APP_PAGES } from '@/constants/link.const'
+import { useAuthStore } from '@/hooks/stores/auth.store'
 import { useChatName } from '@/hooks/use-chat-name'
 import { cn, formatTimeAgo } from '@/lib/utils'
 import type { IChat } from '@/services/api.types'
@@ -11,6 +12,8 @@ export function ChatCard({ chatItem, activeChatId }: { chatItem: IChat; activeCh
   const lastSender = chatItem.participants.find(
     (p) => p.user.id === chatItem.lastMessage?.senderId,
   )?.user
+  const user = useAuthStore((state) => state.user)
+  const isLastSender = lastSender?.id === user?.id
   return (
     <Link to={`${APP_PAGES.CHAT}/${chatItem.id}`} key={`chatItem-${chatItem.id}`}>
       <Card
@@ -24,7 +27,9 @@ export function ChatCard({ chatItem, activeChatId }: { chatItem: IChat; activeCh
           <div className='font-bold line-clamp-1 min-w-0 capitalize'>{chatName}</div>
           {lastSender?.displayName && chatItem.lastMessage ? (
             <div className='text-xs text-muted-foreground line-clamp-1 min-w-0'>
-              <b className='capitalize'>{lastSender.displayName.split(' ')[0]}: </b>
+              <b className='capitalize'>
+                {isLastSender ? 'Bạn' : lastSender.displayName.split(' ')[0]}:{' '}
+              </b>
               {chatItem.lastMessage.content}
             </div>
           ) : (

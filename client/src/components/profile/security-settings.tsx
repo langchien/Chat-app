@@ -18,7 +18,7 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod'
 import { LogOut, Shield } from 'lucide-react'
 import { useForm } from 'react-hook-form'
-import { PasswordInput } from '../ui/custom-input'
+import { InputPassword } from '../ui/custom-input'
 
 export function SecuritySettings() {
   const form = useForm<IChangePassworBodyDto>({
@@ -51,7 +51,7 @@ export function SecuritySettings() {
                   <FormItem>
                     <FormLabel>Mật khẩu hiện tại</FormLabel>
                     <FormControl>
-                      <PasswordInput placeholder='Nhập mật khẩu hiện tại' {...field} />
+                      <InputPassword placeholder='Nhập mật khẩu hiện tại' {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -65,7 +65,7 @@ export function SecuritySettings() {
                   <FormItem>
                     <FormLabel>Mật khẩu mới</FormLabel>
                     <FormControl>
-                      <PasswordInput placeholder='Nhập mật khẩu mới' {...field} />
+                      <InputPassword placeholder='Nhập mật khẩu mới' {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -79,7 +79,7 @@ export function SecuritySettings() {
                   <FormItem>
                     <FormLabel>Xác nhận mật khẩu mới</FormLabel>
                     <FormControl>
-                      <PasswordInput placeholder='Nhập lại mật khẩu mới' {...field} />
+                      <InputPassword placeholder='Nhập lại mật khẩu mới' {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

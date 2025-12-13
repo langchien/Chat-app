@@ -5,7 +5,7 @@ import { APP_PAGES } from '@/constants/link.const'
 import { useSignInForm } from '@/hooks/auth/use-sign-in'
 import { Controller } from 'react-hook-form'
 import { Link } from 'react-router'
-import { PasswordInput } from '../ui/custom-input'
+import { InputPassword } from '../ui/custom-input'
 import { OAuth2Btn } from './oauth2'
 
 export function SignInForm() {
@@ -48,11 +48,10 @@ export function SignInForm() {
                 </Link>
               </div>
 
-              <PasswordInput
+              <InputPassword
                 {...field}
                 id='password'
                 name='password'
-                type='password'
                 placeholder='Nhập mật khẩu'
                 aria-invalid={fieldState.invalid}
                 autoComplete='current-password'

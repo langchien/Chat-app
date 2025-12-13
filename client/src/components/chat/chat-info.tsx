@@ -52,7 +52,7 @@ export function ChatInfo({ chat }: { chat: IChat }) {
           <ChatDisplayName chat={chat} />
         </div>
 
-        <ScrollArea className='flex-1'>
+        <ScrollArea className='flex-1 overflow-auto'>
           <Accordion type='multiple' className='w-full p-4 space-y-2'>
             <AccordionItem value='item-1'>
               <AccordionTrigger>
@@ -104,16 +104,15 @@ export function ChatInfo({ chat }: { chat: IChat }) {
           </Accordion>
         </ScrollArea>
 
-        <div className='p-4 border-t border-border'>
-          <Button
-            onClick={onDeleteChat}
-            variant='ghost'
-            className='w-full justify-start gap-2 text-destructive hover:text-destructive hover:bg-destructive/10'
-          >
-            <Trash2 className='h-5 w-5' />
-            Xoá cuộc trò chuyện
-          </Button>
-        </div>
+        <Button
+          onClick={onDeleteChat}
+          variant='destructiveOutline'
+          size={'lg'}
+          className='mt-auto border-t w-full rounded-none'
+        >
+          <Trash2 className='h-5 w-5' />
+          Xoá cuộc trò chuyện
+        </Button>
       </DrawerContent>
     </Drawer>
   )

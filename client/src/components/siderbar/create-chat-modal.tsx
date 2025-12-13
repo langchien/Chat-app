@@ -9,7 +9,6 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { SOCKET_EVENTS } from '@/constants/event.const'
 import { APP_PAGES } from '@/constants/link.const'
 import { useSocketStore } from '@/hooks/stores/socket.store'
 import { getInitials } from '@/lib/utils'
@@ -54,7 +53,6 @@ export function CreateChatModal() {
     try {
       const data = await chatRequest.getOrCreateChatByUserId(userId)
       navigate(`${APP_PAGES.CHAT}/${data.id}`)
-      if (socket) socket.emit(SOCKET_EVENTS.JOIN_CHAT, data.id)
       setOpen(false)
     } catch (error) {
       toast.error('Lỗi tạo cuộc trò chuyện')

@@ -2,6 +2,7 @@ import { NotFoundException } from '@/core/exceptions'
 import { HttpStatusCode } from '@/core/status-code'
 import { isRecordNotFoundError } from '@/lib/database'
 import { PaginateCursorCtrl } from '@/lib/paginate-cusor.ctrl'
+import { socketService } from '@/socket'
 import { SOCKET_EVENTS } from '@/socket/event.const'
 import { RequestHandler } from 'express'
 import { IUserIdReqParamsDto } from '../user/user.req.dto'
@@ -23,10 +24,8 @@ export class ChatCtrl extends PaginateCursorCtrl {
       receiverIds: [...new Set([...receiverIds, userId])],
     })
     const parseData = ChatResDto.parse(result)
-    req.io.to(userId).emit(SOCKET_EVENTS.UPDATE_CHAT, parseData)
-    receiverIds.forEach((receiverId) => {
-      req.io.to(receiverId).emit(SOCKET_EVENTS.UPDATE_CHAT, parseData)
-    })
+    socketService.joinChat(result.id, [...new Set([...receiverIds, userId])])
+
     res.status(HttpStatusCode.Created).json(parseData)
   }
 
@@ -87,8 +86,8 @@ export class ChatCtrl extends PaginateCursorCtrl {
     const result = await chatService.getOrCreateChatByUserId(userId, req.user.userId)
     const restulParsed = ChatResDto.parse(result.chat)
     if (result.isCreate) {
-      req.io.to(userId).emit(SOCKET_EVENTS.UPDATE_CHAT, restulParsed)
-      req.io.to(req.user.userId).emit(SOCKET_EVENTS.UPDATE_CHAT, restulParsed)
+      socketService.joinChat(result.chat.id, [userId, req.user.userId])
+      req.io.to(result.chat.id).emit(SOCKET_EVENTS.UPDATE_CHAT, restulParsed)
     }
     res.json(restulParsed)
   }

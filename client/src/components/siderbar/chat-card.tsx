@@ -1,11 +1,11 @@
 import { APP_PAGES } from '@/constants/link.const'
-import { useAuthStore } from '@/hooks/stores/auth.store'
 import { useChatName } from '@/hooks/use-chat-name'
 import { cn, formatTimeAgo } from '@/lib/utils'
 import type { IChat } from '@/services/api.types'
+import { useAuthStore } from '@/stores/auth.store'
 import { Link } from 'react-router'
+import { ChatAvatar } from '../avatar'
 import { Card } from '../ui/card'
-import { ChatAvatar } from './chat-avatar'
 
 export function ChatCard({ chatItem, activeChatId }: { chatItem: IChat; activeChatId?: string }) {
   const chatName = useChatName(chatItem).chatDisplayName

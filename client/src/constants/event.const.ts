@@ -5,6 +5,5 @@ export const SOCKET_EVENTS = {
   MEDIA_PROCESSING_UPDATE: 'media-processing-update',
   UPDATE_CHAT: 'update-chat',
   DELETE_CHAT: 'delete-chat',
-  JOIN_CHAT: 'join-chat',
   UNFRIEND: 'unfriend',
 } as const

@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router'
-import { toast } from 'sonner'
 
 export function useHeader() {
   // Phần fake window, chỉ có chức năng full screen hoạt động
@@ -22,21 +21,11 @@ export function useHeader() {
     }
   }
 
-  const handleClose = () => {
-    toast.warning('Trình duyệt chặn đóng tab tự động. Vui lòng đóng thủ công.')
-  }
-
-  const handleMinimize = () => {
-    toast.warning('Minimize không được hỗ trợ trong môi trường trình duyệt')
-  }
-
   // Phần title của app
   const location = useLocation()
   return {
     isFullscreen,
     toggleFullscreen,
-    handleClose,
-    handleMinimize,
     pathname: location.pathname,
   }
 }

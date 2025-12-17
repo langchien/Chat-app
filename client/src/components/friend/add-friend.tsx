@@ -1,12 +1,11 @@
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
 import { Separator } from '@/components/ui/separator'
-import { getInitials } from '@/lib/utils'
 import type { IUser } from '@/services/api.types'
 import { friendRequest } from '@/services/friend'
 import { Search } from 'lucide-react'
 import { useState } from 'react'
 import { useDebouncedCallback } from 'use-debounce'
+import { UserAvatar } from '../avatar'
 import { FriendStatusButton } from './friend-status-btn'
 
 export function AddFriend({ defaultSearch }: { defaultSearch?: string }) {
@@ -39,10 +38,7 @@ export function AddFriend({ defaultSearch }: { defaultSearch?: string }) {
       <div className='flex flex-col space-y-2 py-3'>
         {result.map((user) => (
           <div key={user.id} className='flex items-center space-x-2'>
-            <Avatar>
-              <AvatarImage src={user.avatarUrl} />
-              <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
-            </Avatar>
+            <UserAvatar user={user} />
             <div className='flex flex-col'>
               <div className='flex flex-row items-center space-x-2'>
                 <div className='font-semibold'>{user.displayName}</div>

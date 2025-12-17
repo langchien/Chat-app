@@ -16,7 +16,7 @@ import { messageRouter } from '@/routes/message/message.route'
 import { oauth2Router } from '@/routes/oauth2/oauth2.route'
 import { protectedRouter } from '@/routes/protected/protected.route'
 import { userRouter } from '@/routes/user/user.route'
-import { app, httpServer, io } from '@/socket'
+import { app, httpServer } from '@/socket'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
 import express from 'express'
@@ -41,11 +41,6 @@ const main = async () => {
       origin: envConfig.clientUri, // Chỉ cho phép truy cập từ clientUri
     }),
   )
-  // Gán io vào req để có thể sử dụng trong các route
-  app.use((req, res, next) => {
-    req.io = io
-    next()
-  })
   // Đăng ký các route
   app.use(API_ROUTES.USER, userRouter)
   app.use(API_ROUTES.AUTH, authRouter)

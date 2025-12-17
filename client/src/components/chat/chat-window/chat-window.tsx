@@ -1,0 +1,53 @@
+import { ChatInput } from '@/components/chat/chat-input'
+import { useChatWindow } from '@/components/chat/chat-window/use-chat-window'
+import { Message } from '@/components/chat/message'
+import { Skeleton } from '@/components/ui/skeleton'
+import type { IMessagePaginate } from '@/services/api.types'
+import InfiniteScroll from 'react-infinite-scroll-component'
+
+function LoadingMessageItem() {
+  return (
+    <div className='flex justify-center py-4'>
+      <Skeleton className='h-5 w-40 bg-gray-300 rounded-full' />
+    </div>
+  )
+}
+function EndMessage() {
+  return (
+    <div className='py-4 text-center text-sm text-muted-foreground'>
+      Bạn đã xem hết tất cả các tin nhắn
+    </div>
+  )
+}
+export function ChatWindow({ paginateMessages }: { paginateMessages: IMessagePaginate }) {
+  const { messages, hasMore, fetchData, userId, mapUserById, chat } =
+    useChatWindow(paginateMessages)
+  return (
+    <>
+      <div id='scrollableChatWindow' className='app-scroll flex flex-col-reverse p-4 overflow-auto'>
+        <InfiniteScroll
+          dataLength={messages.length}
+          next={fetchData}
+          className='flex flex-col-reverse'
+          hasMore={hasMore}
+          loader={<LoadingMessageItem />}
+          endMessage={<EndMessage />}
+          scrollableTarget='scrollableChatWindow'
+          inverse={true}
+        >
+          <div className='space-y-4 flex flex-col-reverse'>
+            {messages.map((message) => (
+              <Message
+                key={message.id}
+                message={message}
+                userId={userId}
+                mapUserById={mapUserById}
+              />
+            ))}
+          </div>
+        </InfiniteScroll>
+      </div>
+      <ChatInput chatId={chat.id} />
+    </>
+  )
+}

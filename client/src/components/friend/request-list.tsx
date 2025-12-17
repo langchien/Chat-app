@@ -1,12 +1,11 @@
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { useAppStore } from '@/hooks/stores/app.store'
 import { useRequest } from '@/hooks/use-request'
-import { getInitials } from '@/lib/utils'
 import type { ISentFriendRequest } from '@/services/api.types'
 import { friendRequest } from '@/services/friend'
+import { useAppStore } from '@/stores/app.store'
 import { format } from 'date-fns'
 import { useNavigate } from 'react-router'
+import { UserAvatar } from '../avatar'
 
 export function RequestList({ requests }: { requests: ISentFriendRequest[] }) {
   const { isLoading } = useAppStore()
@@ -31,10 +30,7 @@ export function RequestList({ requests }: { requests: ISentFriendRequest[] }) {
       {requests.map((req) => (
         <div key={req.id} className='flex items-center justify-between p-3 border rounded-lg'>
           <div className='flex items-center gap-3'>
-            <Avatar>
-              <AvatarImage src={req.to.avatarUrl} />
-              <AvatarFallback>{getInitials(req.to.displayName)}</AvatarFallback>
-            </Avatar>
+            <UserAvatar user={req.to} />
             <div className='flex flex-col'>
               <span className='font-semibold'>{req.to.displayName}</span>
               <span className='text-xs text-muted-foreground'>

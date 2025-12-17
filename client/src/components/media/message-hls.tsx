@@ -1,7 +1,7 @@
 import { SOCKET_EVENTS } from '@/constants/event.const'
-import { useSocketStore } from '@/hooks/stores/socket.store'
 import type { IMedia } from '@/services/api.types'
 import { MediaStatus } from '@/services/media/media.schema'
+import { useSocketStore } from '@/stores/socket.store'
 import { Clock, Frown } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Skeleton } from '../ui/skeleton'

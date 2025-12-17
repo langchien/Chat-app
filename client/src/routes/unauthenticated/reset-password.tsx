@@ -1,7 +1,7 @@
 import { AuthLayout } from '@/components/auth/auth-layout'
 import { ResetPasswordForm } from '@/components/auth/reset-password-form'
 import { APP_PAGES } from '@/constants/link.const'
-import { useAuthStore } from '@/hooks/stores/auth.store'
+import { useAuthStore } from '@/stores/auth.store'
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router'
 

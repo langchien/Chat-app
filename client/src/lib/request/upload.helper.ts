@@ -1,5 +1,5 @@
 import { envConfig } from '@/config/envConfig'
-import { useAuthStore } from '@/hooks/stores/auth.store'
+import { useAuthStore } from '@/stores/auth.store'
 import axios from 'axios'
 import { responseError } from './axios.helper'
 

@@ -1,5 +1,4 @@
 import { envConfig } from '@/config/envConfig'
-import { useAuthStore } from '@/hooks/stores/auth.store'
 import {
   AppException,
   HTTP_STATUS_CODE,
@@ -7,6 +6,7 @@ import {
   type ResponseErrorPayload,
   type ValidationErrorPayload,
 } from '@/lib/request/request.type'
+import { useAuthStore } from '@/stores/auth.store'
 import axios, { type AxiosError, type AxiosResponse } from 'axios'
 
 export const httpRequest = axios.create({

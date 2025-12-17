@@ -7,9 +7,7 @@ import {
   Maximize,
   MessageCircle,
   Minimize,
-  Minus,
   Users,
-  X,
   Zap,
   type LucideProps,
 } from 'lucide-react'
@@ -58,7 +56,7 @@ function AppTitle({ pathname }: { pathname: string }) {
 }
 
 export function AppHeader() {
-  const { isFullscreen, toggleFullscreen, handleClose, handleMinimize, pathname } = useHeader()
+  const { isFullscreen, toggleFullscreen, pathname } = useHeader()
 
   return (
     <header className='relative h-10 shrink-0 bg-sidebar w-full flex items-center px-3 overflow-hidden'>
@@ -79,19 +77,8 @@ export function AppHeader() {
             <CircleQuestionMark />
           </Button>
           <div className='flex items-center gap-1 border-s ps-1'>
-            <Button size='icon-sm' variant='ghost' onClick={handleMinimize}>
-              <Minus />
-            </Button>
             <Button size='icon-sm' variant='ghost' onClick={toggleFullscreen}>
               {isFullscreen ? <Minimize /> : <Maximize />}
-            </Button>
-            <Button
-              size='icon-sm'
-              variant='ghost'
-              onClick={handleClose}
-              className='hover:bg-destructive hover:text-white dark:hover:bg-destructive dark:hover:text-white'
-            >
-              <X />
             </Button>
           </div>
         </SidebarMenuItem>

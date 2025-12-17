@@ -19,7 +19,7 @@ import type { IChat } from '@/services/api.types'
 import { chatRequest } from '@/services/chat'
 import { File, Image, Info, Link, Lock, Trash2, Users, X } from 'lucide-react'
 import { useState } from 'react'
-import { ChatAvatar } from '../siderbar/chat-avatar'
+import { ChatAvatar } from '../avatar'
 import { ChatDisplayName } from './chat-display-name'
 import { ChatMemberList } from './chat-member'
 

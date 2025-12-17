@@ -8,13 +8,13 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-import { useAuthStore } from '@/hooks/stores/auth.store'
 import { useRequest } from '@/hooks/use-request'
 import {
   ChangePassworBodyDto,
   protectedRequest,
   type IChangePassworBodyDto,
 } from '@/services/protected'
+import { useAuthStore } from '@/stores/auth.store'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { LogOut, Shield } from 'lucide-react'
 import { useForm } from 'react-hook-form'

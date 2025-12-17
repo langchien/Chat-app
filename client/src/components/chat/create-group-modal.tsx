@@ -1,4 +1,3 @@
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -10,14 +9,14 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useAppStore } from '@/hooks/stores/app.store'
-import { useAuthStore } from '@/hooks/stores/auth.store'
 import { useRequest } from '@/hooks/use-request'
-import { getInitials } from '@/lib/utils'
 import type { IUser } from '@/services/api.types'
 import { chatRequest } from '@/services/chat'
+import { useAppStore } from '@/stores/app.store'
+import { useAuthStore } from '@/stores/auth.store'
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { UserAvatar } from '../avatar'
 
 interface CreateGroupModalProps {
   friends: IUser[]
@@ -109,10 +108,7 @@ export function CreateGroupModal({
                       checked={selectedFriends.includes(friend.id)}
                       onCheckedChange={() => toggleFriend(friend.id)}
                     />
-                    <Avatar className='h-8 w-8'>
-                      <AvatarImage src={friend.avatarUrl} />
-                      <AvatarFallback>{getInitials(friend.displayName)}</AvatarFallback>
-                    </Avatar>
+                    <UserAvatar user={friend} size={'sm'} />
                     <span className='text-sm font-medium'>{friend.displayName}</span>
                   </div>
                 ))

@@ -3,7 +3,7 @@ import { useCallback } from 'react'
 import type { UseFormSetError } from 'react-hook-form'
 import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
-import { useAppStore } from './stores/app.store'
+import { useAppStore } from '../stores/app.store'
 
 interface UseRequestOptions<R = any> {
   redirectUrl?: string

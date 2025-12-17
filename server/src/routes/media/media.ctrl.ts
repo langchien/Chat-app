@@ -1,8 +1,8 @@
 import { envConfig } from '@/config/env-config'
 import { BadRequestException, NotFoundException } from '@/core/exceptions'
 import { HttpStatusCode } from '@/core/status-code'
-import { SOCKET_EVENTS } from '@/socket/event.const'
-import { Request, RequestHandler, Response } from 'express'
+import { socketService } from '@/socket'
+import { RequestHandler, Response } from 'express'
 import { File } from 'formidable'
 import { IChatIdParamDto } from '../chat/chat.req.dto'
 import { ChatResDto, IChatResDto } from '../chat/chat.res.dto'
@@ -19,16 +19,14 @@ const IS_LOCAL = envConfig.upload.provider === 'local'
 
 class MediaCtrl {
   private sendMessageSocket = (
-    req: Request,
     res: Response,
     payload: { message: IMessageResDto; chat: IChatResDto },
   ) => {
-    const io = req.io
     const { chat, message } = payload
     const messageRes = MessageResDto.parse(message)
     const chatRes = ChatResDto.parse(chat)
     const resultPayload = { message: messageRes, chat: chatRes }
-    io.to(chat.id).emit(SOCKET_EVENTS.RECEIVE_MESSAGE, resultPayload)
+    socketService.sendMessage(chat.id, resultPayload)
     res.status(HttpStatusCode.Created).json(resultPayload)
   }
   // Lấy thông tin media theo id
@@ -66,7 +64,7 @@ class MediaCtrl {
       user.userId,
       content,
     )
-    return this.sendMessageSocket(req, res, response)
+    return this.sendMessageSocket(res, response)
   }
 
   uploadAvatar: RequestHandler = async (req, res) => {
@@ -110,7 +108,7 @@ class MediaCtrl {
       senderId,
       content,
     )
-    return this.sendMessageSocket(req, res, response)
+    return this.sendMessageSocket(res, response)
   }
 
   // Phục vụ file đã upload, chỉ tải do không truyền content-type khi upload lên s3

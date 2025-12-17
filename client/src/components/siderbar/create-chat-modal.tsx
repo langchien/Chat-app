@@ -1,5 +1,4 @@
 import { CreateGroupModal } from '@/components/chat/create-group-modal'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -10,15 +9,15 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { APP_PAGES } from '@/constants/link.const'
-import { useSocketStore } from '@/hooks/stores/socket.store'
-import { getInitials } from '@/lib/utils'
 import type { IUser } from '@/services/api.types'
 import { chatRequest } from '@/services/chat'
 import { friendRequest } from '@/services/friend'
+import { useSocketStore } from '@/stores/socket.store'
 import { Loader2, Search, Users } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
+import { UserAvatar } from '../avatar'
 
 export function CreateChatModal() {
   const [open, setOpen] = useState(false)
@@ -125,10 +124,7 @@ export function CreateChatModal() {
                         className='w-full justify-start h-14'
                         onClick={() => handleCreateChat(friend.id)}
                       >
-                        <Avatar className='h-10 w-10 mr-3'>
-                          <AvatarImage src={friend.avatarUrl} />
-                          <AvatarFallback>{getInitials(friend.displayName)}</AvatarFallback>
-                        </Avatar>
+                        <UserAvatar user={friend} />
                         <div className='flex flex-col items-start'>
                           <span className='font-medium'>{friend.displayName}</span>
                           <span className='text-xs text-muted-foreground'>{friend.email}</span>

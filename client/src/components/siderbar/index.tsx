@@ -1,5 +1,5 @@
+import { ChatList } from '@/components/chat/chat-list'
 import { AccountSetting } from '@/components/siderbar/account-setting'
-import { ChatList } from '@/components/siderbar/chat-list'
 import {
   Sidebar,
   SidebarFooter,

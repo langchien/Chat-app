@@ -2,7 +2,6 @@ import { BadRequestException } from '@/core/exceptions'
 import { HttpStatusCode } from '@/core/status-code'
 import { BaseController } from '@/lib/database'
 import { IIdParamDto } from '@/lib/schema.common'
-import { SOCKET_EVENTS } from '@/socket/event.const'
 import { RequestHandler } from 'express'
 import { IUserIdReqParamsDto } from '../user/user.req.dto'
 import { IUserResDto, UserResDto } from '../user/user.res.dto'
@@ -20,6 +19,7 @@ import {
   SentFriendRequestResDto,
 } from './friend.res.dto'
 
+import { socketService } from '@/socket'
 import { friendService } from './friend.service'
 
 class FriendController extends BaseController {
@@ -84,8 +84,7 @@ class FriendController extends BaseController {
   unfriend: RequestHandler<IUserIdReqParamsDto> = async (req, res) => {
     const { userId } = req.params
     await friendService.unfriend(req.user.userId, userId)
-    req.io.to(userId).emit(SOCKET_EVENTS.UNFRIEND, req.user.userId)
-    req.io.to(req.user.userId).emit(SOCKET_EVENTS.UNFRIEND, userId)
+    socketService.unfriend(req.user.userId, userId)
     res.status(HttpStatusCode.NoContent).json(null)
   }
 

@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
-import { useAuthStore } from '@/hooks/stores/auth.store'
 import type { IParticipant, IUser } from '@/services/api.types'
+import { useAuthStore } from '@/stores/auth.store'
 import { UserPlus } from 'lucide-react'
 import { ProfileTabs } from '../profile/profile-tabs'
 import { UserInfo } from '../siderbar/account-setting'

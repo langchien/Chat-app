@@ -1,6 +1,6 @@
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { cn, formatMessageTime, getInitials } from '@/lib/utils'
+import { cn, formatMessageTime } from '@/lib/utils'
 import type { IMessage, IUser } from '@/services/api.types'
+import { UserAvatar } from '../avatar'
 import { MessageMedia } from '../media/message-media'
 
 export function Message({
@@ -13,20 +13,11 @@ export function Message({
   mapUserById: Map<string, IUser>
 }) {
   const isOwnMessage = message.senderId === userId
+  const user = mapUserById.get(message.senderId)
   const medias = message.medias || []
   return (
     <div className={cn('flex mb-5', isOwnMessage ? 'justify-end' : 'justify-start', 'gap-3')}>
-      {!isOwnMessage && (
-        <Avatar className='h-8 w-8'>
-          <AvatarImage
-            src={mapUserById.get(message.senderId)?.avatarUrl ?? ''}
-            alt={mapUserById.get(message.senderId)?.displayName}
-          />
-          <AvatarFallback>
-            {getInitials(mapUserById.get(message.senderId)?.displayName ?? 'U')}
-          </AvatarFallback>
-        </Avatar>
-      )}
+      {!isOwnMessage && user && <UserAvatar user={user} />}
       <div className='max-w-md md:max-w-lg lg:max-w-xl flex flex-col space-y-1'>
         <MessageMedia medias={medias} />
         {message.content && (

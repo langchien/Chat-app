@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { APP_PAGES } from '@/constants/link.const'
-import { useAuthStore } from '@/hooks/stores/auth.store'
+import { useAuthStore } from '@/stores/auth.store'
 import { MessageSquare, Shield, Video, Zap } from 'lucide-react'
 import { Link } from 'react-router'
 

@@ -3,7 +3,6 @@ import { HttpStatusCode } from '@/core/status-code'
 import { isRecordNotFoundError } from '@/lib/database'
 import { PaginateCursorCtrl } from '@/lib/paginate-cusor.ctrl'
 import { socketService } from '@/socket'
-import { SOCKET_EVENTS } from '@/socket/event.const'
 import { RequestHandler } from 'express'
 import { IUserIdReqParamsDto } from '../user/user.req.dto'
 import {
@@ -43,15 +42,12 @@ export class ChatCtrl extends PaginateCursorCtrl {
     IChatResDto,
     IUpdateChatDisplayNameReqBodyDto
   > = async (req, res) => {
-    const io = req.io
     const { chatId } = req.params
     const { userId } = req.user
     const { displayName } = req.body
-
     const result = await chatService.updateChatDisplayName(chatId, userId, displayName)
-
     const restulParsed = ChatResDto.parse(result)
-    io.to(chatId).emit(SOCKET_EVENTS.UPDATE_CHAT, restulParsed)
+    socketService.updateChat(chatId, restulParsed)
     res.json(restulParsed)
   }
 
@@ -67,7 +63,7 @@ export class ChatCtrl extends PaginateCursorCtrl {
     try {
       const { chatId } = req.params
       await chatService.delete(chatId)
-      req.io.to(chatId).emit(SOCKET_EVENTS.DELETE_CHAT, { chatId })
+      socketService.deleteChat(chatId)
       res.status(HttpStatusCode.NoContent).json()
     } catch (error) {
       if (isRecordNotFoundError(error)) throw new NotFoundException('Chat không tồn tại')
@@ -87,7 +83,7 @@ export class ChatCtrl extends PaginateCursorCtrl {
     const restulParsed = ChatResDto.parse(result.chat)
     if (result.isCreate) {
       socketService.joinChat(result.chat.id, [userId, req.user.userId])
-      req.io.to(result.chat.id).emit(SOCKET_EVENTS.UPDATE_CHAT, restulParsed)
+      socketService.updateChat(result.chat.id, restulParsed)
     }
     res.json(restulParsed)
   }

@@ -1,5 +1,5 @@
 import { APP_PAGES } from '@/constants/link.const'
-import { useAuthStore } from '@/hooks/stores/auth.store'
+import { useAuthStore } from '@/stores/auth.store'
 import { useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 

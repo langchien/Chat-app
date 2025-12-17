@@ -1,13 +1,12 @@
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { useAppStore } from '@/hooks/stores/app.store'
 import { useRequest } from '@/hooks/use-request'
-import { getInitials } from '@/lib/utils'
 import type { IReceivedFriendRequest } from '@/services/api.types'
 import { friendRequest } from '@/services/friend'
+import { useAppStore } from '@/stores/app.store'
 import { format } from 'date-fns'
 import { Check, X } from 'lucide-react'
 import { useRevalidator } from 'react-router'
+import { UserAvatar } from '../avatar'
 
 export function ReceiveRequest({ requests }: { requests: IReceivedFriendRequest[] }) {
   const { isLoading } = useAppStore()
@@ -43,10 +42,7 @@ export function ReceiveRequest({ requests }: { requests: IReceivedFriendRequest[
       {requests.map((req) => (
         <div key={req.id} className='flex items-center justify-between p-3 border rounded-lg'>
           <div className='flex items-center gap-3'>
-            <Avatar>
-              <AvatarImage src={req.from.avatarUrl} />
-              <AvatarFallback>{getInitials(req.from.displayName)}</AvatarFallback>
-            </Avatar>
+            <UserAvatar user={req.from} />
             <div className='flex flex-col'>
               <span className='font-semibold'>{req.from.displayName}</span>
               <span className='text-xs text-muted-foreground'>

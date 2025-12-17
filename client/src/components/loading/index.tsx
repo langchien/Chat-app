@@ -1,4 +1,4 @@
-import { useAppStore } from '@/hooks/stores/app.store'
+import { useAppStore } from '@/stores/app.store'
 import { MessageCircle, Phone, Send, Video } from 'lucide-react'
 
 export function AppLoadingOverlay({ loading }: { loading?: boolean }) {

@@ -1,6 +1,4 @@
-import { ChatHeader } from '@/components/chat/chat-header'
-import { ChatWindow } from '@/components/chat/chat-window'
-import { ChatWindowSkeleton } from '@/components/chat/chat-window-skeleton'
+import { ChatHeader, ChatWindow, ChatWindowSkeleton } from '@/components/chat/chat-window'
 import { chatRequest } from '@/services/chat'
 import { messageRequest } from '@/services/messages'
 import { Suspense } from 'react'

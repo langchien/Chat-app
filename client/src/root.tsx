@@ -6,8 +6,8 @@ import './app.css'
 import { AppLoadingOverlay } from './components/loading'
 import { ThemeProvider } from './components/theme/theme-provider'
 import { Toaster } from './components/ui/sonner'
-import { useAuthStore } from './hooks/stores/auth.store'
-import { useSocketStore } from './hooks/stores/socket.store'
+import { useAuthStore } from './stores/auth.store'
+import { useSocketStore } from './stores/socket.store'
 
 export const links: Route.LinksFunction = () => [
   { rel: 'preconnect', href: 'https://fonts.googleapis.com' },

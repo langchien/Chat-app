@@ -1,7 +1,7 @@
 import { NotFoundException } from '@/core/exceptions'
 import { HttpStatusCode } from '@/core/status-code'
 import { PaginateCursorCtrl } from '@/lib/paginate-cusor.ctrl'
-import { SOCKET_EVENTS } from '@/socket/event.const'
+import { socketService } from '@/socket'
 import { RequestHandler } from 'express'
 import { IChatIdParamDto } from '../chat/chat.req.dto'
 import { ChatResDto, IChatResDto } from '../chat/chat.res.dto'
@@ -46,7 +46,6 @@ class MessageCtrl extends PaginateCursorCtrl {
     },
     ICreateMessageBodyDto
   > = async (req, res) => {
-    const io = req.io
     const { message, chat } = await messageService.create({
       ...req.body,
       senderId: req.user.userId,
@@ -54,7 +53,7 @@ class MessageCtrl extends PaginateCursorCtrl {
     const messageRes = MessageResDto.parse(message)
     const chatRes = ChatResDto.parse(chat)
     const resultPayload = { message: messageRes, chat: chatRes }
-    io.to(chat.id).emit(SOCKET_EVENTS.RECEIVE_MESSAGE, resultPayload)
+    socketService.sendMessage(chat.id, resultPayload)
     res.status(HttpStatusCode.Created).json(resultPayload)
   }
 

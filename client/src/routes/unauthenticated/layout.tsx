@@ -1,13 +1,15 @@
 import { APP_PAGES } from '@/constants/link.const'
 import { useAuthStore } from '@/stores/auth.store'
-import { useEffect } from 'react'
-import { Outlet, useNavigate } from 'react-router'
+import { Outlet, redirect } from 'react-router'
+
+export async function clientLoader() {
+  const user = useAuthStore.getState().user
+  if (user) {
+    throw redirect(APP_PAGES.CHAT)
+  }
+  return null
+}
 
 export default function UnauthenticatedLayout() {
-  const user = useAuthStore((state) => state.user)
-  const navigate = useNavigate()
-  useEffect(() => {
-    if (user) navigate(APP_PAGES.CHAT)
-  }, [user, navigate])
   return <Outlet />
 }

@@ -2,51 +2,61 @@ Cấu trúc dự án
 
 # File Tree: chat-app
 
-**Generated:** 12/8/2025, 3:51:13 PM
+**Generated:** 12/22/2025, 12:15:30 PM
 **Root Path:** `p:\Nodejs\chat-app`
 
 ```
 ├── 📁 client
-│   ├── 📁 public
+│   ├── 📁 public # Static files
 │   ├── 📁 src
-│   │   ├── 📁 components
+│   │   ├── 📁 components # Shared components used across features
+│   │   │   ├── 📁 avatar
+│   │   │   ├── 📁 header
+│   │   │   ├── 📁 loading
+│   │   │   ├── 📁 theme
 │   │   │   └── 📁 ui # thư viện component từ shadcn ui
 │   │   ├── 📁 config
 │   │   │   └── 📄 envConfig.ts # cấu hình môi trường
 │   │   ├── 📁 constants
+│   │   │   ├── 📄 api-routes.ts # api endpoints
 │   │   │   ├── 📄 event.const.ts # event socket io
 │   │   │   └── 📄 link.const.ts # link
-│   │   ├── 📁 hooks
-│   │   ├── 📁 lib
+│   │   ├── 📁 features # Các tính năng của ứng dụng (Modular architecture)
+│   │   │   ├── ✅ templates # Tính năng xác thực
+│   │   │   │   ├── 📁 components
+│   │   │   │   ├── 📁 hooks
+│   │   │   │   ├── 📁 pages
+│   │   │   │   └── 📁 services
+│   │   │   ├── 📁 auth # Tính năng xác thực
+│   │   │   ├── 📁 chat # Tính năng chat
+│   │   │   ├── 📁 friend # Tính năng bạn bè
+│   │   │   ├── 📁 home # Trang chủ
+│   │   │   ├── 📁 message # Xử lý tin nhắn
+│   │   │   └── 📁 user # Quản lý user
+│   │   ├── 📁 hooks # Global custom hooks
+│   │   ├── 📁 layouts # Layout components
+│   │   │   ├── 📁 main-nav
+│   │   │   ├── 📁 siderbar
+│   │   │   ├── 📄 authenticated-layout.tsx
+│   │   │   └── 📄 unauthenticated-layout.tsx
+│   │   ├── 📁 lib # Utilities and helpers
 │   │   │   ├── 📁 request # thư viện request
 │   │   │   │   ├── 📄 axios.helper.ts
 │   │   │   │   ├── 📄 index.ts
 │   │   │   │   ├── 📄 request.type.ts
 │   │   │   │   └── 📄 upload.helper.ts
-│   │   │   ├── 📄 schema.common.ts # schema chung
-│   │   │   └── 📄 utils.ts
-│   │   ├── 📁 routes
-│   │   │   ├── 📁 private
-│   │   │   ├── 📁 unauthenticated
-│   │   │   └── 📄 welcome.tsx
-│   │   ├── 📁 services # Cung cấp interface các data từ server, các function call api
-│   │   │   ├── 📁 templates
-│   │   │   │   ├── 📄 index.ts # logic call api
-│   │   │   │   ├── 📄 module_name.req.ts # request dto
-│   │   │   │   ├── 📄 module_name.res.ts # response dto
-│   │   │   │   └── 📄 module_name.schema.ts # zod schema
-│   │   │   ├── 📁 auth
-│   │   │   ├── 📁 chats
-│   │   │   ├── 📁 media
-│   │   │   ├── 📁 messages
-│   │   │   ├── 📁 protected
-│   │   │   ├── 📁 user
-│   │   │   ├── 📄 api.types.ts # type api
-│   │   │   └── 📄 request.interface.ts # interface request
-│   │   ├── 📁 types
+│   │   │   ├── 📁 paginate-cusor.ctrl.ts
+│   │   │   ├── 📁 schema.common.ts # schema chung
+│   │   │   └── 📁 utils.ts
+│   │   ├── 📁 stores # Global state management (Zustand)
+│   │   │   ├── 📁 app.store.ts
+│   │   │   ├── 📁 auth.store.ts
+│   │   │   ├── 📄 chat.store.ts
+│   │   │   └── 📄 socket.store.ts
+│   │   ├── 📁 types # Global types
 │   │   ├── 🎨 app.css
 │   │   ├── 📄 root.tsx
-│   │   ├── 📄 routes.ts
+│   │   ├── 📄 routes.ts # App routing configuration
 │   │   └── 📄 vite-env.d.ts
 │   ├── ⚙️ .dockerignore
 │   ├── ⚙️ .editorconfig
@@ -97,7 +107,7 @@ Cấu trúc dự án
 │   │   │   ├── 📄 schema.common.ts
 │   │   │   └── 📄 utils.ts
 │   │   ├── 📁 routes
-│   │   │   ├── 📁 templates
+│   │   │   ├── ✅ templates
 │   │   │   │   ├── 📄 module_name.controller.ts # controller chỉ xử lý nhận request và trả response
 │   │   │   │   ├── 📄 module_name.db.ts # các quy định interface thao tác với db
 │   │   │   │   ├── 📄 module_name.req.dto.ts # request dto

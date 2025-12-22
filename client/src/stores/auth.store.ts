@@ -1,13 +1,13 @@
 import { APP_PAGES } from '@/constants/link.const'
-import type { IUser } from '@/services/api.types'
 import type {
   ILoginReqBodyDto,
   IRegisterReqBodyDto,
   IResetPasswordReqBodyDto,
   IVerifyOtpDto,
-} from '@/services/auth'
-import { authRequest } from '@/services/auth'
-import { protectedRequest } from '@/services/protected'
+} from '@/features/auth/services'
+import { authRequest } from '@/features/auth/services'
+import { protectedRequest } from '@/features/user/services/protected'
+import type { IUser } from '@/types/api.types'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { useAppStore } from './app.store'

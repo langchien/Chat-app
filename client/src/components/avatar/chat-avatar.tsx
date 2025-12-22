@@ -1,8 +1,8 @@
 import { Avatar } from '@/components/ui/avatar'
 import { useChatName } from '@/hooks/use-chat-name'
 import { cn } from '@/lib/utils'
-import type { IChat } from '@/services/api.types'
 import { useSocketStore } from '@/stores/socket.store'
+import type { IChat } from '@/types/api.types'
 import { Ellipsis } from 'lucide-react'
 import { UserAvatar } from './user-avatar'
 

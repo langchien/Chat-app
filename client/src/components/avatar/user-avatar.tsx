@@ -1,6 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { cn, getInitials } from '@/lib/utils'
-import type { IUser } from '@/services/api.types'
+import type { IUser } from '@/types/api.types'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { OnlineBadge } from './online-badge'
 

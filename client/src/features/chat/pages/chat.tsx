@@ -16,17 +16,28 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     limit: DEFAULT_PAGINATION_LIMIT,
   })
   const chat = await chatRequest.getById(chatId)
+
+  // Fetch deferred data (no await)
+  const linksPromise = chatRequest.getLinks(chatId)
+  const mediaPromise = chatRequest.getMedia(chatId)
+
   return {
     messages: messagesPromise,
     chat,
     chatId,
+    linksPromise,
+    mediaPromise,
   }
 }
 
 export default function ChatPage({ loaderData }: Route.ComponentProps) {
   return (
     <div className='h-full flex-1 flex flex-col overflow-auto'>
-      <ChatHeader chat={loaderData.chat} />
+      <ChatHeader
+        chat={loaderData.chat}
+        linksPromise={loaderData.linksPromise}
+        mediaPromise={loaderData.mediaPromise}
+      />
       <Suspense key={loaderData.chat.id} fallback={<ChatWindowSkeleton />}>
         <Await resolve={loaderData.messages}>
           {(value) => <ChatWindow paginateMessages={value} />}

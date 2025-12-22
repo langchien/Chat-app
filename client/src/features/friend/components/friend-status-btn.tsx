@@ -73,8 +73,12 @@ export function FriendStatusButton({
     onCancelRequest,
     onUnfriend,
     onAccept,
+    isCurrentUser,
   } = useFriendStatusBtn(userId)
 
+  if (isCurrentUser) {
+    return null
+  }
   if (status === FriendStatus.FRIEND) {
     return <Btn status={status} isLoading={isLoading} onClick={onUnfriend} className={className} />
   }

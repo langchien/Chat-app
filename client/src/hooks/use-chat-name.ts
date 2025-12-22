@@ -1,4 +1,4 @@
-import type { IChat } from '@/services/api.types'
+import type { IChat } from '@/types/api.types'
 import { useAuthStore } from '../stores/auth.store'
 
 export const useChatName = (chat: IChat) => {

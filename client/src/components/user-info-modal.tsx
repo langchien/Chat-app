@@ -9,9 +9,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import type { IUser } from '@/services/api.types'
+import { FriendStatusButton } from '@/features/friend/components/friend-status-btn'
+import type { IUser } from '@/types/api.types'
 import { UserAvatar } from './avatar'
-import { FriendStatusButton } from './friend/friend-status-btn'
 
 export function UserInfoModal({ user }: { user: IUser }) {
   return (

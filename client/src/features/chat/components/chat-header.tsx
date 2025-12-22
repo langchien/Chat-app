@@ -2,11 +2,18 @@ import { ChatAvatar } from '@/components/avatar'
 import { PageHeader } from '@/components/header/page-header'
 import { Button } from '@/components/ui/button'
 import { useChatName } from '@/hooks/use-chat-name'
-import type { IChat } from '@/types/api.types'
+import type { IChat, IMedia } from '@/types/api.types'
 import { Phone, Video } from 'lucide-react'
+import type { IChatLink } from '../services/chat.res.dto'
 import { ChatInfo } from './chat-info'
 
-export function ChatHeader({ chat }: { chat: IChat }) {
+interface ChatHeaderProps {
+  chat: IChat
+  linksPromise: Promise<IChatLink[]>
+  mediaPromise: Promise<IMedia[]>
+}
+
+export function ChatHeader({ chat, linksPromise, mediaPromise }: ChatHeaderProps) {
   const { chatDisplayName } = useChatName(chat)
   return (
     <PageHeader>
@@ -22,7 +29,7 @@ export function ChatHeader({ chat }: { chat: IChat }) {
           <Button variant='ghost' size='icon' className='h-9 w-9'>
             <Video className='h-5 w-5' />
           </Button>
-          <ChatInfo chat={chat} />
+          <ChatInfo chat={chat} linksPromise={linksPromise} mediaPromise={mediaPromise} />
         </div>
       </div>
     </PageHeader>

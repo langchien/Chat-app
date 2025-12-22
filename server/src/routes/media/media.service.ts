@@ -4,6 +4,7 @@ import { localFileService, MediaDirectories, UPLOAD_LOCAL_DIR } from '@/core/loc
 import { BaseService } from '@/lib/database/base-service'
 import { s3Service } from '@/lib/s3.service'
 import { ObjectId } from 'bson'
+import { NextFunction, Response } from 'express'
 import { File } from 'formidable'
 import fs from 'fs'
 import { rename, unlink } from 'fs/promises'
@@ -54,13 +55,18 @@ class MediaService extends BaseService {
     return response
   }
 
-  async serveFile(mediaType: string, fileName: string, res: any, next: any) {
+  async serveFile(mediaType: string, fileName: string, res: Response, next: NextFunction) {
     const localFilePath = localFileService.getFilePath(mediaType as MediaType, fileName)
     const s3FilePath = MediaDirectories[mediaType as MediaType] + fileName
     try {
       if (IS_LOCAL)
-        return res.sendFile(localFilePath, (err: any) => {
-          if (err) next(new NotFoundException('Không tìm thấy file'))
+        return res.sendFile(localFilePath, (err: unknown) => {
+          if (err) {
+            // Khi client đóng kết nối (aborted) hoặc có lỗi xảy ra trong quá trình stream file,
+            // headers có thể đã được gửi một phần. Nếu gọi next() lúc này sẽ gây lỗi ERR_HTTP_HEADERS_SENT.
+            if (res.headersSent) return
+            next(new NotFoundException('Không tìm thấy file'))
+          }
         })
       return await s3Service.sendFileFromS3(res, s3FilePath)
     } catch (error) {
@@ -102,21 +108,29 @@ class MediaService extends BaseService {
     return { headers, stream }
   }
 
-  async serveVideoM3u8(id: string, res: any, next: any) {
+  async serveVideoM3u8(id: string, res: Response, next: any) {
     if (!IS_LOCAL)
       return s3Service.sendFileFromS3(res, MediaDirectories.video_hls + id + '/master.m3u8')
     const m3u8Path = localFileService.getFilePath(MediaType.video_hls, id, 'master.m3u8')
-    return res.sendFile(m3u8Path, (err: any) => {
-      if (err) next(new NotFoundException('Không tìm thấy file m3u8'))
+    return res.sendFile(m3u8Path, (err: unknown) => {
+      if (err) {
+        // Kiểm tra headersSent để tránh lỗi crash server khi client ngắt kết nối giữa chừng
+        if (res.headersSent) return
+        next(new NotFoundException('Không tìm thấy file m3u8'))
+      }
     })
   }
 
-  async serveVideoHlsPlaylist(id: string, v: string, segment: string, res: any, next: any) {
+  async serveVideoHlsPlaylist(id: string, v: string, segment: string, res: Response, next: any) {
     if (!IS_LOCAL)
       return s3Service.sendFileFromS3(res, `${MediaDirectories.video_hls}${id}/${v}/${segment}`)
     const playlistPath = localFileService.getFilePath(MediaType.video_hls, id, v, segment)
-    return res.sendFile(playlistPath, (err: any) => {
-      if (err) next(new NotFoundException('Không tìm thấy playlist HLS'))
+    return res.sendFile(playlistPath, (err: unknown) => {
+      if (err) {
+        // Tránh lỗi ERR_HTTP_HEADERS_SENT nếu headers đã được gửi trước khi xảy ra lỗi
+        if (res.headersSent) return
+        next(new NotFoundException('Không tìm thấy playlist HLS'))
+      }
     })
   }
 

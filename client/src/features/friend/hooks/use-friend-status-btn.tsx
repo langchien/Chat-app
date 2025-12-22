@@ -8,7 +8,7 @@ import { useState } from 'react'
 export function useFriendStatusBtn(userId: string) {
   const { isLoading } = useAppStore()
   const { user: currentUser } = useAuthStore()
-
+  const isCurrentUser = currentUser?.id === userId
   // Modal state
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const defaultMessage = `Xin chào, mình là ${currentUser?.displayName}. Kết bạn với mình nhé!`
@@ -70,6 +70,7 @@ export function useFriendStatusBtn(userId: string) {
     message,
     isDialogOpen,
     status,
+    isCurrentUser,
     onAddFriend,
     setIsDialogOpen,
     setMessage,

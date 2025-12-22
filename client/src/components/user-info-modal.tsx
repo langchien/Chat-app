@@ -69,7 +69,7 @@ export function UserInfoModal({ user }: { user: IUser }) {
         <DialogFooter className='sm:justify-between'>
           <FriendStatusButton userId={user.id} />
           <DialogClose asChild>
-            <Button type='button' variant='secondary'>
+            <Button className='ms-auto' type='button' variant='secondary'>
               Đóng
             </Button>
           </DialogClose>

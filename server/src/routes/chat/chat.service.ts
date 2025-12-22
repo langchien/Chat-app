@@ -220,6 +220,45 @@ class ChatService extends BaseService {
     })
     return { chat: newChat, isCreate: true }
   }
+  async getLinksInChat(chatId: string) {
+    const messages = await this.prismaService.message.findMany({
+      where: {
+        chatId,
+        content: { contains: 'http' },
+      },
+      select: {
+        id: true,
+        content: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    })
+
+    const links = messages.flatMap((msg) => {
+      const urlRegex = /(https?:\/\/[^\s]+)/g
+      const matches = msg.content.match(urlRegex)
+      return matches
+        ? matches.map((url) => ({
+            url,
+            messageId: msg.id,
+            createdAt: msg.createdAt,
+          }))
+        : []
+    })
+
+    return links
+  }
+
+  async getMediaInChat(chatId: string) {
+    return this.prismaService.media.findMany({
+      where: {
+        message: {
+          chatId,
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    })
+  }
 }
 
 export const chatService = new ChatService()

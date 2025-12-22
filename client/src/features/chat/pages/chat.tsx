@@ -3,6 +3,7 @@ import { messageRequest } from '@/features/message/services'
 import { Suspense } from 'react'
 import { Await } from 'react-router'
 import { ChatHeader } from '../components/chat-header'
+import { ChatInput } from '../components/chat-input'
 import { ChatWindow } from '../components/chat-window'
 import { ChatWindowSkeleton } from '../components/chat-window-skeleton'
 import type { Route } from './+types/chat'
@@ -31,6 +32,7 @@ export default function ChatPage({ loaderData }: Route.ComponentProps) {
           {(value) => <ChatWindow paginateMessages={value} />}
         </Await>
       </Suspense>
+      <ChatInput chatId={loaderData.chat.id} />
     </div>
   )
 }

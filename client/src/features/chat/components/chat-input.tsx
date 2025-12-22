@@ -23,7 +23,6 @@ export function ChatInput({ chatId }: { chatId: string }) {
     sendMessage,
     addEmoji,
   } = useChatInput({ chatId })
-
   return (
     <Card className='sticky bottom-0 z-10 rounded-none p-4 mt-auto'>
       <div className='flex gap-2'>

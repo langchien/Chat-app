@@ -1,6 +1,7 @@
 import { APP_PAGES } from '@/constants/link.const'
 import { useAuthStore } from '@/stores/auth.store'
 import { Outlet, redirect } from 'react-router'
+import Snowfall from 'react-snowfall'
 
 export async function clientLoader() {
   const user = useAuthStore.getState().user
@@ -11,5 +12,10 @@ export async function clientLoader() {
 }
 
 export default function UnauthenticatedLayout() {
-  return <Outlet />
+  return (
+    <>
+      <Outlet />
+      <Snowfall enable3DRotation color='white' snowflakeCount={50} />
+    </>
+  )
 }

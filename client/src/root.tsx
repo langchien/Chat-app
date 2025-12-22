@@ -22,6 +22,10 @@ export const links: Route.LinksFunction = () => [
   },
 ]
 
+export function meta() {
+  return [{ title: 'Chat app' }, { name: 'description', content: 'Welcome to Chat app!' }]
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang='en'>

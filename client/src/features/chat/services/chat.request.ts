@@ -1,11 +1,12 @@
 import { API_ROUTES, ApiRequest } from '@/constants/api-routes'
 import type { IPaginateCursorQuery } from '@/lib/paginate-cusor.ctrl'
+import type { IMedia } from '@/types/api.types'
 import type {
   ICreateChatReqDto,
   IUpdateChatDisplayNameReqBodyDto,
   IUpdateChatReqDto,
 } from './chat.req.dto'
-import type { IChatPaginateCursorResDto, IChatResDto } from './chat.res.dto'
+import type { IChatLink, IChatPaginateCursorResDto, IChatResDto } from './chat.res.dto'
 
 class ChatRequest extends ApiRequest {
   create = async (body: ICreateChatReqDto) => {
@@ -54,6 +55,16 @@ class ChatRequest extends ApiRequest {
 
   getOrCreateChatByUserId = async (userId: string) => {
     const response = await this.httpRequest.get<IChatResDto>(`${this.basePath}/user/${userId}`)
+    return response.data
+  }
+
+  getLinks = async (chatId: string) => {
+    const response = await this.httpRequest.get<IChatLink[]>(`${this.basePath}/${chatId}/links`)
+    return response.data
+  }
+
+  getMedia = async (chatId: string) => {
+    const response = await this.httpRequest.get<IMedia[]>(`${this.basePath}/${chatId}/media`)
     return response.data
   }
 }

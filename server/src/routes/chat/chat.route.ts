@@ -41,3 +41,7 @@ chatRouter.get(
   zodValidate(UserIdReqParamsDto, 'params'),
   chatCtrl.getOrCreateChatByUserId,
 )
+
+chatRouter.get('/:chatId/links', zodValidate(ChatIdParam, 'params'), chatCtrl.getLinks)
+
+chatRouter.get('/:chatId/media', zodValidate(ChatIdParam, 'params'), chatCtrl.getMedia)

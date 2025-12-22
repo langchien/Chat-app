@@ -87,6 +87,20 @@ export class ChatCtrl extends PaginateCursorCtrl {
     }
     res.json(restulParsed)
   }
+
+  getLinks: RequestHandler<IChatIdParamDto> = async (req, res) => {
+    const { chatId } = req.params
+    const result = await chatService.getLinksInChat(chatId)
+    // You might want to define a specific DTO for the response, but for now sending the result
+    res.json(result)
+  }
+
+  getMedia: RequestHandler<IChatIdParamDto> = async (req, res) => {
+    const { chatId } = req.params
+    const result = await chatService.getMediaInChat(chatId)
+    // You might want to define a specific DTO for the response, but for now sending the result
+    res.json(result)
+  }
 }
 
 export const chatCtrl = new ChatCtrl()

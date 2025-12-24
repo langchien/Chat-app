@@ -33,11 +33,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 export default function ChatPage({ loaderData }: Route.ComponentProps) {
   return (
     <div className='h-full flex-1 flex flex-col overflow-auto'>
-      <ChatHeader
-        chat={loaderData.chat}
-        linksPromise={loaderData.linksPromise}
-        mediaPromise={loaderData.mediaPromise}
-      />
+      <ChatHeader />
       <Suspense key={loaderData.chat.id} fallback={<ChatWindowSkeleton />}>
         <Await resolve={loaderData.messages}>
           {(value) => <ChatWindow paginateMessages={value} />}

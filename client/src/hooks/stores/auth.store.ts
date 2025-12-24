@@ -16,7 +16,6 @@ import { useChatStore } from './chat.store'
 import { useSocketStore } from './socket.store'
 
 interface IAuthState {
-  isAuthenticated: boolean
   accessToken: string | null
   user: IUser | null
   isCanSignUp: boolean
@@ -24,16 +23,17 @@ interface IAuthState {
 }
 
 interface IAuthActions {
-  setIsAuthenticated: (isAuthenticated: boolean) => void
   setAccessToken: (accessToken: string | null) => void
   setUser: (user: IUser | null) => void
   clearAuthStore: () => void
   signOut: () => Promise<void>
   signIn: (body: ILoginReqBodyDto) => Promise<void>
+  signInWithOAuth2: (accessToken: string) => Promise<void>
   signUp: (body: IRegisterReqBodyDto) => Promise<void>
   resetPassword: (body: IResetPasswordReqBodyDto) => Promise<void>
   verifyEmail: (body: IVerifyOtpDto) => Promise<void>
   verifyResetPasswordEmail: (body: IVerifyOtpDto) => Promise<void>
+  signOutAllDevices: () => Promise<void>
 }
 
 const LOCAL_STORAGE_KEY = 'auth-storage'
@@ -41,14 +41,10 @@ const LOCAL_STORAGE_KEY = 'auth-storage'
 export const useAuthStore = create<IAuthState & IAuthActions>()(
   persist(
     (set, get, store) => ({
-      isAuthenticated: false,
       accessToken: null,
       user: null,
       isCanSignUp: false,
       isCanResetPassword: false,
-      setIsAuthenticated: (isAuthenticated: boolean) => {
-        set({ isAuthenticated })
-      },
       setAccessToken: (accessToken: string | null) => {
         set({ accessToken })
       },
@@ -63,7 +59,6 @@ export const useAuthStore = create<IAuthState & IAuthActions>()(
       },
       signIn: async (body: ILoginReqBodyDto) => {
         get().clearAuthStore()
-        set({ isAuthenticated: true })
         try {
           const { accessToken } = await authRequest.signin(body)
           set({ accessToken })
@@ -75,10 +70,24 @@ export const useAuthStore = create<IAuthState & IAuthActions>()(
           throw error
         }
       },
+      signInWithOAuth2: async (accessToken: string) => {
+        useAppStore.getState().setLoading(true)
+        get().clearAuthStore()
+        try {
+          set({ accessToken })
+          const userRes = await protectedRequest.getProfile()
+          set({ user: userRes })
+          await useChatStore.getState().getMyChatList()
+        } catch (error) {
+          get().clearAuthStore()
+          throw error
+        } finally {
+          useAppStore.getState().setLoading(false)
+        }
+      },
       signUp: async (body: IRegisterReqBodyDto) => {
         try {
           get().clearAuthStore()
-          set({ isAuthenticated: true })
           const { accessToken } = await authRequest.signup(body)
           set({ accessToken })
           const userRes = await protectedRequest.getProfile()
@@ -93,7 +102,6 @@ export const useAuthStore = create<IAuthState & IAuthActions>()(
       resetPassword: async (body: IResetPasswordReqBodyDto) => {
         try {
           get().clearAuthStore()
-          set({ isAuthenticated: true })
           const { accessToken } = await authRequest.resetPassword(body)
           set({ accessToken })
           const userRes = await protectedRequest.getProfile()
@@ -110,6 +118,17 @@ export const useAuthStore = create<IAuthState & IAuthActions>()(
         setLoading(true)
         try {
           await authRequest.logout()
+        } finally {
+          setLoading(false)
+          get().clearAuthStore()
+          redirect(APP_PAGES.SIGNIN)
+        }
+      },
+      signOutAllDevices: async () => {
+        const setLoading = useAppStore.getState().setLoading
+        setLoading(true)
+        try {
+          await authRequest.logoutAllDevices()
         } finally {
           setLoading(false)
           get().clearAuthStore()
@@ -138,7 +157,6 @@ export const useAuthStore = create<IAuthState & IAuthActions>()(
     {
       name: LOCAL_STORAGE_KEY,
       partialize: (state) => ({
-        isAuthenticated: state.isAuthenticated,
         user: state.user,
         isCanSignUp: state.isCanSignUp,
         isCanResetPassword: state.isCanResetPassword,

@@ -1,11 +1,11 @@
 import { NotFoundException } from '@/core/exceptions'
-import { BaseRepository } from '@/lib/database'
+import { BaseService } from '@/lib/database'
 import { IPaginateCursorQuery } from '@/lib/paginate-cusor.ctrl'
-import { ICreateChatInp, IUpdateChatInp } from './chat.db'
-import { ChatResDto, IChatPaginateCursorResDto, IChatResDto } from './chat.res.dto'
+import { IChat, ICreateChatInp, IParticipant, IUpdateChatInp } from './chat.db'
+import { ChatResDto, IChatPaginateCursorResDto } from './chat.res.dto'
 
-class ChatRepo extends BaseRepository {
-  async create(data: ICreateChatInp): Promise<IChatResDto> {
+class ChatService extends BaseService {
+  async create(data: ICreateChatInp): Promise<IChat> {
     const { receiverIds, ...restData } = data
     const users = await this.prismaService.user.findMany({
       where: { id: { in: receiverIds } },
@@ -29,7 +29,7 @@ class ChatRepo extends BaseRepository {
     })
   }
 
-  async update(id: string, data: IUpdateChatInp): Promise<IChatResDto> {
+  async update(id: string, data: IUpdateChatInp): Promise<IChat> {
     return this.prismaService.chat.update({
       where: { id: id },
       data: data,
@@ -43,7 +43,14 @@ class ChatRepo extends BaseRepository {
     })
   }
 
-  async findOneById(id: string, userId: string): Promise<IChatResDto | null> {
+  updateParticipantsNickname(id: string, nickname: string): Promise<IParticipant> {
+    return this.prismaService.participant.update({
+      where: { id },
+      data: { nickname: nickname },
+    })
+  }
+
+  async findOneById(id: string, userId: string): Promise<IChat | null> {
     return this.prismaService.chat.findUnique({
       where: { id: id, participants: { some: { userId: userId } } },
       include: {
@@ -60,7 +67,7 @@ class ChatRepo extends BaseRepository {
     return this.prismaService.chat.delete({ where: { id: id } })
   }
 
-  async getAllChatsByUserId(userId: string): Promise<IChatResDto[]> {
+  async getAllChatsByUserId(userId: string): Promise<IChat[]> {
     return this.prismaService.chat.findMany({
       include: {
         participants: {
@@ -115,4 +122,4 @@ class ChatRepo extends BaseRepository {
   }
 }
 
-export const chatRepo = new ChatRepo()
+export const chatService = new ChatService()

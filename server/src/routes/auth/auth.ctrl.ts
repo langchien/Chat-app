@@ -19,10 +19,10 @@ import {
   IVerifyOtpDto,
 } from '@/routes/auth/auth.req.dto'
 import { RequestHandler } from 'express'
-import { userRepo } from '../user/user.repo'
+import { userService } from '../user/user.service'
 import { authMaillerService } from './auth-mailler.service'
 import { OtpType } from './otp-request.schema'
-import { otpRepo } from './otp.repo'
+import { otpService } from './otp.service'
 
 class AuthCtrl extends BaseController {
   private generateOtpAndSendEmail = async (email: string, type: OtpType) => {
@@ -31,7 +31,7 @@ class AuthCtrl extends BaseController {
     const iat = new Date(now)
     const exp = new Date(now + 10 * 60 * 1000) // 10 phút
     await authMaillerService.sendOtpEmail(email, otp, type)
-    await otpRepo.upsert({
+    await otpService.upsert({
       email,
       otp,
       type,
@@ -42,7 +42,7 @@ class AuthCtrl extends BaseController {
   }
 
   private async verifyEmail(email: string, otp: string, type: OtpType) {
-    const result = await otpRepo.findOneAndDelete({ email, otp, type })
+    const result = await otpService.findOneAndDelete({ email, otp, type })
     const exp = new Date(result.exp)
     if (exp < new Date()) throw new NotFoundException('Mã OTP không hợp lệ hoặc đã hết hạn')
     const token = jwtService.signOtpToken({
@@ -71,7 +71,7 @@ class AuthCtrl extends BaseController {
    */
   sendVerifyEmailCtrl: RequestHandler<any, any, ISendOtpReqBodyDto> = async (req, res) => {
     const email = req.body.email
-    const existingEmail = await userRepo.findOneByEmail(email)
+    const existingEmail = await userService.findOneByEmail(email)
     if (existingEmail) throw new ConflictException('Email đã được sử dụng')
     await this.generateOtpAndSendEmail(email, OtpType.VerifyEmail)
     return res.status(HttpStatusCode.NoContent).json({})
@@ -115,11 +115,11 @@ class AuthCtrl extends BaseController {
       if (Date.now() >= exp * 1000) throw new UnauthorizedException('Register token đã hết hạn')
       const hashedPassword = await hashingService.hash(password)
       // email và username phải là duy nhất
-      const isExistingEmail = await userRepo.findOneByEmail(email)
+      const isExistingEmail = await userService.findOneByEmail(email)
       // email lấy thông qua token nên chỉ bị trùng khi client cố ý lấy token đấy gửi lại nên trả lỗi Unauthorized
       const username = generateSlug(fields.username)
       if (isExistingEmail) throw new UnauthorizedException('Email đã được sử dụng')
-      const isExistingUsername = await userRepo.findOneByUsername(username)
+      const isExistingUsername = await userService.findOneByUsername(username)
       // username tồn tại thì trả về lỗi unprocessable entity với chi tiết lỗi để client hiển thị đúng ở field nào
       if (isExistingUsername)
         throw new UnprocessableEntityException([
@@ -128,7 +128,7 @@ class AuthCtrl extends BaseController {
             path: ['username'],
           },
         ])
-      const result = await userRepo.create({
+      const result = await userService.create({
         ...fields,
         email,
         hashedPassword,
@@ -151,7 +151,7 @@ class AuthCtrl extends BaseController {
 
   loginCtrl: RequestHandler<any, any, ILoginReqBodyDto> = async (req, res) => {
     const { email, password } = req.body
-    const result = await userRepo.findOneByEmail(email)
+    const result = await userService.findOneByEmail(email)
     if (!result) throw new UnauthorizedException('Email hoặc mật khẩu không đúng')
     const isPasswordValid = await hashingService.compare(password, result.hashedPassword)
     if (!isPasswordValid) throw new UnauthorizedException('Email hoặc mật khẩu không đúng')
@@ -205,7 +205,7 @@ class AuthCtrl extends BaseController {
 
   sendForgotPasswordOtpCtrl: RequestHandler<any, any, ISendOtpReqBodyDto> = async (req, res) => {
     const email = req.body.email
-    const existingEmail = await userRepo.findOneByEmail(email)
+    const existingEmail = await userService.findOneByEmail(email)
     if (!existingEmail) throw new NotFoundException('Email không tồn tại trong hệ thống')
     await this.generateOtpAndSendEmail(email, OtpType.ResetPasswordReqBodyDto)
     return res.status(HttpStatusCode.NoContent).json({})
@@ -233,7 +233,7 @@ class AuthCtrl extends BaseController {
       if (Date.now() >= exp * 1000)
         throw new UnauthorizedException('Forgot password token đã hết hạn')
       const hashedPassword = await hashingService.hash(password)
-      const user = await userRepo.findOneByEmail(email)
+      const user = await userService.findOneByEmail(email)
       const { accessToken, refreshToken } = jwtService.generateTokens({
         email,
         userId: user!.id.toString(),
@@ -241,7 +241,7 @@ class AuthCtrl extends BaseController {
       await this.addRefreshTokenToRedis(refreshToken, user!.id.toString())
       jwtService.setCookieToClient(res, refreshToken, TokenType.Refresh)
       if (!user) throw new NotFoundException('Người dùng không tồn tại')
-      const result = await userRepo.update(user.id.toString(), { hashedPassword })
+      const result = await userService.update(user.id.toString(), { hashedPassword })
       if (!result) throw new NotFoundException('Người dùng không tồn tại')
       return res.status(HttpStatusCode.Created).json({ accessToken })
     } catch (error) {

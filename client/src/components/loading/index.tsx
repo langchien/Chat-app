@@ -6,7 +6,7 @@ export function AppLoadingOverlay({ loading }: { loading?: boolean }) {
   if (!isLoading && !loading) return null
   const message = 'Đang tải, vui lòng chờ...'
   return (
-    <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm'>
+    <div className='fixed inset-0 z-100 flex items-center justify-center bg-black/50 backdrop-blur-sm'>
       {/* Icon chat */}
       <div className='absolute top-12 left-12 animate-bounce'>
         <div className='flex items-center gap-2'>

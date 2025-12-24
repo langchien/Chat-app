@@ -1,24 +1,10 @@
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from '@/components/ui/sidebar'
-import { APP_IMAGES, APP_PAGES } from '@/constants/link.const'
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
+import { APP_IMAGES } from '@/constants/link.const'
 import { useAuthStore } from '@/hooks/stores/auth.store'
 import { getInitials } from '@/lib/utils'
 import type { IUser } from '@/services/api.types'
-import { BadgeCheck, Bell, ChevronsUpDown, Computer, Layers, LogOut } from 'lucide-react'
-import { Link } from 'react-router'
+import { LogOut, Settings } from 'lucide-react'
+import { ProfileTabs } from '../profile/profile-tabs'
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
 import { Button } from '../ui/button'
 
@@ -40,63 +26,28 @@ export function UserInfo({ user }: { user: IUser }) {
 export function AccountSetting() {
   const user = useAuthStore((state) => state.user)
   const signOut = useAuthStore((state) => state.signOut)
-  const { isMobile } = useSidebar()
-  if (!user)
-    return (
-      <SidebarMenu>
-        <SidebarMenuItem>
-          <Link to={APP_PAGES.SIGNIN}>
-            <Button className='w-full'>Đăng nhập</Button>
-          </Link>
-        </SidebarMenuItem>
-      </SidebarMenu>
-    )
+  if (!user) return null
   return (
-    <SidebarMenu>
-      <SidebarMenuItem>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <SidebarMenuButton size='lg'>
-              <UserInfo user={user} />
-              <ChevronsUpDown className='ml-auto size-4' />
-            </SidebarMenuButton>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            className='w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg'
-            side={isMobile ? 'bottom' : 'right'}
-            align='end'
-            sideOffset={4}
-          >
-            <DropdownMenuLabel className='p-0 font-normal'>
-              <UserInfo user={user} />
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <BadgeCheck />
-                Tài khoản
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Bell />
-                Thông báo
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Layers />
-                Đổi mật khẩu
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Computer />
-                Thiết bị đăng nhập
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={signOut}>
-              <LogOut />
-              Đăng xuất
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </SidebarMenuItem>
-    </SidebarMenu>
+    <div className='flex items-center justify-between w-full h-full group/settings'>
+      <UserInfo user={user} />
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button variant={'ghost'} size={'icon-lg'}>
+            <Settings className='size-6 group-hover/settings:animate-spin' />
+          </Button>
+        </DialogTrigger>
+        <DialogContent className='max-w-xl md:max-w-3xl lg:max-w-4xl min-h-[400px]'>
+          <ProfileTabs />
+        </DialogContent>
+      </Dialog>
+      <Button
+        className='hover:bg-red-500/90 hover:text-white'
+        variant={'ghost'}
+        size={'icon-lg'}
+        onClick={signOut}
+      >
+        <LogOut className='size-6' />
+      </Button>
+    </div>
   )
 }

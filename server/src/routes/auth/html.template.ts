@@ -6,12 +6,12 @@ interface IOtpData {
 }
 
 export const OTP_MESSAGE: Record<OtpType, IOtpData> = {
-  FORGOT_PASSWORD: {
+  [OtpType.ResetPasswordReqBodyDto]: {
     subject: 'Khôi phục mật khẩu ✔',
     description:
       'Bạn đang đăng nhập vào hệ thống của Huster Chap-app. Sử dụng mã OTP bên dưới để kích hoạt khôi phục mật khẩu. Mã OTP chỉ có hiệu lực trong 5 phút.',
   },
-  VERIFY_EMAIL: {
+  [OtpType.VerifyEmail]: {
     subject: 'Xác thực tài khoản ✔',
     description:
       'Bạn đang đăng ký tài khoản trên hệ thống của Huster Chap-app. Sử dụng mã OTP bên dưới để xác thực email. Mã OTP chỉ có hiệu lực trong 5 phút.',

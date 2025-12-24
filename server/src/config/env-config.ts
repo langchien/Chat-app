@@ -46,10 +46,7 @@ const EnvConfig = z.object({
     refreshToken: JwtConfig,
     otpToken: JwtConfig,
   }),
-  redis: z.object({
-    host: z.string('REDIS_HOST không được để trống'),
-    port: z.coerce.number('REDIS_PORT không được để trống'),
-  }),
+  redisUrl: z.string('REDIS_URL không được để trống'),
 })
 export interface IEnvConfigInput extends z.input<typeof EnvConfig> {}
 
@@ -93,10 +90,7 @@ export const envConfigInput: IEnvConfigInput = {
       expiresIn: process.env.JWT_OTP_EXPIRES_IN ?? 10 * 60,
     },
   },
-  redis: {
-    host: process.env.REDIS_HOST!,
-    port: +process.env.REDIS_PORT!,
-  },
+  redisUrl: process.env.REDIS_URL!,
 }
 
 const verifyEnvConfig = () => {

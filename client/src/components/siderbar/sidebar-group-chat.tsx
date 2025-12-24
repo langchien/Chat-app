@@ -6,10 +6,9 @@ import { ChatCard } from './chat-card'
 interface SidebarGroupChatProps {
   chatGroups: IChat[]
   activeChatId?: string
-  userId?: string
 }
 
-export function SidebarGroupChat({ chatGroups, activeChatId, userId }: SidebarGroupChatProps) {
+export function SidebarGroupChat({ chatGroups, activeChatId }: SidebarGroupChatProps) {
   if (chatGroups.length === 0) return null
   return (
     <SidebarGroup className='space-y-2'>
@@ -18,12 +17,7 @@ export function SidebarGroupChat({ chatGroups, activeChatId, userId }: SidebarGr
         <Users className='size-12' />
       </SidebarGroupLabel>
       {chatGroups.map((chatItem) => (
-        <ChatCard
-          key={chatItem.id}
-          chatItem={chatItem}
-          activeChatId={activeChatId}
-          userId={userId}
-        />
+        <ChatCard key={chatItem.id} chatItem={chatItem} activeChatId={activeChatId} />
       ))}
     </SidebarGroup>
   )

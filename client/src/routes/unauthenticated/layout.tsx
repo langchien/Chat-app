@@ -4,10 +4,10 @@ import { useEffect } from 'react'
 import { Outlet, useNavigate } from 'react-router'
 
 export default function UnauthenticatedLayout() {
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+  const user = useAuthStore((state) => state.user)
   const navigate = useNavigate()
   useEffect(() => {
-    if (isAuthenticated) navigate(APP_PAGES.CHAT)
-  }, [isAuthenticated, navigate])
+    if (user) navigate(APP_PAGES.CHAT)
+  }, [user, navigate])
   return <Outlet />
 }

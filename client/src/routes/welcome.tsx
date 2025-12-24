@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { APP_PAGES } from '@/constants/link.const'
+import { useAuthStore } from '@/hooks/stores/auth.store'
 import { MessageSquare, Shield, Video, Zap } from 'lucide-react'
 import { Link } from 'react-router'
 
@@ -7,6 +8,7 @@ export function meta() {
   return [{ title: 'Chat app' }, { name: 'description', content: 'Welcome to Chat app!' }]
 }
 export default function Welcome() {
+  const { user } = useAuthStore()
   return (
     <main className='min-h-screen bg-linear-to-br from-slate-950 via-slate-900 to-slate-950'>
       <div className='container mx-auto px-4 py-16'>
@@ -30,16 +32,26 @@ export default function Welcome() {
           </p>
 
           <div className='flex flex-wrap items-center justify-center gap-4'>
-            <Link to={APP_PAGES.SIGNUP}>
-              <Button className='h-16 text-xl px-8 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors shadow-lg shadow-blue-500/25'>
-                Đăng ký ngay
-              </Button>
-            </Link>
-            <Link to={APP_PAGES.SIGNIN}>
-              <Button className='h-16 text-xl px-8 bg-slate-800 hover:bg-slate-700 text-white font-semibold rounded-xl transition-colors border border-slate-700'>
-                Đăng nhập
-              </Button>
-            </Link>
+            {user ? (
+              <Link to={APP_PAGES.CHAT}>
+                <Button className='h-16 text-xl px-8 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors shadow-lg shadow-blue-500/25'>
+                  Chat ngay
+                </Button>
+              </Link>
+            ) : (
+              <>
+                <Link to={APP_PAGES.SIGNUP}>
+                  <Button className='h-16 text-xl px-8 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors shadow-lg shadow-blue-500/25'>
+                    Đăng ký ngay
+                  </Button>
+                </Link>
+                <Link to={APP_PAGES.SIGNIN}>
+                  <Button className='h-16 text-xl px-8 bg-slate-800 hover:bg-slate-700 text-white font-semibold rounded-xl transition-colors border border-slate-700'>
+                    Đăng nhập
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </header>
 

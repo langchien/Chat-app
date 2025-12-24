@@ -1,6 +1,6 @@
-import { UserAvatar } from '@/components/avatar'
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
 import { Separator } from '@/components/ui/separator'
+import { UserInfoModal } from '@/components/user-info-modal'
 import { friendRequest } from '@/features/friend/services'
 import type { IUser } from '@/types/api.types'
 import { Search } from 'lucide-react'
@@ -38,13 +38,7 @@ export function AddFriend({ defaultSearch }: { defaultSearch?: string }) {
       <div className='flex flex-col space-y-2 py-3'>
         {result.map((user) => (
           <div key={user.id} className='flex items-center space-x-2'>
-            <UserAvatar user={user} />
-            <div className='flex flex-col'>
-              <div className='flex flex-row items-center space-x-2'>
-                <div className='font-semibold'>{user.displayName}</div>
-              </div>
-              <div className='text-xs text-muted-foreground'>{user.email}</div>
-            </div>
+            <UserInfoModal user={user} />
             <div className='ms-auto'></div>
             <FriendStatusButton userId={user.id} userDisplayName={user.displayName} />
           </div>

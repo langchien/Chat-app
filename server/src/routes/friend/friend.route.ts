@@ -25,9 +25,15 @@ friendRoute.patch(
   zodValidate(UpdateFriendRequestBodyDto, 'body'),
   friendCtrl.updateFriendRequestStatus,
 )
-friendRoute.get('/requests/received', friendCtrl.getListFriendRequest)
+friendRoute.get('/requests/received', friendCtrl.getReceivedFriendRequests)
 
-friendRoute.get('/requests/sent', friendCtrl.getListFriendRequestFrom)
+friendRoute.get('/requests/sent', friendCtrl.getSentFriendRequests)
+
+friendRoute.get(
+  '/status/:userId',
+  zodValidate(UserIdReqParamsDto, 'params'),
+  friendCtrl.getFriendStatus,
+)
 
 friendRoute.delete(
   '/request/:requestId',

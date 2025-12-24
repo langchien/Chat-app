@@ -1,18 +1,50 @@
-import { BaseService } from '@/lib/database'
+import { NotFoundException, UnprocessableEntityException } from '@/core/exceptions'
+import { BaseService, isRecordNotFoundError, isUniqueConstraintError } from '@/lib/database'
 import { ICreateUserInput, IUpdateUserInput, IUser } from './user.db'
 
 class UserService extends BaseService {
-  create(data: ICreateUserInput): Promise<IUser> {
-    return this.prismaService.user.create({
-      data,
-    })
+  private handleUniqueConstraintError(error: any) {
+    if (isUniqueConstraintError(error)) {
+      if ((error.meta as any).target == 'User_email_key')
+        throw new UnprocessableEntityException([
+          {
+            message: 'Email đã được sử dụng',
+            path: ['email'],
+          },
+        ])
+      if ((error.meta as any).target == 'User_username_key')
+        throw new UnprocessableEntityException([
+          {
+            message: 'Username đã được sử dụng',
+            path: ['username'],
+          },
+        ])
+    }
+    throw error
   }
 
-  update(id: string, data: IUpdateUserInput): Promise<IUser> {
-    return this.prismaService.user.update({
-      where: { id },
-      data,
-    })
+  async create(data: ICreateUserInput): Promise<IUser> {
+    try {
+      return await this.prismaService.user.create({
+        data,
+      })
+    } catch (error) {
+      this.handleUniqueConstraintError(error)
+      throw error // Should be unreachable if handleUniqueConstraintError throws
+    }
+  }
+
+  async update(id: string, data: IUpdateUserInput): Promise<IUser> {
+    try {
+      return await this.prismaService.user.update({
+        where: { id },
+        data,
+      })
+    } catch (error) {
+      if (isRecordNotFoundError(error)) throw new NotFoundException('Không tìm thấy người dùng')
+      this.handleUniqueConstraintError(error)
+      throw error
+    }
   }
 
   findOneById(id: string): Promise<IUser | null> {
@@ -40,10 +72,15 @@ class UserService extends BaseService {
     })
   }
 
-  delete(id: string): Promise<IUser> {
-    return this.prismaService.user.delete({
-      where: { id },
-    })
+  async delete(id: string): Promise<IUser> {
+    try {
+      return await this.prismaService.user.delete({
+        where: { id },
+      })
+    } catch (error) {
+      if (isRecordNotFoundError(error)) throw new NotFoundException('Không tìm thấy người dùng')
+      throw error
+    }
   }
 
   searchByText(query: string, limmit: number): Promise<IUser[]> {

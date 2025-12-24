@@ -20,12 +20,16 @@ export function ChatCard({ chatItem, activeChatId }: { chatItem: IChat; activeCh
         )}
       >
         <ChatAvatar chatItem={chatItem} />
-        <div className='flex-1 text-left space-y-1'>
-          <div className='font-bold text-sm line-clamp-1 min-w-0 capitalize'>{chatName}</div>
-          <div className='text-xs text-muted-foreground line-clamp-1 min-w-0'>
-            <b className='capitalize'>{lastSender?.displayName?.split(' ')[0]}: </b>
-            {chatItem.lastMessage?.content}
-          </div>
+        <div className='flex-1 text-left space-y-1  text-sm '>
+          <div className='font-bold line-clamp-1 min-w-0 capitalize'>{chatName}</div>
+          {lastSender?.displayName && chatItem.lastMessage ? (
+            <div className='text-xs text-muted-foreground line-clamp-1 min-w-0'>
+              <b className='capitalize'>{lastSender.displayName.split(' ')[0]}: </b>
+              {chatItem.lastMessage.content}
+            </div>
+          ) : (
+            <p>...</p>
+          )}
         </div>
         <div className='ms-auto text-xs text-muted-foreground h-full align-top'>
           {formatTimeAgo(chatItem.updatedAt)}

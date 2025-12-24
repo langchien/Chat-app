@@ -4,7 +4,7 @@ import { isRecordNotFoundError } from '@/lib/database'
 import { PaginateCursorCtrl } from '@/lib/paginate-cusor.ctrl'
 import { SOCKET_EVENTS } from '@/socket/event.const'
 import { RequestHandler } from 'express'
-import { IChat } from './chat.db'
+import { IUserIdReqParamsDto } from '../user/user.req.dto'
 import {
   IChatIdParamDto,
   ICreateChatReqDto,
@@ -22,7 +22,12 @@ export class ChatCtrl extends PaginateCursorCtrl {
       ...restData,
       receiverIds: [...new Set([...receiverIds, userId])],
     })
-    res.status(HttpStatusCode.Created).json(ChatResDto.parse(result))
+    const parseData = ChatResDto.parse(result)
+    req.io.to(userId).emit(SOCKET_EVENTS.UPDATE_CHAT, parseData)
+    receiverIds.forEach((receiverId) => {
+      req.io.to(receiverId).emit(SOCKET_EVENTS.UPDATE_CHAT, parseData)
+    })
+    res.status(HttpStatusCode.Created).json(parseData)
   }
 
   update: RequestHandler<IChatIdParamDto, IChatResDto, IUpdateChatReqDto> = async (req, res) => {
@@ -42,36 +47,13 @@ export class ChatCtrl extends PaginateCursorCtrl {
     const io = req.io
     const { chatId } = req.params
     const { userId } = req.user
-    const chat = await chatService.findOneById(chatId, userId)
-    if (!chat) throw new NotFoundException('Chat không tồn tại')
     const { displayName } = req.body
-    const groupInfo = chat.groupInfo
-    let result: IChat
-    if (groupInfo) {
-      const updatedChat = await chatService.update(chatId, {
-        groupInfo: {
-          ...groupInfo,
-          name: displayName,
-        },
-      })
-      result = updatedChat
-    } else {
-      const members = chat.participants.filter((p) => p.userId !== userId)
-      const member = members[0]
-      const updatedParticipant = await chatService.updateParticipantsNickname(
-        member.id,
-        displayName,
-      )
-      result = {
-        ...chat,
-        participants: chat.participants.map((p) =>
-          p.id === updatedParticipant.id ? { ...p, nickname: updatedParticipant.nickname } : p,
-        ),
-      }
-    }
+
+    const result = await chatService.updateChatDisplayName(chatId, userId, displayName)
+
     const restulParsed = ChatResDto.parse(result)
     io.to(chatId).emit(SOCKET_EVENTS.UPDATE_CHAT, restulParsed)
-    res.status(HttpStatusCode.Ok).json(restulParsed)
+    res.json(restulParsed)
   }
 
   getById: RequestHandler<IChatIdParamDto> = async (req, res) => {
@@ -98,6 +80,17 @@ export class ChatCtrl extends PaginateCursorCtrl {
     const query = this.parsePaginationQuery(req.query)
     const results = await chatService.getChatsByCursor(req.user.userId, query)
     res.json(results)
+  }
+
+  getOrCreateChatByUserId: RequestHandler<IUserIdReqParamsDto, IChatResDto> = async (req, res) => {
+    const { userId } = req.params
+    const result = await chatService.getOrCreateChatByUserId(userId, req.user.userId)
+    const restulParsed = ChatResDto.parse(result.chat)
+    if (result.isCreate) {
+      req.io.to(userId).emit(SOCKET_EVENTS.UPDATE_CHAT, restulParsed)
+      req.io.to(req.user.userId).emit(SOCKET_EVENTS.UPDATE_CHAT, restulParsed)
+    }
+    res.json(restulParsed)
   }
 }
 

@@ -7,7 +7,6 @@ const MAXIMUM_BITRATE_360P = 1 * 10 ** 6 // 1Mbps
 const MAXIMUM_BITRATE_480P = 2.5 * 10 ** 6 // 2.5Mbps
 const MAXIMUM_BITRATE_720P = 5 * 10 ** 6 // 5Mbps
 const MAXIMUM_BITRATE_1080P = 8 * 10 ** 6 // 8Mbps
-const MAXIMUM_BITRATE_1440P = 16 * 10 ** 6 // 16Mbps
 
 interface EncodeByResolution {
   inputPath: string
@@ -20,7 +19,6 @@ interface EncodeByResolution {
     480: number
     720: number
     1080: number
-    1440: number
     original: number
   }
   originalResolution: {
@@ -176,7 +174,6 @@ class FfmpegService {
     const bitrate480 = bitrate > MAXIMUM_BITRATE_480P ? MAXIMUM_BITRATE_480P : bitrate
     const bitrate720 = bitrate > MAXIMUM_BITRATE_720P ? MAXIMUM_BITRATE_720P : bitrate
     const bitrate1080 = bitrate > MAXIMUM_BITRATE_1080P ? MAXIMUM_BITRATE_1080P : bitrate
-    const bitrate1440 = bitrate > MAXIMUM_BITRATE_1440P ? MAXIMUM_BITRATE_1440P : bitrate
     const isHasAudio = await this.checkVideoHasAudio(inputPath)
 
     const allResolutions = [360, 480, 720, 1080, 1440]
@@ -193,7 +190,6 @@ class FfmpegService {
         480: bitrate480,
         720: bitrate720,
         1080: bitrate1080,
-        1440: bitrate1440,
         original: bitrate,
       },
       inputPath,

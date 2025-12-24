@@ -1,21 +1,25 @@
 import { envConfig } from '@/config/env-config'
 import { BadRequestException, NotFoundException } from '@/core/exceptions'
+import { MediaDirectories, localFileService } from '@/core/local-file.service'
 import { HttpStatusCode } from '@/core/status-code'
 import { s3Service } from '@/lib/s3.service'
+import { SOCKET_EVENTS } from '@/socket/event.const'
 import { ObjectId } from 'bson'
 import { RequestHandler } from 'express'
+import { File } from 'formidable'
 import fs from 'fs'
-import { unlink } from 'fs/promises'
 import mime from 'mime'
-import path from 'path'
-import sharp from 'sharp'
-import { getFilePath, getUrlMedia, MediaDirectories } from './dir.const'
+import { IChatIdParamDto } from '../chat/chat.req.dto'
+import { ChatResDto } from '../chat/chat.res.dto'
+import { messageRepo } from '../message/message.repo'
+import { MessageResDto } from '../message/message.res.dto'
 import { IMedia } from './media.db'
 import { mediaQueue } from './media.queue'
 import { mediaRepo } from './media.repo'
-import { IMediaIdParamDto } from './media.req'
+import { IGetFileReqParamsDto, IMediaIdParamDto, IUpdateMediaDto } from './media.req'
+import { IMediaResDto } from './media.res'
 import { Media, MediaStatus, MediaType } from './media.schema'
-import { uploadService } from './upload.service'
+import { mediaService } from './media.service'
 
 const IS_LOCAL = envConfig.upload.provider === 'local'
 
@@ -27,114 +31,75 @@ class MediaCtrl {
     res.json(Media.parse(media))
   }
 
-  // Upload file thường
-  uploadFile: RequestHandler = async (req, res) => {
-    const file = await uploadService.handleFileUpload(req)
-    const url = getUrlMedia.Files(file.newFilename)
-    const filePath = getFilePath.Files(file.newFilename)
-    if (!IS_LOCAL) {
-      await s3Service.upload(MediaDirectories.Files + file.newFilename, filePath)
-      await unlink(filePath)
-    }
-    const result = await mediaRepo.create({
-      type: MediaType.File,
-      status: MediaStatus.Compileted,
-      url,
-    })
-    res.status(HttpStatusCode.Created).json(Media.parse(result))
+  updateMedia: RequestHandler<any, IMediaResDto, IUpdateMediaDto> = async (req, res) => {
+    const mediaId = req.params.mediaId
+    const updateData = req.body
+    const updatedMedia = await mediaRepo.update(mediaId, updateData)
+    if (!updatedMedia) throw new NotFoundException('Không tìm thấy media để cập nhật')
+    res.json(Media.parse(updatedMedia))
   }
 
-  // Upload nhiều ảnh, chuyển sang jpg
-  uploadImages: RequestHandler = async (req, res) => {
-    const CONTENT_TYPE = 'image/jpg'
-    const files = await uploadService.handleUploadImages(req)
-    const results = await Promise.all(
-      files.map(async (file) => {
-        const filename = path.parse(file.newFilename).name + '.jpg'
-        const filepath = file.filepath
-        const newFilePath = getFilePath.Images(filename)
-        const url = getUrlMedia.Images(filename)
-        await sharp(filepath).jpeg().toFile(newFilePath)
-        if (!IS_LOCAL) {
-          await s3Service.upload(MediaDirectories.Images + filename, newFilePath, CONTENT_TYPE)
-          await Promise.all([unlink(newFilePath), unlink(filepath)])
-        } else await unlink(filepath)
-        return url
-      }),
-    )
-    const resultsData = await mediaRepo.createMany(
-      results.map((url) => ({
-        type: MediaType.Image,
-        status: MediaStatus.Compileted,
-        url,
-      })),
-    )
-    res.status(HttpStatusCode.Created).json(resultsData.map((item) => Media.parse(item)))
-  }
-
-  // Upload video thường
-  uploadVideo: RequestHandler = async (req, res) => {
-    const video = await uploadService.handleVideoUpload(req)
-    const url = getUrlMedia.Videos(video.newFilename)
-    const filepath = video.filepath
-    if (!IS_LOCAL) {
-      await s3Service.upload(
-        MediaDirectories.Videos + video.newFilename,
-        filepath,
-        mime.getType(video.filepath) ?? 'video/mp4',
-      )
-      await unlink(filepath)
-    }
-    const result = await mediaRepo.create({
-      type: MediaType.Video,
-      status: MediaStatus.Compileted,
-      url,
+  muiltiUploadMedia: RequestHandler<IChatIdParamDto> = async (req, res) => {
+    const io = req.io
+    const user = req.user
+    const chatId = req.params.chatId
+    const contents: string[] | undefined = req.body?.contents
+    const content = contents && contents.length > 0 ? contents[0] : ''
+    if (!req.files)
+      throw new BadRequestException(undefined, 'Chưa có file để upload, hoặc các file không hợp lệ')
+    const allFiles = Object.values(req.files)
+      .flat()
+      .filter((file) => file instanceof File) // phải import File từ formidable
+    if (allFiles.length === 0)
+      throw new BadRequestException(undefined, 'Chưa có file để upload, hoặc các file không hợp lệ')
+    const medias = await mediaService.handleTransformFile(allFiles)
+    const { chat, message } = await messageRepo.create({
+      chatId,
+      senderId: user.userId,
+      content,
+      mediaIds: medias.map((media) => media.id),
     })
-    res.status(HttpStatusCode.Created).json(Media.parse(result))
+    const messageRes = MessageResDto.parse(message)
+    const chatRes = ChatResDto.parse(chat)
+    const resultPayload = { message: messageRes, chat: chatRes }
+    io.to(chat.id).emit(SOCKET_EVENTS.RECEIVE_MESSAGE, resultPayload)
+    res.status(HttpStatusCode.Created).json(resultPayload)
   }
 
   // Upload video chuyển sang HLS
   uploadVideoHls: RequestHandler = async (req, res) => {
-    const video = await uploadService.handleVideoUpload(req, 100, true)
+    const videos = req.files?.videos
+    if (!videos || (Array.isArray(videos) && videos.length === 0))
+      throw new BadRequestException(
+        undefined,
+        'Chưa có video để upload, hoặc các video không hợp lệ',
+      )
+    const video = videos[0]
     const id = new ObjectId().toString()
-    const url = getUrlMedia.VideoHLS(id, '/master.m3u8')
+    const url = localFileService.getUrlMedia.video_hls(id, '/master.m3u8')
     const result = await mediaRepo.create({
       id,
-      type: MediaType.HLS,
-      status: MediaStatus.Pending,
+      type: MediaType.video_hls,
+      status: MediaStatus.pending,
       url,
+      originalName: video.originalFilename ?? video.newFilename,
     })
     await mediaQueue.enqueue({ id, filename: video.newFilename })
     res.status(HttpStatusCode.Created).json(Media.parse(result))
   }
 
   // Phục vụ file đã upload, chỉ tải do không truyền content-type khi upload lên s3
-  serveFile: RequestHandler = async (req, res, next) => {
+  serveFile: RequestHandler<IGetFileReqParamsDto> = async (req, res, next) => {
+    const { mediaDirectory, fileName } = req.params
+    const filePath = mediaService.getFilePath(mediaDirectory, fileName)
     try {
-      const fileName = req.params.fileName
-      const filePath = getFilePath.Files(fileName)
       if (IS_LOCAL)
         return res.sendFile(filePath, (err) => {
           if (err) next(new NotFoundException('Không tìm thấy file'))
         })
-      return await s3Service.sendFileFromS3(res, MediaDirectories.Files + fileName)
+      return await s3Service.sendFileFromS3(res, MediaDirectories.file + fileName)
     } catch (error) {
       next(new NotFoundException('Không tìm thấy file'))
-    }
-  }
-
-  // Phục vụ ảnh đã upload
-  serveImage: RequestHandler = async (req, res, next) => {
-    try {
-      const imageName = req.params.imageName
-      const imagePath = getFilePath.Images(imageName)
-      if (IS_LOCAL)
-        return res.sendFile(imagePath, (err) => {
-          if (err) next(new NotFoundException('Không tìm thấy ảnh'))
-        })
-      return await s3Service.sendFileFromS3(res, MediaDirectories.Images + imageName)
-    } catch (error) {
-      next(new NotFoundException('Không tìm thấy ảnh'))
     }
   }
 
@@ -143,13 +108,13 @@ class MediaCtrl {
     const videoName = req.params.videoName
     const range = req.headers.range
     const contentType = mime.getType(videoName) ?? 'video/mp4'
-    const videoPath = getFilePath.Videos(videoName)
+    const videoPath = localFileService.getFilePath.video(videoName)
     if (!range) throw new BadRequestException()
     let videoSize: number
     if (IS_LOCAL) {
       if (!fs.existsSync(videoPath)) throw new NotFoundException('Không tìm thấy video')
       videoSize = fs.statSync(videoPath).size
-    } else videoSize = await s3Service.getFileSizeFromS3(MediaDirectories.Videos + videoName)
+    } else videoSize = await s3Service.getFileSizeFromS3(MediaDirectories.video + videoName)
     const [startStr, endStr] = range.replace('bytes=', '').split('-')
     const start = Number(startStr)
     let end = endStr ? Number(endStr) : start + MAX_CHUNK_SIZE - 1
@@ -166,11 +131,7 @@ class MediaCtrl {
       const videoStream = fs.createReadStream(videoPath, { start, end })
       videoStream.pipe(res)
     } else {
-      const data = await s3Service.readS3FileSegment(
-        MediaDirectories.Videos + videoName,
-        start,
-        end,
-      )
+      const data = await s3Service.readS3FileSegment(MediaDirectories.video + videoName, start, end)
       ;(data.Body as any).pipe(res)
     }
   }
@@ -179,8 +140,8 @@ class MediaCtrl {
   serveVideoM3u8: RequestHandler = (req, res, next) => {
     const id = req.params.id
     if (!IS_LOCAL)
-      return s3Service.sendFileFromS3(res, MediaDirectories.VideoHLS + id + '/master.m3u8')
-    const m3u8Path = getFilePath.VideoHLS(id, 'master.m3u8')
+      return s3Service.sendFileFromS3(res, MediaDirectories.video_hls + id + '/master.m3u8')
+    const m3u8Path = localFileService.getFilePath.video_hls(id, 'master.m3u8')
     return res.sendFile(m3u8Path, (err) => {
       if (err) next(new NotFoundException('Không tìm thấy file m3u8'))
     })
@@ -190,8 +151,8 @@ class MediaCtrl {
   serveVideoHlsPlaylist: RequestHandler = (req, res, next) => {
     const { id, v, segment } = req.params
     if (!IS_LOCAL)
-      return s3Service.sendFileFromS3(res, `${MediaDirectories.VideoHLS}${id}/${v}/${segment}`)
-    const playlistPath = getFilePath.VideoHLS(id, v, segment)
+      return s3Service.sendFileFromS3(res, `${MediaDirectories.video_hls}${id}/${v}/${segment}`)
+    const playlistPath = localFileService.getFilePath.video_hls(id, v, segment)
     return res.sendFile(playlistPath, (err) => {
       if (err) next(new NotFoundException('Không tìm thấy playlist HLS'))
     })

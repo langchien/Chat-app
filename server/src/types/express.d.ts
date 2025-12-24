@@ -1,5 +1,6 @@
 import { AccessTokenPayload } from '@/lib/jwt.service'
 import { Server } from 'socket.io'
+import { Files } from 'formidable'
 
 /**
  *@description Mở rộng Express Request interface để thêm thuộc tính user và io
@@ -11,6 +12,7 @@ declare global {
     interface Request {
       user: AccessTokenPayload
       io: Server
+      files?: Files
     }
   }
 }

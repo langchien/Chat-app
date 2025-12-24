@@ -5,7 +5,7 @@ import { Link } from 'react-router'
 import { Card } from '../ui/card'
 import { ChatAvatar } from './chat-avatar'
 
-function getChatName(chatItem: IChat, userId?: string) {
+export function getChatName(chatItem: IChat, userId?: string) {
   if (chatItem.type === 'group' && chatItem.groupInfo) return chatItem.groupInfo.name
   const participant = chatItem.participants.find((p) => p.user.id !== userId)
   return participant ? participant.user.displayName : 'Không xác định'
@@ -27,12 +27,11 @@ export function ChatCard({
     <Link to={`${APP_PAGES.CHAT}/${chatItem.id}`} key={`chatItem-${chatItem.id}`}>
       <Card
         className={cn(
-          'min-h-14 flex flex-row items-center p-3 bg-linear-to-br from-blue-200 to-blue-100 rounded-2xl hover:border-blue-500 hover:to-blue-200 hover:from-blue-100 transition-all duration-300 group border border-blue-400',
-          chatItem.id === activeChatId &&
-            'from-blue-300 to-blue-200 rounded-2xl hover:to-blue-300 hover:from-blue-200 border-blue-500 ',
+          'min-h-14 flex flex-row items-center p-3 hover:bg-primary/10 space-x-3 bg-card text-card-foreground',
+          chatItem.id === activeChatId && 'bg-primary/10 border-l-4 border-primary',
         )}
       >
-        <ChatAvatar chatItem={chatItem} userId={userId} isGroup={chatItem.type === 'group'} />
+        <ChatAvatar chatItem={chatItem} userId={userId} />
         <div className='flex-1 text-left space-y-1'>
           <div className='font-bold text-sm line-clamp-1 min-w-0 capitalize'>{chatName}</div>
           <div className='text-xs text-muted-foreground line-clamp-1 min-w-0'>

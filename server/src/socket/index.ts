@@ -1,9 +1,11 @@
 import { envConfig } from '@/config/env-config'
 import { authenticateSocket } from '@/core/access-token.middleware'
 import { AccessTokenPayload } from '@/lib/jwt.service'
+import { chatRepo } from '@/routes/chat/chat.repo'
 import express from 'express'
 import { createServer } from 'http'
 import { Server } from 'socket.io'
+import { SOCKET_EVENTS } from './event.const'
 
 const initSocketService = () => {
   const app = express()
@@ -14,6 +16,9 @@ const initSocketService = () => {
       credentials: true,
     },
   })
+  // todo: Nên dùng redis để lưu trữ danh sách user online
+  const onlineUsers = new Map<string, string>()
+
   io.use(authenticateSocket)
 
   io.on('connection', async (socket) => {
@@ -21,7 +26,23 @@ const initSocketService = () => {
     //   authenticateSocket(socket, next)
     // })
     const { userId }: AccessTokenPayload = socket.data.user
-    socket.on('disconnect', () => {})
+    // Xử lý chức năng online users
+    onlineUsers.set(userId, socket.id)
+    io.emit(SOCKET_EVENTS.ONLINE_USERS, Array.from(onlineUsers.keys()))
+    socket.on('disconnect', () => {
+      onlineUsers.delete(userId)
+      io.emit(SOCKET_EVENTS.ONLINE_USERS, Array.from(onlineUsers.keys()))
+    })
+    // Chức năng join các room chat của user
+    const allChat = await chatRepo.getAllChatsByUserId(userId)
+    allChat.forEach((chat) => {
+      socket.join(chat.id)
+    })
+    socket.on('disconnect', () => {
+      allChat.forEach((chat) => {
+        socket.leave(chat.id)
+      })
+    })
   })
   return { io, httpServer, app }
 }

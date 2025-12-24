@@ -15,7 +15,7 @@ import { Outlet } from 'react-router'
 export function ChatSidebar() {
   return (
     <SidebarProvider className='overflow-hidden'>
-      <Sidebar variant='sidebar'>
+      <Sidebar variant='sidebar' className='h-screen bg-sidebar pb-16 relative'>
         <SidebarHeader>
           <SidebarMenu>
             <AppTittle />
@@ -23,12 +23,12 @@ export function ChatSidebar() {
           </SidebarMenu>
         </SidebarHeader>
         <ChatList />
-        <SidebarFooter className='h-16 mt-auto justify-center flex-col sticky bottom-0 bg-white border-t border-border'>
+        <SidebarFooter className='h-16 absolute left-4 right-4 bottom-4 rounded-lg shadow-2xl border-primary border bg-white dark:bg-background'>
           <AccountSetting />
         </SidebarFooter>
       </Sidebar>
-      <SidebarInset className='overflow-x-auto overflow-y-hidden bg-neutral-50 dark:bg-background'>
-        <main className='container h-screen mx-auto px-4'>
+      <SidebarInset className='overflow-x-auto overflow-y-hidden'>
+        <main className='h-screen'>
           <Outlet />
         </main>
       </SidebarInset>

@@ -31,7 +31,7 @@ export function AccountSetting() {
             <Settings className='size-6 group-hover/settings:animate-spin' />
           </Button>
         </DialogTrigger>
-        <DialogContent className='max-w-xl md:max-w-3xl lg:max-w-4xl min-h-[400px]'>
+        <DialogContent className='max-w-xl md:max-w-3xl lg:max-w-4xl min-h-[400px] max-h-[90vh] overflow-auto'>
           <ProfileTabs />
         </DialogContent>
       </Dialog>

@@ -23,14 +23,16 @@ export function ChatCard({ chatItem, activeChatId }: { chatItem: IChat; activeCh
         )}
       >
         <ChatAvatar chatItem={chatItem} />
-        <div className='flex-1 text-left space-y-1  text-sm '>
+        <div className='flex-1 text-left space-y-1 text-sm min-w-0'>
           <div className='font-bold line-clamp-1 min-w-0 capitalize'>{chatName}</div>
           {lastSender?.displayName && chatItem.lastMessage ? (
             <div className='text-xs text-muted-foreground line-clamp-1 min-w-0'>
               <b className='capitalize'>
                 {isLastSender ? 'Bạn' : lastSender.displayName.split(' ')[0]}:{' '}
               </b>
-              {chatItem.lastMessage.content}
+              <span className='text-xs text-muted-foreground line-clamp-1 min-w-0'>
+                {chatItem.lastMessage.content}
+              </span>
             </div>
           ) : (
             <p>...</p>

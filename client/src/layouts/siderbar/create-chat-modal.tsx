@@ -14,9 +14,9 @@ import { chatRequest } from '@/features/chat/services'
 import { friendRequest } from '@/features/friend/services'
 import { useSocketStore } from '@/stores/socket.store'
 import type { IUser } from '@/types/api.types'
-import { Loader2, Search, Users } from 'lucide-react'
+import { Loader2, Search, UserPlus, Users } from 'lucide-react'
 import { useState } from 'react'
-import { useNavigate } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import { toast } from 'sonner'
 
 export function CreateChatModal() {
@@ -70,14 +70,14 @@ export function CreateChatModal() {
         friends={friends}
         onSuccess={() => setOpen(false)}
       />
-      <div className='h-14 shrink-0 p-2 flex flex-col border-b'>
+      <div className='h-14 shrink-0 p-2 flex border-b gap-3'>
         <Dialog open={open} onOpenChange={handleOpenChange}>
           <DialogTrigger asChild>
             <Button
               variant='secondary'
-              className='w-full h-full justify-start text-muted-foreground'
+              className='flex-1 h-full justify-start text-muted-foreground'
             >
-              <Search className='mr-2 h-4 w-4' />
+              <Search />
               Tìm hoặc bắt đầu cuộc trò chuyện
             </Button>
           </DialogTrigger>
@@ -142,6 +142,11 @@ export function CreateChatModal() {
             </div>
           </DialogContent>
         </Dialog>
+        <Button variant={'outline'} size={'icon-lg'} asChild>
+          <Link to={APP_PAGES.ADD_FRIENDS}>
+            <UserPlus />
+          </Link>
+        </Button>
       </div>
     </>
   )

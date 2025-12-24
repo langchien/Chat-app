@@ -8,6 +8,9 @@ export const APP_PAGES = {
   RESET_PASSWORD: '/auth/reset-password',
   CHAT: '/chat',
   FRIENDS: '/friends',
+  ADD_FRIENDS: '/friends/add',
+  FRIEND_REQUEST: '/friends/request',
+  FRIEND_REQUEST_RECEIVE: '/friends/receive',
 } as const
 
 export type AppPages = (typeof APP_PAGES)[keyof typeof APP_PAGES]

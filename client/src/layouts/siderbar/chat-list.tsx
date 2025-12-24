@@ -2,6 +2,7 @@ import { Item, ItemContent, ItemMedia, ItemTitle } from '@/components/ui/item'
 import { SidebarContent } from '@/components/ui/sidebar'
 import { Spinner } from '@/components/ui/spinner'
 import { useChatList } from '@/features/chat/hooks/use-chat-list'
+import type { IChatPaginateCursorResDto } from '@/features/chat/services'
 import { EmptyChat } from '@/layouts/siderbar/empty-chat'
 import { SidebarDirectChat } from '@/layouts/siderbar/sidebar-direct-chat'
 import { SidebarGroupChat } from '@/layouts/siderbar/sidebar-group-chat'
@@ -28,24 +29,24 @@ function EndChat({ hidden }: { hidden?: boolean }) {
   )
 }
 
-export function ChatList() {
-  const { data, chatGroups, chatDirects, chatId, getMore, hasMore } = useChatList()
+export function ChatList({ paginateData }: { paginateData: IChatPaginateCursorResDto }) {
+  const { chatList, chatGroups, chatDirects, chatId, getMore, hasMore } = useChatList(paginateData)
   return (
     <div
       id='scrollableConversationList'
       className='app-scroll h-full flex-1 overflow-y-auto min-h-0'
     >
       <InfiniteScroll
-        dataLength={data.length}
+        dataLength={chatList.length}
         next={getMore}
         hasMore={hasMore}
         scrollThreshold={0.8}
         loader={<Loading />}
-        endMessage={<EndChat hidden={data.length === 0} />}
+        endMessage={<EndChat hidden={chatList.length === 0} />}
         scrollableTarget='scrollableConversationList'
       >
         <SidebarContent>
-          {data.length === 0 ? (
+          {chatList.length === 0 ? (
             <EmptyChat />
           ) : (
             <>

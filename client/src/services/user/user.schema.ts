@@ -12,7 +12,7 @@ export const User = BaseCollection.extend({
   email: createEmail(),
   displayName: createName('Tên hiển thị', 100),
   hashedPassword: z.string(),
-  avatarUrl: z.url().nullish(),
-  bio: createString('Bio', 300).nullish(),
-  phone: createString('Sổ điện thoại', 15).nullish(),
+  avatarUrl: z.string().optional(),
+  bio: createString('Bio', 300).optional(),
+  phone: createString('Sổ điện thoại', 15).optional(),
 })

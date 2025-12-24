@@ -1,9 +1,11 @@
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
-import { Image, Paperclip, Send, Video } from 'lucide-react'
+import { Film, Paperclip, Send } from 'lucide-react'
 import { Card } from '../ui/card'
+import { Label } from '../ui/label'
+import { InputEmoji } from './input-imoji'
 
 const skeletonMessages = Array.from({ length: 10 }, (_, i) => ({
   id: i,
@@ -27,18 +29,24 @@ export function ChatWindowSkeleton() {
       </div>
       <Card className='sticky bottom-0 z-10 rounded-none p-4 mt-auto'>
         <div className='flex gap-2'>
-          <Button variant='ghost' size='icon' className='h-9 w-9'>
-            <Video className='h-5 w-5' />
-          </Button>
-          <Button variant='ghost' size='icon' className='h-9 w-9'>
-            <Image className='h-5 w-5' />
-          </Button>
-          <Button variant='ghost' size='icon' className='h-9 w-9'>
-            <Paperclip className='h-5 w-5' />
-          </Button>
-          <Input placeholder='Aa' className='flex-1' />
+          <Label
+            htmlFor='big-video'
+            className={cn(buttonVariants({ variant: 'ghost', size: 'icon-lg' }))}
+          >
+            <Film className='size-5' />
+          </Label>
+          <Label
+            htmlFor='file-input'
+            className={cn(buttonVariants({ variant: 'ghost', size: 'icon-lg' }))}
+          >
+            <Paperclip className='size-5' />
+          </Label>
+          <div className='flex-1 relative'>
+            <Input placeholder='Aa' className='w-full' />
+          </div>
+          <InputEmoji addEmoji={() => {}} />
           <Button size='icon' className='h-9 w-9 bg-blue-500 hover:bg-blue-600'>
-            <Send className='h-5 w-5' />
+            <Send className='size-5' />
           </Button>
         </div>
       </Card>

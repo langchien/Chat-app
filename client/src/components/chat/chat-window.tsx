@@ -1,6 +1,5 @@
 import { SOCKET_EVENTS } from '@/constants/event.const'
 import { useAuthStore } from '@/hooks/stores/auth.store'
-import { useChatStore } from '@/hooks/stores/chat.store'
 import { useSocketStore } from '@/hooks/stores/socket.store'
 import type { clientLoader } from '@/routes/private/chat'
 import type { IChat, IMessage, IMessagePaginate, IUser } from '@/services/api.types'
@@ -33,17 +32,15 @@ export function ChatWindow({ paginateMessages }: { paginateMessages: IMessagePag
   const [messages, setMessages] = useState(paginateMessages.data)
   const [hasMore, setHasMore] = useState(paginateMessages.hasMore)
   const [nextCursor, setNextCursor] = useState(paginateMessages.nextCursor)
-  const { data, setChatList } = useChatStore()
   useEffect(() => {
     if (!socket) return
-    socket.on(SOCKET_EVENTS.RECEIVE_MESSAGE, (payload: { message: IMessage; chat: IChat }) => {
+    const handleReceiveMessage = (payload: { message: IMessage; chat: IChat }) => {
       if (payload.chat.id !== chat.id) return
       setMessages((prevMessages) => [payload.message, ...prevMessages])
-      const _data = data.filter((c) => c.id !== payload.chat.id)
-      setChatList([payload.chat, ..._data])
-    })
+    }
+    socket.on(SOCKET_EVENTS.RECEIVE_MESSAGE, handleReceiveMessage)
     return () => {
-      socket.off(SOCKET_EVENTS.RECEIVE_MESSAGE)
+      socket.off(SOCKET_EVENTS.RECEIVE_MESSAGE, handleReceiveMessage)
     }
   }, [socket, chat.id])
   const allUserInChat = chat.participants.map((p) => p.user)

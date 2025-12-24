@@ -17,7 +17,7 @@ export function InputEmoji({ addEmoji }: { addEmoji: (emoji: string) => void }) 
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <Button variant='ghost'>
-          <Smile />
+          <Smile className='size-5' />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align='end'>

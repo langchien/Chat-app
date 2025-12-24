@@ -3,6 +3,8 @@ import path from 'path'
 import slash from 'slash'
 import { $ } from 'zx'
 
+const ALL_RESOLUTIONS = [360, 480, 720, 1080]
+
 const MAXIMUM_BITRATE_360P = 1 * 10 ** 6 // 1Mbps
 const MAXIMUM_BITRATE_480P = 2.5 * 10 ** 6 // 2.5Mbps
 const MAXIMUM_BITRATE_720P = 5 * 10 ** 6 // 5Mbps
@@ -159,16 +161,15 @@ class FfmpegService {
   /**
    *
    * @param inputPath là đường dẫn của video cần encode
-   * @param id là id quản lý, sẽ tạo folder tương ứng /uploads/videos/hls/:id
+   * @param outputFolder là thư mục chứa các file đã encode
    */
-  encodeHLSWithMultipleVideoStreams = async (inputPath: string, id: string) => {
+  encodeHLSWithMultipleVideoStreams = async (inputPath: string, outputFolder: string) => {
     const [bitrate, resolution] = await Promise.all([
       this.getBitrate(inputPath),
       this.getResolution(inputPath),
     ])
-    const parent_folder = path.join(inputPath, '..')
-    const outputSegmentPath = path.join(parent_folder, id, 'v%v/fileSequence%d.ts')
-    const outputPath = path.join(parent_folder, id, 'v%v/prog_index.m3u8')
+    const outputSegmentPath = path.join(outputFolder, 'v%v/fileSequence%d.ts')
+    const outputPath = path.join(outputFolder, 'v%v/prog_index.m3u8')
 
     const bitrate360 = bitrate > MAXIMUM_BITRATE_360P ? MAXIMUM_BITRATE_360P : bitrate
     const bitrate480 = bitrate > MAXIMUM_BITRATE_480P ? MAXIMUM_BITRATE_480P : bitrate
@@ -176,8 +177,7 @@ class FfmpegService {
     const bitrate1080 = bitrate > MAXIMUM_BITRATE_1080P ? MAXIMUM_BITRATE_1080P : bitrate
     const isHasAudio = await this.checkVideoHasAudio(inputPath)
 
-    const allResolutions = [360, 480, 720, 1080, 1440]
-    const resolutionsToEncode = allResolutions.filter((res) => resolution.height >= res)
+    const resolutionsToEncode = ALL_RESOLUTIONS.filter((res) => resolution.height >= res)
 
     // Nếu độ phân giải gốc không nằm trong danh sách, hãy thêm nó vào
     if (!resolutionsToEncode.includes(resolution.height)) {

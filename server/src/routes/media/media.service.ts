@@ -1,7 +1,6 @@
-import { envConfig } from '@/config/env-config'
-import { KeyDirectory, MediaDirectories, UPLOAD_LOCAL_DIR } from '@/core/local-file.service'
-import { API_ROUTES } from '@/core/routes.const'
+import { localFileService, MediaDirectories } from '@/core/local-file.service'
 import { s3Service } from '@/lib/s3.service'
+import { ObjectId } from 'bson'
 import { File } from 'formidable'
 import { rename, unlink } from 'fs/promises'
 import mime from 'mime'
@@ -11,41 +10,47 @@ import { IMedia } from './media.db'
 import { mediaRepo } from './media.repo'
 import { MediaStatus, MediaType } from './media.schema'
 
-const IS_LOCAL = envConfig.upload.provider === 'local'
-const MEDIA_BASE_URL = envConfig.serverUri + API_ROUTES.MEDIA + '/'
-
 class MediaService {
-  handleTransformFile = async (files: File[], messageId?: string): Promise<IMedia[]> => {
+  handleTransformFile = async (files: File[], isLocal: boolean): Promise<IMedia[]> => {
     const datas = await Promise.all(
       files.map(async (file) => {
         const contentType = mime.getType(file.filepath) || undefined
-        let keyDirectory: KeyDirectory = 'file'
-        if (file.mimetype?.startsWith('image/')) keyDirectory = 'image'
-        else if (file.mimetype?.startsWith('video/')) keyDirectory = 'video'
-        const url = MEDIA_BASE_URL + MediaDirectories[keyDirectory] + file.newFilename
-        const filePath = path.resolve(
-          UPLOAD_LOCAL_DIR,
-          MediaDirectories[keyDirectory],
-          file.newFilename,
-        )
-        if (keyDirectory === 'image') {
-          await sharp(file.filepath).jpeg().toFile(filePath)
+        let mediaType: MediaType = MediaType.file
+        if (file.mimetype?.startsWith('image/')) mediaType = MediaType.image
+        else if (file.mimetype?.startsWith('video/')) mediaType = MediaType.video
+        else if (file.mimetype?.startsWith('audio/')) mediaType = MediaType.audio
+        // Nếu là video hoặc audio thì cần di chuyển file từ thư mục temp của formidable sang thư mục upload tương ứng
+        const isNeedMove = mediaType === MediaType.video || mediaType === MediaType.audio
+        let url = localFileService.getUrlMedia(mediaType, file.newFilename)
+        const filePath = localFileService.getFilePath(mediaType, file.newFilename)
+        if (mediaType === MediaType.image) {
+          const newFilePath = filePath.replace(path.extname(filePath), '.jpeg')
+          url = localFileService.getUrlMedia(
+            mediaType,
+            file.newFilename.replace(path.extname(file.newFilename), '.jpeg'),
+          )
+          await sharp(file.filepath).jpeg().toFile(newFilePath)
           await unlink(file.filepath)
         }
-        if (!IS_LOCAL) {
-          const _filePath = keyDirectory === 'video' ? file.filepath : filePath
+        if (!isLocal) {
+          let filePathToUpload = file.filepath
+          let fileNameToUpload = file.newFilename
+          if (mediaType === MediaType.image) {
+            filePathToUpload = filePath.replace(path.extname(filePath), '.jpeg')
+            fileNameToUpload = file.newFilename.replace(path.extname(file.newFilename), '.jpeg')
+          }
           await s3Service.upload(
-            MediaDirectories[keyDirectory] + file.newFilename,
-            _filePath,
+            MediaDirectories[mediaType] + fileNameToUpload,
+            filePathToUpload,
             contentType,
           )
-          await unlink(_filePath)
-        } else if (keyDirectory === 'video') {
+          await unlink(filePathToUpload)
+        } else if (isNeedMove) {
           await rename(file.filepath, filePath)
         }
         return {
           url,
-          type: MediaType[keyDirectory],
+          type: mediaType,
           originalName: file.originalFilename ?? file.newFilename,
         }
       }),
@@ -53,26 +58,22 @@ class MediaService {
     const results: IMedia[] = await mediaRepo.createMany(
       datas.map((data) => ({
         ...data,
-        status: MediaStatus.compileted,
-        messageId,
+        status: MediaStatus.completed,
       })),
     )
     return results
   }
 
-  getFilePath = (mediaDirectory: 'videos' | 'images' | 'files', fileName: string) => {
-    const localFilePath = path.resolve(UPLOAD_LOCAL_DIR, mediaDirectory, fileName)
-    const s3FileKey = mediaDirectory + '/' + fileName
-    if (IS_LOCAL) return localFilePath
-    return s3FileKey
-  }
-
-  handleUnlinkFiles = async (files: File[]) => {
-    await Promise.all(
-      files.map(async (file) => {
-        await unlink(file.filepath)
-      }),
-    )
+  handleVideoToHLS = async (video: File): Promise<IMedia> => {
+    const id = new ObjectId().toString()
+    const url = localFileService.getUrlMedia(MediaType.video_hls, id, 'master.m3u8')
+    return mediaRepo.create({
+      id,
+      type: MediaType.video_hls,
+      status: MediaStatus.pending,
+      url,
+      originalName: video.originalFilename ?? video.newFilename,
+    })
   }
 }
 

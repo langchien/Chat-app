@@ -25,6 +25,7 @@ export class ChatCtrl extends PaginateCursorCtrl {
     })
     const parseData = ChatResDto.parse(result)
     socketService.joinChat(result.id, [...new Set([...receiverIds, userId])])
+    socketService.updateChat(result.id, parseData)
 
     res.status(HttpStatusCode.Created).json(parseData)
   }

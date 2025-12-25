@@ -93,7 +93,7 @@ export function ChatInfo() {
                   </span>
                 </AccordionTrigger>
                 <AccordionContent>
-                  <ChatMemberList participants={chat.participants} />
+                  <ChatMemberList chat={chat} />
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value='item-2'>

@@ -6,6 +6,7 @@ import { socketService } from '@/socket'
 import { RequestHandler } from 'express'
 import { IUserIdReqParamsDto } from '../user/user.req.dto'
 import {
+  IAddParticipantsReqBodyDto,
   IChatIdParamDto,
   ICreateChatReqDto,
   IUpdateChatDisplayNameReqBodyDto,
@@ -100,6 +101,28 @@ export class ChatCtrl extends PaginateCursorCtrl {
     const result = await chatService.getMediaInChat(chatId)
     // You might want to define a specific DTO for the response, but for now sending the result
     res.json(result)
+  }
+
+  addParticipants: RequestHandler<IChatIdParamDto, IChatResDto, IAddParticipantsReqBodyDto> =
+    async (req, res) => {
+      const { chatId } = req.params
+      const { userIds } = req.body
+      const result = await chatService.addParticipants(chatId, userIds, req.user.userId)
+      const resultParsed = ChatResDto.parse(result)
+
+      socketService.memberAdded(chatId, resultParsed.participants)
+      socketService.joinChat(chatId, userIds)
+
+      res.json(resultParsed)
+    }
+
+  removeParticipant: RequestHandler<IChatIdParamDto & { userId: string }> = async (req, res) => {
+    const { chatId, userId } = req.params
+    const result = await chatService.removeParticipant(chatId, userId, req.user.userId)
+
+    socketService.memberRemoved(chatId, userId)
+
+    res.json(ChatResDto.parse(result))
   }
 }
 

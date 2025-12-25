@@ -301,6 +301,92 @@ class ChatService extends BaseService {
       orderBy: { createdAt: 'desc' },
     })
   }
+  async addParticipants(
+    chatId: string,
+    userIds: string[],
+    actorId: string,
+  ): Promise<IChatIncludeParticipants> {
+    const chat = await this.prismaService.chat.findUnique({
+      where: { id: chatId },
+      include: { participants: true },
+    })
+
+    if (!chat) throw new NotFoundException('Chat không tồn tại')
+    if (chat.type !== ChatType.GROUP)
+      throw new NotFoundException('Chỉ có thể thêm thành viên vào nhóm')
+
+    // Check if actor is in the group
+    const isActorInGroup = chat.participants.some(
+      (p) => p.userId === actorId && (!p.deletedAt || new Date(p.deletedAt) > new Date()),
+    )
+    if (!isActorInGroup) throw new NotFoundException('Bạn không phải là thành viên của nhóm này')
+
+    // Get all participants including soft deleted ones to check against input userIds
+    const allParticipantsInChat = await this.prismaService.participant.findMany({
+      where: {
+        chatId,
+        userId: { in: userIds },
+      },
+    })
+
+    // 1. Identify users to restore (they exist but have deletedAt)
+    const validUserIdsToRestore = allParticipantsInChat
+      .filter((p) => p.deletedAt)
+      .map((p) => p.userId)
+
+    // 2. Identify users to create (they are not in allParticipantsInChat)
+    const existingUserIds = allParticipantsInChat.map((p) => p.userId)
+    const validUserIdsToCreate = userIds.filter((id) => !existingUserIds.includes(id))
+
+    // Restore
+    if (validUserIdsToRestore.length > 0) {
+      await this.prismaService.participant.updateMany({
+        where: { chatId, userId: { in: validUserIdsToRestore } },
+        data: { deletedAt: null, joinedAt: new Date() },
+      })
+    }
+
+    // Create
+    if (validUserIdsToCreate.length > 0) {
+      await this.prismaService.participant.createMany({
+        data: validUserIdsToCreate.map((id) => ({ chatId, userId: id })),
+      })
+    }
+
+    return this.findOneById(chatId, actorId) as Promise<IChatIncludeParticipants>
+  }
+
+  async removeParticipant(
+    chatId: string,
+    userIdToRemove: string,
+    actorId: string,
+  ): Promise<IChatIncludeParticipants> {
+    const chat = await this.prismaService.chat.findUnique({
+      where: { id: chatId },
+      include: { participants: true },
+    })
+
+    if (!chat) throw new NotFoundException('Chat không tồn tại')
+    if (chat.type !== ChatType.GROUP)
+      throw new NotFoundException('Chỉ có thể xóa thành viên khỏi nhóm')
+
+    // Permission check: Actor must be Admin OR Actor is removing themselves (Leave Group)
+    const isAdmin = chat.groupInfo?.createdBy === actorId
+    if (!isAdmin && userIdToRemove !== actorId) {
+      throw new NotFoundException('Bạn không có quyền xóa thành viên này')
+    }
+
+    // Cannot remove the only admin? Or transfer ownership?
+    // For now, if admin leaves, group might be headless or allowed.
+    // If admin removes themselves, it's a leave.
+
+    await this.prismaService.participant.update({
+      where: { userId_chatId: { chatId, userId: userIdToRemove } },
+      data: { deletedAt: new Date() },
+    })
+
+    return this.findOneById(chatId, actorId) as Promise<IChatIncludeParticipants>
+  }
 }
 
 export const chatService = new ChatService()

@@ -68,6 +68,20 @@ class ChatService extends BaseService {
     return this.prismaService.chat.delete({ where: { id: id } })
   }
 
+  async deleteConversation(chatId: string, userId: string): Promise<IParticipant> {
+    return this.prismaService.participant.update({
+      where: {
+        userId_chatId: {
+          chatId,
+          userId,
+        },
+      },
+      data: {
+        deletedAt: new Date(),
+      },
+    })
+  }
+
   async updateChatDisplayName(
     chatId: string,
     userId: string,
@@ -115,7 +129,7 @@ class ChatService extends BaseService {
   }
 
   async getAllChatsByUserId(userId: string): Promise<IChatIncludeParticipants[]> {
-    return this.prismaService.chat.findMany({
+    const chats = await this.prismaService.chat.findMany({
       include: {
         participants: {
           include: {
@@ -130,6 +144,17 @@ class ChatService extends BaseService {
           },
         },
       },
+    })
+    // Filter out chats that are "deleted" for this user
+    return chats.filter((chat) => {
+      const participant = chat.participants.find((p) => p.userId === userId)
+      if (!participant || !participant.deletedAt) return true
+      // If last message exists and is newer than deletedAt, show it.
+      // If no last message, it's effectively empty or old, hide it if deletedAt is set?
+      // Actually if no lastMessage, it might be a new empty chat.
+      if (!chat.lastMessage) return false // Or true? Assume if no message, nothing to see?
+      // Logic: Show if lastMessage.createdAt > deletedAt
+      return new Date(chat.lastMessage.createdAt) > new Date(participant.deletedAt)
     })
   }
 
@@ -159,12 +184,29 @@ class ChatService extends BaseService {
       },
       take: limit + 1,
     })
+
+    // Filter results in memory
+    const filteredResults = results.filter((chat) => {
+      const participant = chat.participants.find((p) => p.userId === userId)
+      if (!participant || !participant.deletedAt) return true
+      if (!chat.lastMessage) return false
+      return new Date(chat.lastMessage.createdAt) > new Date(participant.deletedAt)
+    })
+
+    // Pagination logic adjustment:
+    // Since we filtered in memory, we might have fewer items than 'limit'.
+    // Properly, we should fetch more, but for simplicity we return what we have.
+    // However, 'nextCursor' should be based on the original 'results' to continue traversal effectively
+    // OR we return nextCursor of the last item in *filtered* list?
+    // If we return nextCursor of original list, the next page will start correctly from DB perspective.
+
     const hasMore = results.length > limit
     const nextCursor = hasMore ? results[limit - 1].id.toString() : null
+
     return {
       hasMore,
       nextCursor,
-      data: results.slice(0, limit).map((result) => ChatResDto.parse(result)),
+      data: filteredResults.slice(0, limit).map((result) => ChatResDto.parse(result)),
     }
   }
   async getOrCreateChatByUserId(

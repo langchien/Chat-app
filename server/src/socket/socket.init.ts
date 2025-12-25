@@ -2,6 +2,7 @@ import { envConfig } from '@/config/env-config'
 import { authenticateSocket } from '@/core/access-token.middleware'
 import { prismaService } from '@/lib/database'
 import { AccessTokenPayload } from '@/lib/jwt.service'
+import { chatService } from '@/routes/chat/chat.service'
 import express from 'express'
 import { createServer } from 'http'
 import { Server } from 'socket.io'
@@ -58,6 +59,14 @@ const initSocketService = () => {
     socket.on('disconnect', () => {
       allChat.forEach((chat) => {
         socket.leave(chat.id)
+      })
+    })
+
+    socket.on(SOCKET_EVENTS.DELETE_CONVERSATION, async ({ chatId }) => {
+      await chatService.deleteConversation(chatId, userId)
+      io.to(userId).emit(SOCKET_EVENTS.CONVERSATION_DELETED, {
+        chatId,
+        deletedAt: new Date(),
       })
     })
   })

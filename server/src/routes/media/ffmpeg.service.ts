@@ -1,9 +1,23 @@
-import { exec } from 'child_process'
+import { logger } from '@/lib/logger.service'
+
+import ffmpegPath from 'ffmpeg-static'
+import ffprobePath from 'ffprobe-static'
 import path from 'path'
 import slash from 'slash'
 import { $ } from 'zx'
 
 const ALL_RESOLUTIONS = [360, 480, 720, 1080]
+
+if (!ffmpegPath) {
+  throw new Error('ffmpeg system path not found')
+}
+
+if (!ffprobePath.path) {
+  throw new Error('ffprobe system path not found')
+}
+
+const FFMPEG_PATH = slash(ffmpegPath)
+const FFPROBE_PATH = slash(ffprobePath.path)
 
 const MAXIMUM_BITRATE_360P = 1 * 10 ** 6 // 1Mbps
 const MAXIMUM_BITRATE_480P = 2.5 * 10 ** 6 // 2.5Mbps
@@ -29,21 +43,34 @@ interface EncodeByResolution {
   }
 }
 class FfmpegService {
-  private getBitrate = (filePath: string) => {
-    return new Promise<number>((resolve, reject) => {
-      exec(
-        `ffprobe -v error -select_streams v:0 -show_entries stream=bit_rate -of default=nw=1:nk=1 ${filePath}`,
-        (err, stdout, stderr) => {
-          if (err) {
-            return reject(err)
-          }
-          resolve(Number(stdout.trim()))
-        },
-      )
-    })
+  verifyFFmpeg = async () => {
+    let isPass = true
+    try {
+      await $`${FFMPEG_PATH} -version`
+    } catch (e) {
+      logger.error('ffmpeg failed', e)
+      isPass = false
+    }
+
+    try {
+      await $`${FFPROBE_PATH} -version`
+    } catch (e) {
+      logger.error('ffprobe failed', e)
+      isPass = false
+    }
+    if (!isPass) {
+      process.exit(1)
+    } else {
+      logger.info('Đã xác minh ffmpeg và ffprobe thành công')
+    }
+  }
+  private getBitrate = async (filePath: string) => {
+    const { stdout } =
+      await $`${FFPROBE_PATH} -v error -select_streams v:0 -show_entries stream=bit_rate -of default=nw=1:nk=1 ${slash(filePath)}`
+    return Number(stdout.trim())
   }
   private checkVideoHasAudio = async (filePath: string) => {
-    const { stdout } = await $`ffprobe ${[
+    const { stdout } = await $`${FFPROBE_PATH} ${[
       '-v',
       'error',
       '-select_streams',
@@ -58,7 +85,7 @@ class FfmpegService {
   }
 
   private getResolution = async (filePath: string) => {
-    const { stdout } = await $`ffprobe ${[
+    const { stdout } = await $`${FFPROBE_PATH} ${[
       '-v',
       'error',
       '-select_streams',
@@ -154,7 +181,7 @@ class FfmpegService {
       slash(outputPath),
     )
 
-    await $`ffmpeg ${args}`
+    await $`${FFMPEG_PATH} ${args}`
     return true
   }
 
@@ -203,7 +230,7 @@ class FfmpegService {
   }
 
   convertToMp4 = async (inputPath: string, outputPath: string) => {
-    await $`ffmpeg -i ${slash(inputPath)} -c:v libx264 -c:a aac ${slash(outputPath)}`
+    await $`${FFMPEG_PATH} -i ${slash(inputPath)} -c:v libx264 -c:a aac ${slash(outputPath)}`
     return true
   }
 }

@@ -131,6 +131,28 @@ Khi nhận sự kiện `CONVERSATION_DELETED`:
 
 ---
 
+## 4. Rủi ro và Cân nhắc (Risks & Considerations)
+
+1.  **Phân trang (Pagination) & Performance:**
+
+    - Khi query danh sách tin nhắn (`/api/chats/:id/messages`), việc filter `createdAt > deletedAt` có thể ảnh hưởng đến kết quả phân trang (limit/offset hoặc cursor). Cần đảm bảo filter được áp dụng _trước_ khi limit để user luôn nhận đủ số lượng tin nhắn một lần load (ví dụ: load 20 tin).
+    - Nếu `Participant.deletedAt` được dùng nhiều, cần đảm bảo `createdAt` của `Message` và `deletedAt` được index hợp lý nếu dữ liệu lớn (Prisma/MongoDB thường index `_id` có chứa timestamp, nhưng query range trên field riêng biệt nên cẩn thận).
+
+2.  **Đồng bộ đa thiết bị (Multi-device Sync):**
+
+    - Mặc dù socket emit `CONVERSATION_DELETED`, nếu user đang offline ở thiết bị khác, khi online lại cần fetch lại danh sách chat để đồng bộ trạng thái ẩn.
+
+3.  **Chat "Ma" (Ghost Chat):**
+
+    - Trường hợp mạng lag: User A xóa chat -> `deletedAt` updated. Đúng lúc đó User B gửi tin nhắn.
+    - Nếu tin nhắn đến _sau_ khi update `deletedAt` -> Chat hiện lại (Đúng logic).
+    - Nếu tin nhắn đến _trước_ vài mili-giây nhưng client chưa kịp cập nhật UI -> User A thấy tin nhắn đó rồi nó bị ẩn đi (Chấp nhận được).
+
+4.  **Quyền riêng tư (Privacy):**
+    - Đây là tính năng "Xóa lịch sử phía người dùng" (Clear History). Tin nhắn **vẫn nằm trong Database**. Cần làm rõ với người dùng đây không phải là "Thu hồi" (Unsend) hay xóa vĩnh viễn.
+
+---
+
 ## Tóm tắt Flow Chart
 
 ```mermaid

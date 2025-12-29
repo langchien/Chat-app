@@ -126,13 +126,14 @@ enum ChatType {
 }
 
 model Participant {
-  id       String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId   String   @db.ObjectId
-  joinedAt DateTime @default(now())
-  nickname String   @default("")
-  chatId   String   @db.ObjectId
-  chat     Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String    @db.ObjectId
+  joinedAt  DateTime  @default(now())
+  nickname  String    @default("")
+  chatId    String    @db.ObjectId
+  chat      Chat      @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deletedAt DateTime?
 
   @@unique([userId, chatId])
 }

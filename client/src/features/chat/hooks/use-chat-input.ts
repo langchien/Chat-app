@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { messageRequest } from '@/features/message/services'
 import { mediaUploadRequest } from '@/features/message/services/media'
 import { AppException } from '@/lib/request/request.type'
+import { useAudioRecorder } from './use-audio-recorder'
 import { useChatFiles } from './use-chat-files'
 
 export function useChatInput({ chatId }: { chatId: string }) {
@@ -11,8 +12,18 @@ export function useChatInput({ chatId }: { chatId: string }) {
   const [newMessage, setNewMessage] = useState('')
   const [isSending, setIsSending] = useState(false)
 
-  const { files, bigVideo, handleFileChange, handleSetBigVideo, handleDeleteFile, clearFiles } =
-    useChatFiles()
+  const {
+    files,
+    bigVideo,
+    handleFileChange,
+    handleSetBigVideo,
+    handleDeleteFile,
+    clearFiles,
+    addFile,
+  } = useChatFiles()
+
+  const { isRecording, recordingTime, startRecording, stopRecording, cancelRecording } =
+    useAudioRecorder()
 
   // Focus input on mount and after sending
   useEffect(() => {
@@ -57,6 +68,16 @@ export function useChatInput({ chatId }: { chatId: string }) {
     }
   }
 
+  const handleStopRecording = async () => {
+    try {
+      const file = await stopRecording()
+      addFile(file)
+    } catch (error) {
+      toast.error('Không thể lưu file ghi âm')
+      console.error(error)
+    }
+  }
+
   const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
@@ -80,5 +101,10 @@ export function useChatInput({ chatId }: { chatId: string }) {
     onKeyDown: handleKeyDown,
     sendMessage,
     addEmoji,
+    isRecording,
+    recordingTime,
+    startRecording,
+    stopRecording: handleStopRecording,
+    cancelRecording,
   }
 }

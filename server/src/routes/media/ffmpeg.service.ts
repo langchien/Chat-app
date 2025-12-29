@@ -233,6 +233,11 @@ class FfmpegService {
     await $`${FFMPEG_PATH} -i ${slash(inputPath)} -c:v libx264 -c:a aac ${slash(outputPath)}`
     return true
   }
+
+  convertAudio = async (inputPath: string, outputPath: string) => {
+    await $`${FFMPEG_PATH} -i ${slash(inputPath)} -vn -ar 44100 -ac 2 -b:a 128k ${slash(outputPath)}`
+    return true
+  }
 }
 
 export const ffmpegService = new FfmpegService()

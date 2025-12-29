@@ -14,10 +14,9 @@ import {
   DrawerTrigger,
 } from '@/components/ui/drawer'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { APP_PAGES } from '@/constants/link.const'
+import { SOCKET_EVENTS } from '@/constants/event.const'
 import { ChatMemberList } from '@/features/chat/components/chat-member'
-import { chatRequest } from '@/features/chat/services'
-import { useRequest } from '@/hooks/use-request'
+import { useSocketStore } from '@/stores/socket.store'
 import type { IMedia } from '@/types/api.types'
 import {
   File,
@@ -46,10 +45,13 @@ export function ChatInfo() {
   const { chat, linksPromise, mediaPromise } = useLoaderData<typeof clientLoader>()
   const [open, onOpenChange] = useState(false)
   const onClose = () => onOpenChange(false)
-  const onDeleteChat = useRequest(() => chatRequest.delete(chat.id), {
-    messageSuccess: 'Đã xoá cuộc trò chuyện',
-    redirectUrl: APP_PAGES.CHAT,
-  })
+  const { socket } = useSocketStore()
+  const onDeleteChat = () => {
+    if (!socket) return
+    socket.emit(SOCKET_EVENTS.DELETE_CONVERSATION, {
+      chatId: chat.id,
+    })
+  }
   const [mediaId, setMediaId] = useState<string | null>(null)
   const onMediaClick = (media: IMedia) => {
     setMediaId(media.id)
@@ -91,7 +93,7 @@ export function ChatInfo() {
                   </span>
                 </AccordionTrigger>
                 <AccordionContent>
-                  <ChatMemberList participants={chat.participants} />
+                  <ChatMemberList chat={chat} />
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value='item-2'>

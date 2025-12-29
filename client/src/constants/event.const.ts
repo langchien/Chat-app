@@ -5,4 +5,8 @@ export const SOCKET_EVENTS = {
   UPDATE_CHAT: 'update-chat',
   DELETE_CHAT: 'delete-chat',
   UNFRIEND: 'unfriend',
+  DELETE_CONVERSATION: 'delete-conversation',
+  CONVERSATION_DELETED: 'conversation-deleted',
+  MEMBER_ADDED: 'member-added',
+  MEMBER_REMOVED: 'member-removed',
 } as const

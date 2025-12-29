@@ -20,7 +20,7 @@
 - [x] Tạo đoạn chat hoặc mở đoạn chat từ 1 bạn bè
 - [x] Tạo nhóm
 - [x] Hiển thị danh sách nhóm
-- [ ] Thêm/Xóa thành viên nhóm
+- [x] Thêm/Xóa thành viên nhóm
 - [ ] Giải tán nhóm / Rời nhóm
 
 ## 3. Messaging (Nhắn tin)
@@ -29,7 +29,7 @@
 - [x] Gửi/Nhận Emoji
 - [x] Gửi/Nhận File (Ảnh, Video, Audio)
 - [x] Video stream (HLS)
-- [ ] Xóa cuộc hội thoại
+- [x] Xóa cuộc hội thoại
 - [ ] Thu hồi tin nhắn (Unsend) 🆕
 - [ ] Trả lời tin nhắn (Reply) 🆕
 - [ ] Hiển thị trạng thái (Đã gửi/Đã xem) 🆕

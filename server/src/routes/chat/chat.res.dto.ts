@@ -6,6 +6,7 @@ import { Chat, Participant } from './chat.schema'
 export const ParticipantResDto = Participant.pick({
   nickname: true,
   joinedAt: true,
+  deletedAt: true,
 }).extend({
   user: UserResDto,
 })

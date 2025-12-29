@@ -28,3 +28,15 @@ export interface ICreateChatReqDto extends z.infer<typeof CreateChatReq> {}
 export interface IUpdateChatReqDto extends z.infer<typeof UpdateChatReq> {}
 export interface IUpdateChatDisplayNameReqBodyDto
   extends z.infer<typeof UpdateChatDisplayNameReqBodyDto> {}
+
+export const AddParticipantsReqBodyDto = z.object({
+  userIds: z.array(createStringId('userId')).min(1),
+})
+
+export interface IAddParticipantsReqBodyDto extends z.infer<typeof AddParticipantsReqBodyDto> {}
+
+export const RemoveParticipantReqParam = ChatIdParam.extend({
+  userId: createStringId('userId'),
+})
+
+export interface IRemoveParticipantReqParam extends z.infer<typeof RemoveParticipantReqParam> {}

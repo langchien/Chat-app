@@ -4,8 +4,10 @@ import { Router } from 'express'
 import { UserIdReqParamsDto } from '../user/user.req.dto'
 import { chatCtrl } from './chat.ctrl'
 import {
+  AddParticipantsReqBodyDto,
   ChatIdParam,
   CreateChatReq,
+  RemoveParticipantReqParam,
   UpdateChatDisplayNameReqBodyDto,
   UpdateChatReq,
 } from './chat.req.dto'
@@ -45,3 +47,16 @@ chatRouter.get(
 chatRouter.get('/:chatId/links', zodValidate(ChatIdParam, 'params'), chatCtrl.getLinks)
 
 chatRouter.get('/:chatId/media', zodValidate(ChatIdParam, 'params'), chatCtrl.getMedia)
+
+chatRouter.post(
+  '/:chatId/participants',
+  zodValidate(ChatIdParam, 'params'),
+  zodValidate(AddParticipantsReqBodyDto),
+  chatCtrl.addParticipants,
+)
+
+chatRouter.delete(
+  '/:chatId/participants/:userId',
+  zodValidate(RemoveParticipantReqParam, 'params'),
+  chatCtrl.removeParticipant,
+)

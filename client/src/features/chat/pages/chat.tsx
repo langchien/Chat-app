@@ -1,7 +1,9 @@
+import { SOCKET_EVENTS } from '@/constants/event.const'
 import { chatRequest } from '@/features/chat/services'
 import { messageRequest } from '@/features/message/services'
-import { Suspense } from 'react'
-import { Await } from 'react-router'
+import { useSocketStore } from '@/stores/socket.store'
+import { Suspense, useEffect } from 'react'
+import { Await, useRevalidator } from 'react-router'
 import { ChatHeader } from '../components/chat-header'
 import { ChatInput } from '../components/chat-input'
 import { ChatWindow } from '../components/chat-window'
@@ -31,6 +33,28 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 }
 
 export default function ChatPage({ loaderData }: Route.ComponentProps) {
+  const { socket } = useSocketStore()
+  const revalidator = useRevalidator()
+  const chatId = loaderData.chat.id
+
+  useEffect(() => {
+    if (!socket) return
+
+    const handleMemberChange = (data: { chatId: string }) => {
+      if (data.chatId === chatId) {
+        revalidator.revalidate()
+      }
+    }
+
+    socket.on(SOCKET_EVENTS.MEMBER_ADDED, handleMemberChange)
+    socket.on(SOCKET_EVENTS.MEMBER_REMOVED, handleMemberChange)
+
+    return () => {
+      socket.off(SOCKET_EVENTS.MEMBER_ADDED, handleMemberChange)
+      socket.off(SOCKET_EVENTS.MEMBER_REMOVED, handleMemberChange)
+    }
+  }, [socket, chatId, revalidator])
+
   return (
     <div className='h-full flex-1 flex flex-col overflow-auto'>
       <ChatHeader />

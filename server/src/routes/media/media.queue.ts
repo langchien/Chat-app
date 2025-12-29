@@ -3,8 +3,7 @@ import { MediaDirectories, localFileService } from '@/core/local-file.service'
 import { logger } from '@/lib/logger.service'
 import { s3Service } from '@/lib/s3.service'
 import { ffmpegService } from '@/routes/media/ffmpeg.service'
-import { io } from '@/socket'
-import { SOCKET_EVENTS } from '@/socket/event.const'
+import { socketService } from '@/socket'
 import { File } from 'formidable'
 import fs from 'fs'
 import { unlink } from 'fs/promises'
@@ -57,13 +56,13 @@ class MediaQueue {
       const uploadResult = await mediaService.update(item.id, {
         status: MediaStatus.completed,
       })
-      io.to(item.chatId).emit(SOCKET_EVENTS.MEDIA_PROCESSING_UPDATE, uploadResult)
+      socketService.mediaProcessingUpdate(item.chatId, uploadResult)
     } catch (error) {
       logger.error('Lỗi trong quá trình xử lý mục hàng đợi:', error)
       const failedResult = await mediaService.update(item.id, {
         status: MediaStatus.failed,
       })
-      io.to(item.chatId).emit(SOCKET_EVENTS.MEDIA_PROCESSING_UPDATE, failedResult)
+      socketService.mediaProcessingUpdate(item.chatId, failedResult)
     } finally {
       this.encoding = false
       this.processQueue()

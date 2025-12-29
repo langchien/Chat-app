@@ -2,7 +2,7 @@ import { NotFoundException } from '@/core/exceptions'
 import { HttpStatusCode } from '@/core/status-code'
 import { isRecordNotFoundError } from '@/lib/database'
 import { PaginateCursorCtrl } from '@/lib/paginate-cusor.ctrl'
-import { SOCKET_EVENTS } from '@/socket/event.const'
+import { socketService } from '@/socket'
 import { RequestHandler } from 'express'
 import { IUserIdReqParamsDto } from '../user/user.req.dto'
 import {
@@ -23,10 +23,8 @@ export class ChatCtrl extends PaginateCursorCtrl {
       receiverIds: [...new Set([...receiverIds, userId])],
     })
     const parseData = ChatResDto.parse(result)
-    req.io.to(userId).emit(SOCKET_EVENTS.UPDATE_CHAT, parseData)
-    receiverIds.forEach((receiverId) => {
-      req.io.to(receiverId).emit(SOCKET_EVENTS.UPDATE_CHAT, parseData)
-    })
+    socketService.joinChat(result.id, [...new Set([...receiverIds, userId])])
+
     res.status(HttpStatusCode.Created).json(parseData)
   }
 
@@ -44,15 +42,12 @@ export class ChatCtrl extends PaginateCursorCtrl {
     IChatResDto,
     IUpdateChatDisplayNameReqBodyDto
   > = async (req, res) => {
-    const io = req.io
     const { chatId } = req.params
     const { userId } = req.user
     const { displayName } = req.body
-
     const result = await chatService.updateChatDisplayName(chatId, userId, displayName)
-
     const restulParsed = ChatResDto.parse(result)
-    io.to(chatId).emit(SOCKET_EVENTS.UPDATE_CHAT, restulParsed)
+    socketService.updateChat(chatId, restulParsed)
     res.json(restulParsed)
   }
 
@@ -68,7 +63,7 @@ export class ChatCtrl extends PaginateCursorCtrl {
     try {
       const { chatId } = req.params
       await chatService.delete(chatId)
-      req.io.to(chatId).emit(SOCKET_EVENTS.DELETE_CHAT, { chatId })
+      socketService.deleteChat(chatId)
       res.status(HttpStatusCode.NoContent).json()
     } catch (error) {
       if (isRecordNotFoundError(error)) throw new NotFoundException('Chat không tồn tại')
@@ -87,8 +82,8 @@ export class ChatCtrl extends PaginateCursorCtrl {
     const result = await chatService.getOrCreateChatByUserId(userId, req.user.userId)
     const restulParsed = ChatResDto.parse(result.chat)
     if (result.isCreate) {
-      req.io.to(userId).emit(SOCKET_EVENTS.UPDATE_CHAT, restulParsed)
-      req.io.to(req.user.userId).emit(SOCKET_EVENTS.UPDATE_CHAT, restulParsed)
+      socketService.joinChat(result.chat.id, [userId, req.user.userId])
+      socketService.updateChat(result.chat.id, restulParsed)
     }
     res.json(restulParsed)
   }

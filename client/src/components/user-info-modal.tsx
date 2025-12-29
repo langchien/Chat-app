@@ -9,20 +9,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { getInitials } from '@/lib/utils'
-import type { IUser } from '@/services/api.types'
-import { FriendStatusButton } from './friend/friend-status-btn'
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
+import { FriendStatusButton } from '@/features/friend/components/friend-status-btn'
+import type { IUser } from '@/types/api.types'
+import { UserAvatar } from './avatar'
 
 export function UserInfoModal({ user }: { user: IUser }) {
   return (
     <Dialog>
       <DialogTrigger asChild>
         <div className='flex items-center space-x-2 cursor-pointer'>
-          <Avatar>
-            <AvatarImage src={user.avatarUrl} />
-            <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
-          </Avatar>
+          <UserAvatar user={user} />
           <div className='flex flex-col text-left'>
             <div className='flex flex-row items-center space-x-2'>
               <div className='font-semibold'>{user.displayName}</div>
@@ -40,12 +36,9 @@ export function UserInfoModal({ user }: { user: IUser }) {
           <DialogDescription>Chi tiết thông tin cá nhân của {user.displayName}</DialogDescription>
         </DialogHeader>
         <div className='flex flex-col items-center gap-4 py-4'>
-          <Avatar className='h-24 w-24'>
-            <AvatarImage src={user.avatarUrl} />
-            <AvatarFallback className='text-2xl'>{getInitials(user.displayName)}</AvatarFallback>
-          </Avatar>
+          <UserAvatar user={user} size='xl' />
           <div className='text-center'>
-            <h3 className='text-lg font-semibold'>{user.displayName}</h3>
+            <h3 className='text-lg font-semibold capitalize'>{user.displayName}</h3>
             <p className='text-sm text-muted-foreground'>@{user.username}</p>
           </div>
           <div className='w-full grid gap-4'>

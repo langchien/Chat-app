@@ -67,6 +67,21 @@ export const useChatFiles = () => {
     setBigVideo(undefined)
   }
 
+  const addFile = (file: File) => {
+    if (bigVideo) {
+      toast.error('Đã có video lớn, không thể tải thêm file khác.')
+      return
+    }
+    const fileName = file.name
+    // For audio files, we can use a generic icon or specific processing if needed.
+    // Here we just add it to the list.
+    const newFile: ChatFile = {
+      file,
+      fileName,
+    }
+    setFiles((prevFiles) => [...prevFiles, newFile])
+  }
+
   return {
     files,
     bigVideo,
@@ -74,5 +89,6 @@ export const useChatFiles = () => {
     handleSetBigVideo,
     handleDeleteFile,
     clearFiles,
+    addFile,
   }
 }

@@ -15,6 +15,7 @@ import { IChatResDto } from '../chat/chat.res.dto'
 import { IMessageResDto } from '../message/message.res.dto'
 import { messageService } from '../message/message.service'
 import { userService } from '../user/user.service'
+import { ffmpegService } from './ffmpeg.service'
 import { ICreateMediaInput, IMedia, IUpdateMediaInput } from './media.db'
 import { mediaQueue } from './media.queue'
 import { MediaStatus, MediaType } from './media.schema'
@@ -158,18 +159,44 @@ class MediaService extends BaseService {
         if (!isLocal) {
           let filePathToUpload = file.filepath
           let fileNameToUpload = file.newFilename
+
           if (mediaType === MediaType.image) {
             filePathToUpload = filePath.replace(path.extname(filePath), '.jpeg')
             fileNameToUpload = file.newFilename.replace(path.extname(file.newFilename), '.jpeg')
           }
+
+          if (mediaType === MediaType.audio) {
+            filePathToUpload = filePath.replace(path.extname(filePath), '.mp3')
+            fileNameToUpload = file.newFilename.replace(path.extname(file.newFilename), '.mp3')
+            await ffmpegService.convertAudio(file.filepath, filePathToUpload)
+            // We don't unlink original here because formidable might delete it?
+            // Actually formidable moves it to temp. We should clean up temp if we converted.
+            await unlink(file.filepath)
+          }
+
           await s3Service.upload(
             MediaDirectories[mediaType] + fileNameToUpload,
             filePathToUpload,
             contentType,
           )
-          await unlink(filePathToUpload)
+          // If we created a new converted file, delete it after upload
+          if (mediaType === MediaType.image || mediaType === MediaType.audio) {
+            await unlink(filePathToUpload)
+          } else {
+            await unlink(file.filepath) // for other types (video raw, file)
+          }
         } else if (isNeedMove) {
-          await rename(file.filepath, filePath)
+          if (mediaType === MediaType.audio) {
+            const newFilePath = filePath.replace(path.extname(filePath), '.mp3')
+            url = localFileService.getUrlMedia(
+              mediaType,
+              file.newFilename.replace(path.extname(file.newFilename), '.mp3'),
+            )
+            await ffmpegService.convertAudio(file.filepath, newFilePath)
+            await unlink(file.filepath)
+          } else {
+            await rename(file.filepath, filePath)
+          }
         }
         return {
           url,

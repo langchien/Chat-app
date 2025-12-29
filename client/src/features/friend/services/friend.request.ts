@@ -71,6 +71,16 @@ class FriendRequest extends ApiRequest {
     const response = await this.httpRequest.delete(`${this.basePath}/user/${userId}`)
     return response.data
   }
+
+  acceptByUserId = async (userId: string) => {
+    const response = await this.httpRequest.post(`${this.basePath}/accept-by-user/${userId}`)
+    return response.data
+  }
+
+  rejectByUserId = async (userId: string) => {
+    const response = await this.httpRequest.post(`${this.basePath}/reject-by-user/${userId}`)
+    return response.data
+  }
 }
 
 export const friendRequest = new FriendRequest(API_ROUTES.FRIEND)

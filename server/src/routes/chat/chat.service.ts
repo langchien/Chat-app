@@ -1,6 +1,7 @@
 import { NotFoundException } from '@/core/exceptions'
 import { BaseService } from '@/lib/database'
 import { IPaginateCursorQuery } from '@/lib/paginate-cusor.ctrl'
+import { notificationService } from '../notification/notification.service'
 import { IChatIncludeParticipants, ICreateChatInp, IParticipant, IUpdateChatInp } from './chat.db'
 import { ChatResDto, IChatPaginateCursorResDto } from './chat.res.dto'
 import { ChatType } from './chat.schema'
@@ -351,6 +352,24 @@ class ChatService extends BaseService {
       await this.prismaService.participant.createMany({
         data: validUserIdsToCreate.map((id) => ({ chatId, userId: id })),
       })
+    }
+
+    // Create notifications for all added users (restored + created)
+    const allAddedUserIds = [...validUserIdsToRestore, ...validUserIdsToCreate]
+    if (allAddedUserIds.length > 0) {
+      // We can do this in parallel
+      await Promise.all(
+        allAddedUserIds.map((userId) =>
+          notificationService.create({
+            recipientId: userId,
+            // senderId: actorId, // Or maybe null if system message, but better show who added
+            senderId: actorId,
+            type: 'ADDED_TO_GROUP',
+            content: `đã thêm bạn vào nhóm ${chat.groupInfo?.name || 'chat'}`,
+            link: `/chats/${chatId}`,
+          }),
+        ),
+      )
     }
 
     return this.findOneById(chatId, actorId) as Promise<IChatIncludeParticipants>

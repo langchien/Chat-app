@@ -7,4 +7,5 @@ export const API_ROUTES = {
   CHAT: '/chats',
   MESSAGE: '/messages',
   MEDIA: '/media',
+  NOTIFICATION: '/notifications',
 } as const

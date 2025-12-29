@@ -61,6 +61,10 @@ model User {
   sentFriendRequests     FriendRequest[] @relation("FriendRequestFrom")
   receivedFriendRequests FriendRequest[] @relation("FriendRequestTo")
 
+  // 3. Xử lý cho Notification (2 chiều - Nhận và Gửi)
+  notificationsReceived Notification[] @relation("NotificationRecipient")
+  notificationsSent     Notification[] @relation("NotificationSender")
+
   // 2. Xử lý cho Friend (2 chiều)
   friends      Friend[]      @relation("UserFriends")
   friendOf     Friend[]      @relation("UserFriendOf")
@@ -175,4 +179,39 @@ model OtpRequest {
   exp   DateTime
 
   @@unique([email, type])
+}
+
+// 1. Định nghĩa các loại thông báo
+enum NotificationType {
+  FRIEND_REQUEST // Lời mời kết bạn
+  FRIEND_ACCEPTED // Ai đó đã chấp nhận lời mời
+  ADDED_TO_GROUP // Được thêm vào nhóm
+}
+
+enum NotificationActionStatus {
+  NONE
+  ACCEPTED
+  REJECTED
+}
+
+// todo: Thêm sau: Video bạn đã upload và encode xong, có thể xem
+// VIDEO_READY
+
+// 2. Tạo Model Notification
+model Notification {
+  id           String                   @id @default(auto()) @map("_id") @db.ObjectId
+  recipientId  String                   @db.ObjectId
+  senderId     String?                  @db.ObjectId // Null nếu là tin từ hệ thống
+  type         NotificationType
+  actionStatus NotificationActionStatus @default(NONE)
+  content      String                   @default("") // Nội dung hiển thị ngắn gọn
+  link         String? // Link điều hướng khi click (VD: /messages/123)
+  isRead       Boolean                  @default(false)
+  createdAt    DateTime                 @default(now())
+
+  // Quan hệ
+  recipient User  @relation("NotificationRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  sender    User? @relation("NotificationSender", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([recipientId]) // Index để query danh sách thông báo cực nhanh
 }

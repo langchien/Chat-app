@@ -5,6 +5,7 @@ import {
   isRecordNotFoundError,
   isUniqueConstraintError,
 } from '@/lib/database'
+import { notificationService } from '../notification/notification.service'
 import { IUser } from '../user/user.db'
 import { userService } from '../user/user.service'
 import { ICreateFriendRequestInput, IFriend, IFriendRequest } from './friend.db'
@@ -14,6 +15,59 @@ import { FriendRequestStatus } from './friend.schema'
 class FriendService extends BaseService {
   async searchNewFriends(q: string, fromId: string, limit?: number) {
     return userService.searchExcludeFriend(q, fromId, limit ?? 20)
+  }
+
+  async acceptByUserId(senderId: string, receiverId: string) {
+    const request = await this.prismaService.friendRequest.findFirst({
+      where: {
+        fromId: senderId,
+        toId: receiverId,
+        status: FriendRequestStatus.pending,
+      },
+    })
+    if (!request) throw new NotFoundException('Không tìm thấy lời mời kết bạn')
+
+    // Update Notification status
+    // Note: Finding the exact notification can be tricky if there are multiple.
+    // We assume the latest FRIEND_REQUEST from sender to receiver.
+    await this.prismaService.notification.updateMany({
+      where: {
+        senderId,
+        recipientId: receiverId,
+        type: 'FRIEND_REQUEST',
+        // Update all related notifications to ensure legacy ones are covered
+      },
+      data: {
+        actionStatus: 'ACCEPTED',
+      },
+    })
+
+    return this.acceptFriendRequest(request.id, receiverId)
+  }
+
+  async rejectByUserId(senderId: string, receiverId: string) {
+    const request = await this.prismaService.friendRequest.findFirst({
+      where: {
+        fromId: senderId,
+        toId: receiverId,
+        status: FriendRequestStatus.pending,
+      },
+    })
+    if (!request) throw new NotFoundException('Không tìm thấy lời mời kết bạn')
+
+    await this.prismaService.notification.updateMany({
+      where: {
+        senderId,
+        recipientId: receiverId,
+        type: 'FRIEND_REQUEST',
+        actionStatus: 'NONE',
+      },
+      data: {
+        actionStatus: 'REJECTED',
+      },
+    })
+
+    return this.rejectFriendRequest(request.id, receiverId)
   }
 
   async updateFriendRequestStatus(requestId: string, userId: string, status: FriendRequestStatus) {
@@ -32,9 +86,20 @@ class FriendService extends BaseService {
     if (data.fromId === data.toId)
       throw new BadRequestException(undefined, 'Không thể gửi lời mời kết bạn với chính mình')
     try {
-      return await this.prismaService.friendRequest.create({
+      const friendRequest = await this.prismaService.friendRequest.create({
         data,
       })
+
+      // Create notification
+      await notificationService.create({
+        recipientId: data.toId,
+        senderId: data.fromId,
+        type: 'FRIEND_REQUEST',
+        content: 'đã gửi cho bạn lời mời kết bạn', // Customize message as needed
+        link: `/friends/requests`, // Example link
+      })
+
+      return friendRequest
     } catch (error) {
       if (isUniqueConstraintError(error)) throw new ConflictException('Lời mời kết bạn đã tồn tại')
       if (isForeignKeyConstraintError(error))
@@ -84,27 +149,49 @@ class FriendService extends BaseService {
       where: { id: requestId, status: FriendRequestStatus.pending, toId: userAcceptId },
     })
     if (!request) throw new NotFoundException('Không tìm thấy lời mời kết bạn')
-    return this.prismaService.$transaction(async (prisma) => {
-      const [friendRequest, friend] = await Promise.all([
-        prisma.friendRequest.update({
-          where: { id: requestId },
-          data: { status: FriendRequestStatus.accepted },
-        }),
-        prisma.friend.create({
-          data: {
-            userId: userAcceptId,
-            friendId: request.fromId,
-          },
-        }),
-        prisma.friend.create({
-          data: {
-            userId: request.fromId,
-            friendId: userAcceptId,
-          },
-        }),
-      ])
-      return { friend, friendRequest }
-    })
+    return this.prismaService
+      .$transaction(async (prisma) => {
+        const [friendRequest, friend] = await Promise.all([
+          prisma.friendRequest.update({
+            where: { id: requestId },
+            data: { status: FriendRequestStatus.accepted },
+          }),
+          prisma.friend.create({
+            data: {
+              userId: userAcceptId,
+              friendId: request.fromId,
+            },
+          }),
+          prisma.friend.create({
+            data: {
+              userId: request.fromId,
+              friendId: userAcceptId,
+            },
+          }),
+        ])
+
+        // Create notification for the sender of the request
+        // Can't use await here efficiently inside transaction if we want parallelism, but for notification strictly it's fine outside or after.
+        // Ideally, we should use the service but prisma transaction instance doesn't propagate easily to other services unless designed.
+        // For now, let's just trigger it "fire and forget" or await it. Since notification is important info, maybe await.
+        // However, notificationService uses this.prismaService which is not the transaction client.
+        // This is a common pitfall. If transaction fails, notification might still be sent if we await it before.
+        // But here we are inside transaction block.
+        // Ideally we should move notification creation AFTER transaction commits.
+
+        return { friend, friendRequest }
+      })
+      .then(async (result) => {
+        // Create notification after successful transaction
+        await notificationService.create({
+          recipientId: request.fromId,
+          senderId: userAcceptId,
+          type: 'FRIEND_ACCEPTED',
+          content: 'đã chấp nhận lời mời kết bạn',
+          link: `/profile/${userAcceptId}`,
+        })
+        return result
+      })
   }
 
   async rejectFriendRequest(requestId: string, toId: string): Promise<IFriendRequest> {

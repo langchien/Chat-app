@@ -21,3 +21,9 @@ export const ChatPaginateCursorResDto = PaginateCursorResDto.extend({
 export interface IParticipantResDto extends z.infer<typeof ParticipantResDto> {}
 export interface IChatPaginateCursorResDto extends z.infer<typeof ChatPaginateCursorResDto> {}
 export interface IChatResDto extends z.infer<typeof ChatResDto> {}
+
+export interface IChatLink {
+  url: string
+  messageId: string
+  createdAt: string
+}

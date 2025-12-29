@@ -8,12 +8,12 @@ import {
   MessageCircle,
   Minimize,
   Users,
-  Zap,
   type LucideProps,
 } from 'lucide-react'
 import type { ForwardRefExoticComponent, RefAttributes } from 'react'
 import { Link } from 'react-router'
 import { Button } from '../ui/button'
+import { WebLogo } from '../web-logo'
 import { AppNotification } from './app-notification'
 import { useHeader } from './use-header'
 
@@ -62,8 +62,7 @@ export function AppHeader() {
     <header className='relative h-10 shrink-0 bg-sidebar w-full flex items-center px-3 overflow-hidden'>
       <SidebarMenu className='w-full'>
         <SidebarMenuItem className='flex items-center space-x-2 w-full'>
-          <Zap className='size-6 font-bold text-primary/90' />
-          <h1 className='text-2xl font-bold text-primary/90'>Hust Chat</h1>
+          <WebLogo />
           <div className='ms-auto' />
           {/* Thông báo */}
           <Button size='icon-sm' variant='ghost' asChild>

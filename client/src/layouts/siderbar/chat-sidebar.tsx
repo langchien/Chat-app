@@ -6,6 +6,7 @@ import {
   SidebarProvider,
   SidebarSeparator,
 } from '@/components/ui/sidebar'
+import type { IChatPaginateCursorResDto } from '@/features/chat/services'
 import { ChatList } from '@/layouts/siderbar/chat-list'
 import { Outlet } from 'react-router'
 import { MainNav } from '../main-nav'
@@ -13,7 +14,7 @@ import { AccountSetting } from './account-setting'
 import { CreateChatModal } from './create-chat-modal'
 import { SidebarNav } from './sidebar-nav'
 
-export function ChatSidebar() {
+export function ChatSidebar({ paginateData }: { paginateData: IChatPaginateCursorResDto }) {
   return (
     <div className='bg-sidebar h-screen flex flex-col'>
       <AppHeader />
@@ -27,7 +28,7 @@ export function ChatSidebar() {
             <CreateChatModal />
             <SidebarNav />
             <SidebarSeparator />
-            <ChatList />
+            <ChatList paginateData={paginateData} />
             <SidebarFooter className='h-16 absolute left-4 right-4 bottom-4 rounded-lg shadow-2xl border-primary border bg-white dark:bg-background'>
               <AccountSetting />
             </SidebarFooter>

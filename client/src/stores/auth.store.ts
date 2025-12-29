@@ -11,7 +11,6 @@ import type { IUser } from '@/types/api.types'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { useAppStore } from './app.store'
-import { useChatStore } from './chat.store'
 import { useSocketStore } from './socket.store'
 
 interface IAuthState {
@@ -53,7 +52,6 @@ export const useAuthStore = create<IAuthState & IAuthActions>()(
       clearAuthStore: () => {
         set(store.getInitialState())
         localStorage.removeItem(LOCAL_STORAGE_KEY)
-        useChatStore.getState().clearChatStore()
         useSocketStore.getState().disconnect()
       },
       signIn: async (body: ILoginReqBodyDto) => {
@@ -63,7 +61,6 @@ export const useAuthStore = create<IAuthState & IAuthActions>()(
           set({ accessToken })
           const userRes = await protectedRequest.getProfile()
           set({ user: userRes })
-          await useChatStore.getState().getMyChatList()
         } catch (error) {
           get().clearAuthStore()
           throw error
@@ -76,7 +73,6 @@ export const useAuthStore = create<IAuthState & IAuthActions>()(
           set({ accessToken })
           const userRes = await protectedRequest.getProfile()
           set({ user: userRes })
-          await useChatStore.getState().getMyChatList()
         } catch (error) {
           get().clearAuthStore()
           throw error
@@ -92,7 +88,6 @@ export const useAuthStore = create<IAuthState & IAuthActions>()(
           const userRes = await protectedRequest.getProfile()
           set({ user: userRes })
           set({ isCanSignUp: false })
-          await useChatStore.getState().getMyChatList()
         } catch (error) {
           get().clearAuthStore()
           throw error
@@ -106,7 +101,6 @@ export const useAuthStore = create<IAuthState & IAuthActions>()(
           const userRes = await protectedRequest.getProfile()
           set({ user: userRes })
           set({ isCanResetPassword: false })
-          await useChatStore.getState().getMyChatList()
         } catch (error) {
           get().clearAuthStore()
           throw error
@@ -158,6 +152,7 @@ export const useAuthStore = create<IAuthState & IAuthActions>()(
     {
       name: LOCAL_STORAGE_KEY,
       partialize: (state) => ({
+        accessToken: state.accessToken,
         user: state.user,
         isCanSignUp: state.isCanSignUp,
         isCanResetPassword: state.isCanResetPassword,

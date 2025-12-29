@@ -62,9 +62,37 @@ export function FriendStatusButton({
   className,
   userDisplayName,
 }: FriendStatusButtonProps) {
-  // Not friend logic with Dialog
-  const { isDialogOpen, isLoading, status, setIsDialogOpen, onAddFriend, message, setMessage } =
-    useFriendStatusBtn(userId)
+  const {
+    isDialogOpen,
+    isLoading,
+    status,
+    setIsDialogOpen,
+    onAddFriend,
+    message,
+    setMessage,
+    onCancelRequest,
+    onUnfriend,
+    onAccept,
+    isCurrentUser,
+  } = useFriendStatusBtn(userId)
+
+  if (isCurrentUser) {
+    return null
+  }
+  if (status === FriendStatus.FRIEND) {
+    return <Btn status={status} isLoading={isLoading} onClick={onUnfriend} className={className} />
+  }
+
+  if (status === FriendStatus.REQUEST_SENT) {
+    return (
+      <Btn status={status} isLoading={isLoading} onClick={onCancelRequest} className={className} />
+    )
+  }
+
+  if (status === FriendStatus.REQUEST_RECEIVED) {
+    return <Btn status={status} isLoading={isLoading} onClick={onAccept} className={className} />
+  }
+
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>

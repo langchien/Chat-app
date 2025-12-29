@@ -8,13 +8,13 @@ import { useState } from 'react'
 export function useFriendStatusBtn(userId: string) {
   const { isLoading } = useAppStore()
   const { user: currentUser } = useAuthStore()
-
+  const isCurrentUser = currentUser?.id === userId
   // Modal state
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const defaultMessage = `Xin chào, mình là ${currentUser?.displayName}. Kết bạn với mình nhé!`
   const [message, setMessage] = useState(defaultMessage)
 
-  const { data: status, isPending, isError } = useQuery(friendRequest.checkFriendStatus, userId)
+  const { data: status } = useQuery(friendRequest.checkFriendStatus, userId)
 
   const onAddFriend = useRequest(
     async (e: React.FormEvent) => {
@@ -65,5 +65,17 @@ export function useFriendStatusBtn(userId: string) {
       messageError: 'Chấp nhận thất bại',
     },
   )
-  return { isLoading, message, isDialogOpen, status, onAddFriend, setIsDialogOpen, setMessage }
+  return {
+    isLoading,
+    message,
+    isDialogOpen,
+    status,
+    isCurrentUser,
+    onAddFriend,
+    setIsDialogOpen,
+    setMessage,
+    onCancelRequest,
+    onUnfriend,
+    onAccept,
+  }
 }

@@ -1,32 +1,42 @@
 import { SOCKET_EVENTS } from '@/constants/event.const'
-import { useChatStore } from '@/stores/chat.store'
 import { useSocketStore } from '@/stores/socket.store'
 import type { IChat, IMessage } from '@/types/api.types'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams } from 'react-router'
+import { chatRequest, type IChatPaginateCursorResDto } from '../services'
 
-export function useChatList() {
-  const data = useChatStore((state) => state.data)
-  const setChatList = useChatStore((state) => state.setChatList)
-  const getMore = useChatStore((state) => state.getMore)
-  const hasMore = useChatStore((state) => state.hasMore)
+const INIT_LIMIT = 20
+export function useChatList(paginateData: IChatPaginateCursorResDto) {
+  const [chatList, setChatList] = useState<IChat[]>(paginateData.data)
+  const [hasMore, setHasMore] = useState(paginateData.hasMore)
+  const [nextCursor, setNextCursor] = useState(paginateData.nextCursor)
+  const getMore = async () => {
+    if (!nextCursor) return
+    const response = await chatRequest.paginate({
+      limit: INIT_LIMIT,
+      cursor: nextCursor,
+    })
+    setChatList([...chatList, ...response.data])
+    setNextCursor(response.nextCursor)
+    setHasMore(response.hasMore)
+  }
   const { chatId } = useParams()
-  const chatGroups = data.filter((chat) => chat.type === 'group')
-  const chatDirects = data.filter((chat) => chat.type === 'direct')
+  const chatGroups = chatList.filter((chat) => chat.type === 'group')
+  const chatDirects = chatList.filter((chat) => chat.type === 'direct')
   const socket = useSocketStore((state) => state.socket)
 
   useEffect(() => {
     if (!socket) return
     const handleReceiveMessage = (payload: { message: IMessage; chat: IChat }) => {
-      const _data = data.filter((c) => c.id !== payload.chat.id)
+      const _data = chatList.filter((c) => c.id !== payload.chat.id)
       setChatList([payload.chat, ..._data])
     }
     const handleUpdateChat = (updatedChat: IChat) => {
-      const _data = data.filter((c) => c.id !== updatedChat.id)
+      const _data = chatList.filter((c) => c.id !== updatedChat.id)
       setChatList([updatedChat, ..._data])
     }
     const handleDeleteChat = ({ chatId }: { chatId: string }) => {
-      const _data = data.filter((c) => c.id !== chatId)
+      const _data = chatList.filter((c) => c.id !== chatId)
       setChatList(_data)
     }
     socket.on(SOCKET_EVENTS.RECEIVE_MESSAGE, handleReceiveMessage)
@@ -37,10 +47,10 @@ export function useChatList() {
       socket.off(SOCKET_EVENTS.UPDATE_CHAT, handleUpdateChat)
       socket.off(SOCKET_EVENTS.DELETE_CHAT, handleDeleteChat)
     }
-  }, [socket, data, setChatList])
+  }, [socket, chatList, setChatList])
 
   return {
-    data,
+    chatList,
     chatGroups,
     chatDirects,
     chatId,

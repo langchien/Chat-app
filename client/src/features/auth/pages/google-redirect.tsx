@@ -7,17 +7,25 @@ export default function GoogleRedirect() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const signInWithOAuth2 = useAuthStore((state) => state.signInWithOAuth2)
+
   useEffect(() => {
     const handleSignIn = async () => {
       const accessToken = searchParams.get('accessToken')
-      if (accessToken) {
+      if (!accessToken) {
+        navigate(APP_PAGES.SIGNIN)
+        return
+      }
+
+      try {
         await signInWithOAuth2(accessToken)
         navigate(APP_PAGES.CHAT)
-      } else {
+      } catch (error) {
         navigate(APP_PAGES.SIGNIN)
       }
     }
+
     handleSignIn()
   }, [searchParams, navigate, signInWithOAuth2])
+
   return <div>Google Redirecting...</div>
 }

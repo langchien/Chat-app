@@ -1,5 +1,4 @@
 import { Skeleton } from '@/components/ui/skeleton'
-import { ChatInput } from '@/features/chat/components/chat-input'
 import { useChatWindow } from '@/features/chat/hooks/use-chat-window'
 import { Message } from '@/features/message/components/message'
 import type { IMessagePaginate } from '@/types/api.types'
@@ -20,8 +19,8 @@ function EndMessage() {
   )
 }
 export function ChatWindow({ paginateMessages }: { paginateMessages: IMessagePaginate }) {
-  const { messages, hasMore, fetchData, userId, mapUserById, chat } =
-    useChatWindow(paginateMessages)
+  const { messages, hasMore, fetchData, userId, mapUserById } = useChatWindow(paginateMessages)
+
   return (
     <>
       <div id='scrollableChatWindow' className='app-scroll flex flex-col-reverse p-4 overflow-auto'>
@@ -47,7 +46,6 @@ export function ChatWindow({ paginateMessages }: { paginateMessages: IMessagePag
           </div>
         </InfiniteScroll>
       </div>
-      <ChatInput chatId={chat.id} />
     </>
   )
 }

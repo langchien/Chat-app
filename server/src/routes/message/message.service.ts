@@ -97,12 +97,24 @@ class MessageService extends BaseService {
 
   async getMessagesByCursor(
     chatId: string,
+    userId: string,
     query: IPaginateCursorQuery,
   ): Promise<IMessagePaginateCursorResDto> {
     const { cursor, limit } = query
+    const participant = await this.prismaService.participant.findUnique({
+      where: {
+        userId_chatId: {
+          userId,
+          chatId,
+        },
+      },
+    })
+    const deletedAt = participant?.deletedAt
+
     const results = await this.prismaService.message.findMany({
       where: {
         chatId: chatId,
+        ...(deletedAt ? { createdAt: { gt: deletedAt } } : {}),
         ...(cursor ? { id: { lt: cursor } } : {}),
       },
       orderBy: { createdAt: 'desc' },

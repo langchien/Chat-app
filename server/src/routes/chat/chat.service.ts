@@ -68,6 +68,20 @@ class ChatService extends BaseService {
     return this.prismaService.chat.delete({ where: { id: id } })
   }
 
+  async deleteConversation(chatId: string, userId: string): Promise<IParticipant> {
+    return this.prismaService.participant.update({
+      where: {
+        userId_chatId: {
+          chatId,
+          userId,
+        },
+      },
+      data: {
+        deletedAt: new Date(),
+      },
+    })
+  }
+
   async updateChatDisplayName(
     chatId: string,
     userId: string,
@@ -115,7 +129,7 @@ class ChatService extends BaseService {
   }
 
   async getAllChatsByUserId(userId: string): Promise<IChatIncludeParticipants[]> {
-    return this.prismaService.chat.findMany({
+    const chats = await this.prismaService.chat.findMany({
       include: {
         participants: {
           include: {
@@ -130,6 +144,17 @@ class ChatService extends BaseService {
           },
         },
       },
+    })
+    // Filter out chats that are "deleted" for this user
+    return chats.filter((chat) => {
+      const participant = chat.participants.find((p) => p.userId === userId)
+      if (!participant || !participant.deletedAt) return true
+      // If last message exists and is newer than deletedAt, show it.
+      // If no last message, it's effectively empty or old, hide it if deletedAt is set?
+      // Actually if no lastMessage, it might be a new empty chat.
+      if (!chat.lastMessage) return false // Or true? Assume if no message, nothing to see?
+      // Logic: Show if lastMessage.createdAt > deletedAt
+      return new Date(chat.lastMessage.createdAt) > new Date(participant.deletedAt)
     })
   }
 
@@ -159,12 +184,29 @@ class ChatService extends BaseService {
       },
       take: limit + 1,
     })
+
+    // Filter results in memory
+    const filteredResults = results.filter((chat) => {
+      const participant = chat.participants.find((p) => p.userId === userId)
+      if (!participant || !participant.deletedAt) return true
+      if (!chat.lastMessage) return false
+      return new Date(chat.lastMessage.createdAt) > new Date(participant.deletedAt)
+    })
+
+    // Pagination logic adjustment:
+    // Since we filtered in memory, we might have fewer items than 'limit'.
+    // Properly, we should fetch more, but for simplicity we return what we have.
+    // However, 'nextCursor' should be based on the original 'results' to continue traversal effectively
+    // OR we return nextCursor of the last item in *filtered* list?
+    // If we return nextCursor of original list, the next page will start correctly from DB perspective.
+
     const hasMore = results.length > limit
     const nextCursor = hasMore ? results[limit - 1].id.toString() : null
+
     return {
       hasMore,
       nextCursor,
-      data: results.slice(0, limit).map((result) => ChatResDto.parse(result)),
+      data: filteredResults.slice(0, limit).map((result) => ChatResDto.parse(result)),
     }
   }
   async getOrCreateChatByUserId(
@@ -258,6 +300,92 @@ class ChatService extends BaseService {
       },
       orderBy: { createdAt: 'desc' },
     })
+  }
+  async addParticipants(
+    chatId: string,
+    userIds: string[],
+    actorId: string,
+  ): Promise<IChatIncludeParticipants> {
+    const chat = await this.prismaService.chat.findUnique({
+      where: { id: chatId },
+      include: { participants: true },
+    })
+
+    if (!chat) throw new NotFoundException('Chat không tồn tại')
+    if (chat.type !== ChatType.GROUP)
+      throw new NotFoundException('Chỉ có thể thêm thành viên vào nhóm')
+
+    // Check if actor is in the group
+    const isActorInGroup = chat.participants.some(
+      (p) => p.userId === actorId && (!p.deletedAt || new Date(p.deletedAt) > new Date()),
+    )
+    if (!isActorInGroup) throw new NotFoundException('Bạn không phải là thành viên của nhóm này')
+
+    // Get all participants including soft deleted ones to check against input userIds
+    const allParticipantsInChat = await this.prismaService.participant.findMany({
+      where: {
+        chatId,
+        userId: { in: userIds },
+      },
+    })
+
+    // 1. Identify users to restore (they exist but have deletedAt)
+    const validUserIdsToRestore = allParticipantsInChat
+      .filter((p) => p.deletedAt)
+      .map((p) => p.userId)
+
+    // 2. Identify users to create (they are not in allParticipantsInChat)
+    const existingUserIds = allParticipantsInChat.map((p) => p.userId)
+    const validUserIdsToCreate = userIds.filter((id) => !existingUserIds.includes(id))
+
+    // Restore
+    if (validUserIdsToRestore.length > 0) {
+      await this.prismaService.participant.updateMany({
+        where: { chatId, userId: { in: validUserIdsToRestore } },
+        data: { deletedAt: null, joinedAt: new Date() },
+      })
+    }
+
+    // Create
+    if (validUserIdsToCreate.length > 0) {
+      await this.prismaService.participant.createMany({
+        data: validUserIdsToCreate.map((id) => ({ chatId, userId: id })),
+      })
+    }
+
+    return this.findOneById(chatId, actorId) as Promise<IChatIncludeParticipants>
+  }
+
+  async removeParticipant(
+    chatId: string,
+    userIdToRemove: string,
+    actorId: string,
+  ): Promise<IChatIncludeParticipants> {
+    const chat = await this.prismaService.chat.findUnique({
+      where: { id: chatId },
+      include: { participants: true },
+    })
+
+    if (!chat) throw new NotFoundException('Chat không tồn tại')
+    if (chat.type !== ChatType.GROUP)
+      throw new NotFoundException('Chỉ có thể xóa thành viên khỏi nhóm')
+
+    // Permission check: Actor must be Admin OR Actor is removing themselves (Leave Group)
+    const isAdmin = chat.groupInfo?.createdBy === actorId
+    if (!isAdmin && userIdToRemove !== actorId) {
+      throw new NotFoundException('Bạn không có quyền xóa thành viên này')
+    }
+
+    // Cannot remove the only admin? Or transfer ownership?
+    // For now, if admin leaves, group might be headless or allowed.
+    // If admin removes themselves, it's a leave.
+
+    await this.prismaService.participant.update({
+      where: { userId_chatId: { chatId, userId: userIdToRemove } },
+      data: { deletedAt: new Date() },
+    })
+
+    return this.findOneById(chatId, actorId) as Promise<IChatIncludeParticipants>
   }
 }
 

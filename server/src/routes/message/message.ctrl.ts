@@ -34,7 +34,10 @@ class MessageCtrl extends PaginateCursorCtrl {
   ) => {
     const { chatId } = req.params
     const { limit, cursor } = this.parsePaginationQuery(req.query)
-    const result = await messageService.getMessagesByCursor(chatId, { limit, cursor })
+    const result = await messageService.getMessagesByCursor(chatId, req.user.userId, {
+      limit,
+      cursor,
+    })
     res.json(MessagePaginateCursorResDto.parse(result))
   }
 

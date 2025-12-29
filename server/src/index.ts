@@ -20,6 +20,7 @@ import { app, httpServer } from '@/socket'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
 import express from 'express'
+import { ffmpegService } from './routes/media/ffmpeg.service'
 
 const main = async () => {
   await localFileService.initFolder() // khởi tạo các thư mục cần thiết trước khi chạy ứng dụng
@@ -29,6 +30,7 @@ const main = async () => {
     redisService.connect(), // Kết nối đến Redis
     maillerService.verifyConnection(), // Xác minh kết nối mailer
     s3Service.verifyS3Connection(), // Xác minh kết nối S3
+    ffmpegService.verifyFFmpeg(),
   ])
 
   app.use(cookieParser()) // Middleware để parser cookie

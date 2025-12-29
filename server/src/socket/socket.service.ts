@@ -41,6 +41,15 @@ class SocketService {
   mediaProcessingUpdate(chatId: string, message: IMediaResDto) {
     io.to(chatId).emit(SOCKET_EVENTS.MEDIA_PROCESSING_UPDATE, message)
   }
+
+  memberAdded(chatId: string, participants: any[]) {
+    // Using any[] for now or IParticipant[] if imported
+    io.to(chatId).emit(SOCKET_EVENTS.MEMBER_ADDED, { chatId, participants })
+  }
+
+  memberRemoved(chatId: string, userId: string) {
+    io.to(chatId).emit(SOCKET_EVENTS.MEMBER_REMOVED, { chatId, userId })
+  }
 }
 
 export const socketService = new SocketService()

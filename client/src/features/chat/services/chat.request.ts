@@ -58,6 +58,23 @@ class ChatRequest extends ApiRequest {
     return response.data
   }
 
+  addMembers = async (chatId: string, userIds: string[]) => {
+    const response = await this.httpRequest.post<IChatResDto>(
+      `${this.basePath}/${chatId}/participants`,
+      {
+        userIds,
+      },
+    )
+    return response.data
+  }
+
+  removeMember = async (chatId: string, userId: string) => {
+    const response = await this.httpRequest.delete<IChatResDto>(
+      `${this.basePath}/${chatId}/participants/${userId}`,
+    )
+    return response.data
+  }
+
   getLinks = async (chatId: string) => {
     const response = await this.httpRequest.get<IChatLink[]>(`${this.basePath}/${chatId}/links`)
     return response.data

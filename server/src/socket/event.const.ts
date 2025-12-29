@@ -9,4 +9,5 @@ export const SOCKET_EVENTS = {
   CONVERSATION_DELETED: 'conversation-deleted',
   MEMBER_ADDED: 'member-added',
   MEMBER_REMOVED: 'member-removed',
+  NEW_NOTIFICATION: 'new-notification',
 } as const

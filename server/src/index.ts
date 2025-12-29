@@ -13,6 +13,7 @@ import { chatRouter } from '@/routes/chat/chat.route'
 import { friendRoute } from '@/routes/friend/friend.route'
 import { mediaRouter } from '@/routes/media/media.route'
 import { messageRouter } from '@/routes/message/message.route'
+import notificationRouter from '@/routes/notification'
 import { oauth2Router } from '@/routes/oauth2/oauth2.route'
 import { protectedRouter } from '@/routes/protected/protected.route'
 import { userRouter } from '@/routes/user/user.route'
@@ -52,6 +53,7 @@ const main = async () => {
   app.use(API_ROUTES.MESSAGE, messageRouter)
   app.use(API_ROUTES.MEDIA, mediaRouter)
   app.use(API_ROUTES.FRIEND, friendRoute)
+  app.use(API_ROUTES.NOTIFICATION, notificationRouter)
 
   // Phải đặt sau tất cả các route khác
   app.use(handlerExceptionDefault) // Middleware xử lý ngoại lệ

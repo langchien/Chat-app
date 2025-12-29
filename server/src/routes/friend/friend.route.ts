@@ -29,6 +29,18 @@ friendRoute.get('/requests/received', friendCtrl.getReceivedFriendRequests)
 
 friendRoute.get('/requests/sent', friendCtrl.getSentFriendRequests)
 
+friendRoute.post(
+  '/accept-by-user/:userId',
+  zodValidate(UserIdReqParamsDto, 'params'),
+  friendCtrl.acceptByUserId,
+)
+
+friendRoute.post(
+  '/reject-by-user/:userId',
+  zodValidate(UserIdReqParamsDto, 'params'),
+  friendCtrl.rejectByUserId,
+)
+
 friendRoute.get(
   '/status/:userId',
   zodValidate(UserIdReqParamsDto, 'params'),

@@ -88,6 +88,18 @@ class FriendController extends BaseController {
     res.status(HttpStatusCode.NoContent).json(null)
   }
 
+  acceptByUserId: RequestHandler<IUserIdReqParamsDto> = async (req, res) => {
+    const { userId: senderId } = req.params
+    const result = await friendService.acceptByUserId(senderId, req.user!.userId)
+    res.json(result)
+  }
+
+  rejectByUserId: RequestHandler<IUserIdReqParamsDto> = async (req, res) => {
+    const { userId: senderId } = req.params
+    const result = await friendService.rejectByUserId(senderId, req.user!.userId)
+    res.json(result)
+  }
+
   getFriendStatus: RequestHandler<IUserIdReqParamsDto, IFriendStatusResDto> = async (req, res) => {
     const { userId } = req.params
     const status = await friendService.getFriendStatus(req.user.userId, userId)

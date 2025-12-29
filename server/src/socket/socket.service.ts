@@ -1,8 +1,25 @@
+import { IParticipant } from '@/routes/chat/chat.db'
 import { IChatResDto } from '@/routes/chat/chat.res.dto'
 import { IMediaResDto } from '@/routes/media/media.res'
 import { IMessageResDto } from '@/routes/message/message.res.dto'
 import { SOCKET_EVENTS } from './event.const'
 import { getSocketByUserId, io } from './socket.init'
+
+export interface IMemberAddedPayload {
+  chatId: string
+  participants: IParticipant[]
+}
+
+export interface IMemberRemovedPayload {
+  chatId: string
+  userId: string
+}
+
+export interface INotificationPayload {
+  id: string
+  // Add other notification fields as needed or use the full Notification model type
+  [key: string]: any
+}
 
 // gom hết các io.emit vào đây, để dễ dàng quản lý, debug
 class SocketService {
@@ -42,13 +59,18 @@ class SocketService {
     io.to(chatId).emit(SOCKET_EVENTS.MEDIA_PROCESSING_UPDATE, message)
   }
 
-  memberAdded(chatId: string, participants: any[]) {
-    // Using any[] for now or IParticipant[] if imported
-    io.to(chatId).emit(SOCKET_EVENTS.MEMBER_ADDED, { chatId, participants })
+  memberAdded(chatId: string, participants: IParticipant[]) {
+    const payload: IMemberAddedPayload = { chatId, participants }
+    io.to(chatId).emit(SOCKET_EVENTS.MEMBER_ADDED, payload)
   }
 
   memberRemoved(chatId: string, userId: string) {
-    io.to(chatId).emit(SOCKET_EVENTS.MEMBER_REMOVED, { chatId, userId })
+    const payload: IMemberRemovedPayload = { chatId, userId }
+    io.to(chatId).emit(SOCKET_EVENTS.MEMBER_REMOVED, payload)
+  }
+
+  sendNotification(userId: string, notification: any) {
+    io.to(userId).emit(SOCKET_EVENTS.NEW_NOTIFICATION, notification)
   }
 }
 

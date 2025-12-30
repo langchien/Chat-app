@@ -1,55 +1,50 @@
 services:
-  mongo1:
-    image: mongo:7.0
-    container_name: mongo1
-    # BẮT BUỘC: --port phải khớp với port bên ngoài
-    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--port", "${MONGODB_PRIMARY_PORT}"]
-    ports:
-      # Sửa lại thành PORT:PORT (Ví dụ 27021:27021)
-      - "${MONGODB_PRIMARY_PORT}:${MONGODB_PRIMARY_PORT}"
-    volumes:
-      - mongo1_data:/data/db
-    networks:
-      - mongo-cluster
-    restart: unless-stopped
-
-  mongo2:
-    image: mongo:7.0
-    container_name: mongo2
-    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--port", "${MONGODB_SECONDARY1_PORT}"]
-    ports:
-      - "${MONGODB_SECONDARY1_PORT}:${MONGODB_SECONDARY1_PORT}"
-    volumes:
-      - mongo2_data:/data/db
-    networks:
-      - mongo-cluster
-    restart: unless-stopped
-
-  mongo3:
-    image: mongo:7.0
-    container_name: mongo3
-    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--port", "${MONGODB_SECONDARY2_PORT}"]
-    ports:
-      - "${MONGODB_SECONDARY2_PORT}:${MONGODB_SECONDARY2_PORT}"
-    volumes:
-      - mongo3_data:/data/db
-    networks:
-      - mongo-cluster
-    restart: unless-stopped
-
   redis:
     image: redis:alpine
-    container_name: my-redis-compose
+    container_name: my-redis-prod
     ports:
-      - "${REDIS_PORT}:6379"
+      - "${REDIS_PORT:-6379}:6379"
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  server:
+    build:
+      context: ./server
+    container_name: chat-server
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      # Biến này sẽ được ghi đè bởi file .env trên container hoặc server,
+      # trỏ tới MongoDB Atlas
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=redis://redis:6379
+    env_file:
+      - ./server/.env
+    depends_on:
+      - redis
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  client:
+    build:
+      context: ./client
+      args:
+        # Pass server URI to build process for Client (Vite)
+        VITE_API_BASE_URL: ${SERVER_URI:-http://localhost:8000}
+    container_name: chat-client
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+    depends_on:
+      - server
+    networks:
+      - app-network
     restart: unless-stopped
 
 networks:
-  mongo-cluster:
+  app-network:
     driver: bridge
-
-volumes:
-  mongo1_data:
-  mongo2_data:
-  mongo3_data:
-# rs.initiate({id: "rs0",members: [{ id: 0, host: "mongo1:27021" },{ id: 1, host: "mongo2:27022" },{ id: 2, host: "mongo3:27023" }]})

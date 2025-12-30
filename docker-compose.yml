@@ -18,7 +18,7 @@ services:
       - PORT=8000
       # Biến này sẽ được ghi đè bởi file .env trên container hoặc server,
       # trỏ tới MongoDB Atlas
-      - DATABASE_URL=${DATABASE_URL}
+      # - DATABASE_URL=${DATABASE_URL}
       - REDIS_URL=redis://redis:6379
     env_file:
       - ./server/.env
@@ -31,9 +31,6 @@ services:
   client:
     build:
       context: ./client
-      args:
-        # Pass server URI to build process for Client (Vite)
-        VITE_API_BASE_URL: ${SERVER_URI:-http://localhost:8000}
     container_name: chat-client
     ports:
       - "3000:3000"

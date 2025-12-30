@@ -1,10 +1,11 @@
 import { logger } from '@/lib/logger.service'
-
 import ffmpegPath from 'ffmpeg-static'
 import ffprobePath from 'ffprobe-static'
 import path from 'path'
 import slash from 'slash'
-import { $ } from 'zx'
+import { $, quote } from 'zx'
+
+$.quote = quote
 
 const ALL_RESOLUTIONS = [360, 480, 720, 1080]
 

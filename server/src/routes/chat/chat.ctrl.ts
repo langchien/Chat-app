@@ -9,6 +9,7 @@ import {
   IAddParticipantsReqBodyDto,
   IChatIdParamDto,
   ICreateChatReqDto,
+  IRemoveParticipantReqParam,
   IUpdateChatDisplayNameReqBodyDto,
   IUpdateChatReqDto,
 } from './chat.req.dto'
@@ -117,7 +118,7 @@ export class ChatCtrl extends PaginateCursorCtrl {
       res.json(resultParsed)
     }
 
-  removeParticipant: RequestHandler<IChatIdParamDto & { userId: string }> = async (req, res) => {
+  removeParticipant: RequestHandler<IRemoveParticipantReqParam> = async (req, res) => {
     const { chatId, userId } = req.params
     const result = await chatService.removeParticipant(chatId, userId, req.user.userId)
 

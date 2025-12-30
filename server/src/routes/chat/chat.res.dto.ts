@@ -3,11 +3,7 @@ import z from 'zod'
 import { UserResDto } from '../user/user.res.dto'
 import { Chat, Participant } from './chat.schema'
 
-export const ParticipantResDto = Participant.pick({
-  nickname: true,
-  joinedAt: true,
-  deletedAt: true,
-}).extend({
+export const ParticipantResDto = Participant.extend({
   user: UserResDto,
 })
 

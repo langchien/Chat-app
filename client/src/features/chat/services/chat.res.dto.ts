@@ -3,11 +3,7 @@ import { PaginateCursorResDto } from '@/lib/paginate-cusor.ctrl'
 import z from 'zod'
 import { Chat, Participant } from './chat.schema'
 
-export const ParticipantResDto = Participant.pick({
-  nickname: true,
-  joinedAt: true,
-  deletedAt: true,
-}).extend({
+export const ParticipantResDto = Participant.extend({
   user: UserResDto,
 })
 

@@ -11,7 +11,7 @@ import {
 import { useMediaSetup } from '@/features/call/hooks/use-media-setup'
 import { cn } from '@/lib/utils'
 import { Mic, MicOff, Video, VideoOff, X } from 'lucide-react'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 interface PrevVideoCallSetupModalProps {
   onJoin: (stream: MediaStream) => void
@@ -20,8 +20,11 @@ interface PrevVideoCallSetupModalProps {
 
 export function PrevVideoCallSetupModal({ onJoin, onCancel }: PrevVideoCallSetupModalProps) {
   const localVideoRef = useRef<HTMLVideoElement>(null)
+  const [open, setOpen] = useState(false)
 
-  const { stream, devices, selection, status, errors, setSpeakerHelper } = useMediaSetup()
+  const { stream, devices, selection, status, errors, setSpeakerHelper } = useMediaSetup({
+    enabled: open,
+  })
 
   // Sync Video Source
   useEffect(() => {
@@ -38,11 +41,12 @@ export function PrevVideoCallSetupModal({ onJoin, onCancel }: PrevVideoCallSetup
   const handleJoin = () => {
     if (stream && onJoin) {
       onJoin(stream)
+      setOpen(false)
     }
   }
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant='ghost' size='icon' className='h-9 w-9'>
           <Video className='h-5 w-5' />

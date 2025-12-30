@@ -69,6 +69,58 @@ const initSocketService = () => {
         deletedAt: new Date(),
       })
     })
+
+    // --- Media Call Signaling ---
+    socket.on(SOCKET_EVENTS.CALL_USER, ({ to, offer, isVideo }) => {
+      const targetSocketId = onlineUsers.get(to)
+      if (targetSocketId) {
+        io.to(targetSocketId).emit(SOCKET_EVENTS.CALL_MADE, {
+          offer,
+          socket: socket.id,
+          from: userId, // Caller User ID
+          user: socket.data.user, // Full user info if needed
+          isVideo,
+        })
+      }
+    })
+
+    socket.on(SOCKET_EVENTS.MAKE_ANSWER, ({ to, answer }) => {
+      const targetSocketId = onlineUsers.get(to)
+      if (targetSocketId) {
+        io.to(targetSocketId).emit(SOCKET_EVENTS.ANSWER_MADE, {
+          answer,
+          socket: socket.id,
+          from: userId,
+        })
+      }
+    })
+
+    socket.on(SOCKET_EVENTS.ICE_CANDIDATE, ({ to, candidate }) => {
+      const targetSocketId = onlineUsers.get(to)
+      if (targetSocketId) {
+        io.to(targetSocketId).emit(SOCKET_EVENTS.ICE_CANDIDATE, {
+          candidate,
+          from: userId,
+        })
+      }
+    })
+
+    socket.on(SOCKET_EVENTS.HANG_UP, ({ to }) => {
+      const targetSocketId = onlineUsers.get(to)
+      if (targetSocketId) {
+        io.to(targetSocketId).emit(SOCKET_EVENTS.HANG_UP, {
+          from: userId,
+        })
+      }
+    })
+    socket.on(SOCKET_EVENTS.CALL_REJECTED, ({ to }) => {
+      const targetSocketId = onlineUsers.get(to)
+      if (targetSocketId) {
+        io.to(targetSocketId).emit(SOCKET_EVENTS.CALL_REJECTED, {
+          from: userId,
+        })
+      }
+    })
   })
   return { io, httpServer, app, getSocketByUserId }
 }

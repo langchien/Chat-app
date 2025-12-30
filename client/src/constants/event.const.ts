@@ -10,4 +10,11 @@ export const SOCKET_EVENTS = {
   MEMBER_ADDED: 'member-added',
   MEMBER_REMOVED: 'member-removed',
   NEW_NOTIFICATION: 'new-notification',
+  CALL_USER: 'call-user',
+  CALL_MADE: 'call-made',
+  MAKE_ANSWER: 'make-answer',
+  ANSWER_MADE: 'answer-made',
+  CALL_REJECTED: 'call-rejected',
+  HANG_UP: 'hang-up',
+  ICE_CANDIDATE: 'ice-candidate',
 } as const

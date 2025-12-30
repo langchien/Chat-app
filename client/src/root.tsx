@@ -48,6 +48,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
   )
 }
 
+import { ActiveCall } from './features/call/components/active-call'
+import { IncomingCall } from './features/call/components/incoming-call'
+import { CallProvider } from './features/call/context/call.context'
+
 export default function App() {
   const accessToken = useAuthStore((state) => state.accessToken)
   const { connect, disconnect } = useSocketStore()
@@ -55,7 +59,14 @@ export default function App() {
     if (accessToken) connect()
     return () => disconnect()
   }, [accessToken, connect, disconnect])
-  return <Outlet />
+
+  return (
+    <CallProvider>
+      <Outlet />
+      <IncomingCall />
+      <ActiveCall />
+    </CallProvider>
+  )
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {

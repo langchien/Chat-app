@@ -6,7 +6,12 @@ async function getConnectedDevices(type: 'videoinput' | 'audioinput' | 'audioout
   return devices.filter((device) => device.kind === type)
 }
 
-export function useMediaSetup() {
+interface UseMediaSetupProps {
+  isVideo?: boolean
+  enabled?: boolean
+}
+
+export function useMediaSetup({ isVideo = true, enabled = false }: UseMediaSetupProps = {}) {
   const [stream, setStream] = useState<MediaStream | null>(null)
 
   // Danh sách thiết bị
@@ -38,15 +43,10 @@ export function useMediaSetup() {
   // 1. Helper: Cập nhật danh sách thiết bị
   const updateDeviceList = async (mounted = true) => {
     try {
-      const cameras = await getConnectedDevices('videoinput')
       const mics = await getConnectedDevices('audioinput')
       const speakers = await getConnectedDevices('audiooutput')
 
       if (mounted) {
-        setCameraDevices(cameras)
-        if (cameras.length === 0) setCameraError('Không tìm thấy camera')
-        else setCameraError(null)
-
         setMicroDevices(mics)
         if (mics.length === 0) setMicroError('Không tìm thấy micro')
         else setMicroError(null)
@@ -54,8 +54,15 @@ export function useMediaSetup() {
         setSpeakerDevices(speakers)
         if (speakers.length === 0) setSpeakerError('Không tìm thấy loa')
         else setSpeakerError(null)
+
+        if (isVideo) {
+          const cameras = await getConnectedDevices('videoinput')
+          setCameraDevices(cameras)
+          if (cameras.length === 0) setCameraError('Không tìm thấy camera')
+          else setCameraError(null)
+        }
       }
-    } catch (error) {
+    } catch (_error) {
       if (mounted) {
         setCameraError('Lỗi tải danh sách thiết bị')
       }
@@ -64,14 +71,17 @@ export function useMediaSetup() {
 
   // 2. Initial Setup: Yêu cầu quyền truy cập thiết bị
   useEffect(() => {
+    if (!enabled) return
+
     let mounted = true
 
     async function initDevices() {
       try {
-        const initialStream = await navigator.mediaDevices.getUserMedia({
-          video: true,
+        const constraints = {
+          video: isVideo,
           audio: true,
-        })
+        }
+        const initialStream = await navigator.mediaDevices.getUserMedia(constraints)
 
         if (mounted) {
           setErrorMessage(undefined)
@@ -110,12 +120,13 @@ export function useMediaSetup() {
       mounted = false
       navigator.mediaDevices.removeEventListener('devicechange', handleDeviceChange)
     }
-  }, [])
+  }, [isVideo, enabled])
 
   // 3. Tự động chọn thiết bị mặc định
   useEffect(() => {
-    if (cameraDevices.length > 0 && !selectedCamera) setSelectedCamera(cameraDevices[0].deviceId)
-  }, [cameraDevices, selectedCamera])
+    if (isVideo && cameraDevices.length > 0 && !selectedCamera)
+      setSelectedCamera(cameraDevices[0].deviceId)
+  }, [cameraDevices, selectedCamera, isVideo])
 
   useEffect(() => {
     if (microDevices.length > 0 && !selectedMicro) setSelectedMicro(microDevices[0].deviceId)
@@ -128,7 +139,10 @@ export function useMediaSetup() {
 
   // 4. Setup Stream & Mic Test
   useEffect(() => {
-    if (!selectedCamera && !selectedMicro) return
+    if (!enabled) return
+    // Nếu isVideo=true thì cần cả 2, nếu false thì chỉ cần micro
+    if (isVideo && !selectedCamera && !selectedMicro) return
+    if (!isVideo && !selectedMicro) return
 
     let curStream: MediaStream | null = null
 
@@ -147,17 +161,19 @@ export function useMediaSetup() {
       }
 
       try {
-        if (errorMessage || cameraError || microError) return
+        if (errorMessage || (isVideo && cameraError) || microError) return
 
         const constraints: MediaStreamConstraints = {
-          video: selectedCamera ? { deviceId: { exact: selectedCamera } } : false,
+          video: isVideo && selectedCamera ? { deviceId: { exact: selectedCamera } } : false,
           audio: selectedMicro ? { deviceId: { exact: selectedMicro } } : false,
         }
 
         const newStream = await navigator.mediaDevices.getUserMedia(constraints)
 
         // Cập nhật trạng thái ban đầu
-        newStream.getVideoTracks().forEach((t) => (t.enabled = isCameraOn))
+        if (isVideo) {
+          newStream.getVideoTracks().forEach((t) => (t.enabled = isCameraOn))
+        }
         newStream.getAudioTracks().forEach((t) => (t.enabled = isMicOn))
 
         setStream(newStream)
@@ -196,8 +212,8 @@ export function useMediaSetup() {
 
           updateAudioLevel()
         }
-      } catch (error) {
-        toast.error('Lỗi khi truy cập thiết bị')
+      } catch (_error) {
+        // toast.error('Lỗi khi truy cập thiết bị')
         // todo: handle error
       }
     }
@@ -216,7 +232,7 @@ export function useMediaSetup() {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCamera, selectedMicro, errorMessage])
+  }, [selectedCamera, selectedMicro, errorMessage, isVideo, enabled])
 
   // 5. Toggle Actions
   const toggleMic = () => {
@@ -230,7 +246,7 @@ export function useMediaSetup() {
   }
 
   const toggleCamera = () => {
-    if (stream) {
+    if (stream && isVideo) {
       const videoTrack = stream.getVideoTracks()[0]
       if (videoTrack) {
         videoTrack.enabled = !isCameraOn
@@ -245,7 +261,7 @@ export function useMediaSetup() {
     if (el && 'setSinkId' in el && selectedSpeaker) {
       try {
         await el.setSinkId(selectedSpeaker)
-      } catch (err) {
+      } catch (_err) {
         toast.error('Lỗi khi truy cập thiết bị')
         // todo: handle error
       }

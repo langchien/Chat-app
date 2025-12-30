@@ -1,13 +1,12 @@
-FROM node:20-alpine
+# Stage 1: Build
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies (use ci for consistent installs)
-# --omit=dev can be used if we separate build from run, but we need tsc to build
-# So we install all deps first
+# Install dependencies for build (including devDevs)
 RUN npm ci
 
 # Copy source code
@@ -19,8 +18,29 @@ RUN npx prisma generate
 # Build the application
 RUN npm run build
 
-# Expose the port (matches envConfig.port default or expected)
+# Stage 2: Production
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+# Copy package files
+COPY package*.json ./
+
+# Install ONLY production dependencies
+# npm cache clean helps reduce image size
+RUN npm ci --omit=dev && npm cache clean --force
+
+# Copy prisma schema and generate client for production
+COPY prisma ./prisma
+RUN npx prisma generate
+
+# Copy built application from builder stage
+COPY --from=builder /app/dist ./dist
+
+# Expose the port
 EXPOSE 8000
 
 # Start the server
-CMD ["npm", "start"]
+CMD ["node", "dist/index.js"]

@@ -23,25 +23,10 @@ Sau khi chạy xong:
 
 - **Client:** http://localhost:3000
 - **Server:** http://localhost:8000
-- **Database:** mongodb://localhost:27021,27022,27023
+- **Database:** mongodb://localhost:27021 (Replica Set: rs0)
 - **Redis:** localhost:6379
 
-> **⚠️ Lưu ý quan trọng (Lần đầu chạy):**
-> Nếu đây là lần đầu tiên bạn chạy, bạn cần khởi tạo Replica Set cho MongoDB để tính năng Transaction hoạt động:
->
-> 1. Chạy lệnh: `docker exec -it mongo1 mongosh --port 27021`
-> 2. Dán đoạn lệnh sau vào terminal:
->
-> ```javascript
-> rs.initiate({
->   _id: "rs0",
->   members: [
->     { _id: 0, host: "mongo1:27021" },
->     { _id: 1, host: "mongo2:27022" },
->     { _id: 2, host: "mongo3:27023" },
->   ],
-> });
-> ```
+> **✅ Tự động khởi tạo:** MongoDB Replica Set sẽ được script tự động khởi tạo khi container khởi động lần đầu. Bạn không cần chạy lệnh thủ công.
 
 ---
 

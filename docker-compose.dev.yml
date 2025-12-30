@@ -12,32 +12,14 @@ services:
       - mongo1_data:/data/db
     networks:
       - mongo-cluster
-    restart: unless-stopped
-
-  mongo2:
-    image: mongo:7.0
-    container_name: mongo2
-    command:
-      ["mongod", "--replSet", "rs0", "--bind_ip_all", "--port", "${MONGODB_SECONDARY1_PORT:-27022}"]
-    ports:
-      - "${MONGODB_SECONDARY1_PORT:-27022}:${MONGODB_SECONDARY1_PORT:-27022}"
-    volumes:
-      - mongo2_data:/data/db
-    networks:
-      - mongo-cluster
-    restart: unless-stopped
-
-  mongo3:
-    image: mongo:7.0
-    container_name: mongo3
-    command:
-      ["mongod", "--replSet", "rs0", "--bind_ip_all", "--port", "${MONGODB_SECONDARY2_PORT:-27023}"]
-    ports:
-      - "${MONGODB_SECONDARY2_PORT:-27023}:${MONGODB_SECONDARY2_PORT:-27023}"
-    volumes:
-      - mongo3_data:/data/db
-    networks:
-      - mongo-cluster
+    # Healthcheck để tự động initiate replica set
+    healthcheck:
+      test: |
+        test $$(echo "try { rs.initiate({_id:'rs0', members:[{_id:0, host:'mongo1:${MONGODB_PRIMARY_PORT:-27021}'}]}) } catch(e) { rs.status().ok }" | mongosh --port ${MONGODB_PRIMARY_PORT:-27021} --quiet) -eq 1
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
     restart: unless-stopped
 
   redis:
@@ -55,5 +37,3 @@ networks:
 
 volumes:
   mongo1_data:
-  mongo2_data:
-  mongo3_data:

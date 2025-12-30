@@ -7,18 +7,60 @@
 - **Client:** React (Vite), TypeScript, Shadcn UI, Socket.IO Client.
 - **Server:** Node.js, Express, Prisma, MongoDB (Replica Set), Redis, Socket.IO.
 
-## 🚀 Hướng dẫn cài đặt
+## 🚀 Hướng dẫn cài đặt (Ưu tiên dùng Docker)
 
-### 1. Khởi chạy các Service (Docker)
+Đây là cách nhanh nhất để chạy toàn bộ dự án (Full Stack) bao gồm: Client, Server, Database, Redis chỉ với 1 lệnh.
 
-Dự án yêu cầu các service nền tảng như MongoDB (Replica Set) và Redis.
-Vui lòng xem hướng dẫn chi tiết cách khởi chạy tại tài liệu sau:
+### 1. Chạy với Docker Compose
 
-👉 **[Hướng dẫn khởi chạy Docker và cấu hình Replica Set](docs/init-docker.md)**
+Dành cho môi trường Local, chạy lệnh sau:
 
-### 2. Chạy ứng dụng
+```bash
+docker-compose -f docker-compose.local-full.yml up --build -d
+```
 
-Sau khi các service Docker đã hoạt động, bạn có thể khởi chạy Client và Server.
+Sau khi chạy xong:
+
+- **Client:** http://localhost:3000
+- **Server:** http://localhost:8000
+- **Database:** mongodb://localhost:27021,27022,27023
+- **Redis:** localhost:6379
+
+> **⚠️ Lưu ý quan trọng (Lần đầu chạy):**
+> Nếu đây là lần đầu tiên bạn chạy, bạn cần khởi tạo Replica Set cho MongoDB để tính năng Transaction hoạt động:
+>
+> 1. Chạy lệnh: `docker exec -it mongo1 mongosh --port 27021`
+> 2. Dán đoạn lệnh sau vào terminal:
+>
+> ```javascript
+> rs.initiate({
+>   _id: "rs0",
+>   members: [
+>     { _id: 0, host: "mongo1:27021" },
+>     { _id: 1, host: "mongo2:27022" },
+>     { _id: 2, host: "mongo3:27023" },
+>   ],
+> });
+> ```
+
+---
+
+## 🛠 Hướng dẫn chạy thủ công (Dành cho Dev muốn debug từng phần)
+
+Nếu bạn muốn chạy riêng lẻ từng phần để Develop (Dev), bạn làm theo các bước sau:
+
+### 1. Khởi chạy các Service nền (Database & Redis)
+
+Chúng ta sử dụng Docker để chạy các service nền tảng (MongoDB, Redis) tách biệt với code.
+
+```bash
+# Chỉ chạy DB và Redis
+docker-compose -f docker-compose.dev.yml up -d
+```
+
+_Xem chi tiết tại: [Hướng dẫn khởi chạy Docker và cấu hình Replica Set](docs/init-docker.md)_
+
+### 2. Chạy Source Code
 
 #### Server (Backend)
 
@@ -43,7 +85,7 @@ npm install
 npm run dev
 ```
 
-#### Chế độ production
+### 3. Chế độ production
 
 Ở client hay server, bạn có thể build và chạy ở chế độ production, tốc độ ứng dụng sẽ nhanh hơn rất nhiều.
 Chạy bash sau ở cả hai folder client và server

@@ -57,7 +57,11 @@ export const useAuthStore = create<IAuthState & IAuthActions>()(
       signIn: async (body: ILoginReqBodyDto) => {
         get().clearAuthStore()
         try {
-          const { accessToken } = await authRequest.signin(body)
+          const { accessToken } = await authRequest.signin(body, {
+            headers: {
+              'x-skip-auth-refresh': 'true',
+            },
+          })
           set({ accessToken })
           const userRes = await protectedRequest.getProfile()
           set({ user: userRes })

@@ -27,8 +27,12 @@ class AuthRequest extends ApiRequest {
     return response.data
   }
 
-  signin = async (body: ILoginReqBodyDto) => {
-    const response = await this.httpRequest.post<LoginResponseDto>(`${this.basePath}/login`, body)
+  signin = async (body: ILoginReqBodyDto, config?: any) => {
+    const response = await this.httpRequest.post<LoginResponseDto>(
+      `${this.basePath}/login`,
+      body,
+      config,
+    )
     return response.data
   }
 

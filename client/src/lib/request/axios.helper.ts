@@ -52,7 +52,12 @@ export const responseError = async (error: AxiosError) => {
   const originalRequest = error.config as any
 
   // Nếu lỗi không phải 401 hoặc request này đã được retry -> Trả lỗi luôn
-  if (error.response?.status !== 401 || originalRequest._retry) {
+  // Hoặc nếu request có header x-skip-auth-refresh -> Trả lỗi luôn (để tránh loop khi login sai)
+  if (
+    error.response?.status !== 401 ||
+    originalRequest._retry ||
+    originalRequest.headers?.['x-skip-auth-refresh']
+  ) {
     if (error.response && error.response.data) {
       const response = error.response.data as ResponseErrorPayload
       if (error.response.status === HTTP_STATUS_CODE.UNPROCESSABLE_ENTITY) {

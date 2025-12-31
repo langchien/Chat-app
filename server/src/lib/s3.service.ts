@@ -66,6 +66,9 @@ class S3Service {
       Key: filepath,
     })
     const data = await this.uploadClient.send(command)
+    if (data.ContentType) res.set('Content-Type', data.ContentType)
+    if (data.ContentLength) res.set('Content-Length', data.ContentLength.toString())
+    if (data.ETag) res.set('ETag', data.ETag)
     ;(data.Body as any).pipe(res)
   }
 

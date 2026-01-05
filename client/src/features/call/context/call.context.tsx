@@ -10,6 +10,7 @@ import {
   useState,
 } from 'react'
 import { toast } from 'sonner'
+import { ICE_SERVERS } from '../call.constants'
 
 interface IncomingCall {
   offer: RTCSessionDescriptionInit
@@ -39,13 +40,6 @@ interface CallContextType {
 }
 
 const CallContext = createContext<CallContextType | undefined>(undefined)
-
-const ICE_SERVERS = {
-  iceServers: [
-    { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:global.stun.twilio.com:3478' },
-  ],
-}
 
 export function CallProvider({ children }: { children: ReactNode }) {
   const { socket } = useSocketStore()
@@ -290,12 +284,50 @@ export function CallProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const toggleCamera = () => {
-    if (localStream && isVideoCall) {
-      const track = localStream.getVideoTracks()[0]
-      if (track) {
-        track.enabled = !isCameraOn
-        setIsCameraOn(!isCameraOn)
+  const toggleCamera = async () => {
+    if (!localStream) return
+
+    const videoTrack = localStream.getVideoTracks()[0]
+
+    if (videoTrack) {
+      videoTrack.enabled = !isCameraOn
+      setIsCameraOn(!isCameraOn)
+    } else {
+      // Upgrade logic: Audio -> Video
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false, // We already have audio
+        })
+        const newVideoTrack = stream.getVideoTracks()[0]
+
+        // Add to local stream
+        localStream.addTrack(newVideoTrack)
+        // Update state reference to trigger effects
+        setLocalStream(new MediaStream(localStream.getTracks()))
+
+        setIsCameraOn(true)
+        setIsVideoCall(true)
+
+        // Add to PeerConnection and Renegotiate
+        if (peerConnectionRef.current && socket) {
+          peerConnectionRef.current.addTrack(newVideoTrack, localStream)
+
+          const offer = await peerConnectionRef.current.createOffer()
+          await peerConnectionRef.current.setLocalDescription(offer)
+
+          const targetId = targetUserIdRef.current || incomingCall?.from
+          if (targetId) {
+            socket.emit(SOCKET_EVENTS.CALL_USER, {
+              to: targetId,
+              offer,
+              isVideo: true,
+            })
+          }
+        }
+      } catch (error) {
+        console.error('Failed to enable camera:', error)
+        toast.error('Không thể bật camera')
       }
     }
   }
@@ -304,7 +336,20 @@ export function CallProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!socket) return
 
-    socket.on(SOCKET_EVENTS.CALL_MADE, (data) => {
+    socket.on(SOCKET_EVENTS.CALL_MADE, async (data) => {
+      // Handle Renegotiation (Upgrade Call)
+      if (activeCall && targetUserIdRef.current === data.from && peerConnectionRef.current) {
+        await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(data.offer))
+        const answer = await peerConnectionRef.current.createAnswer()
+        await peerConnectionRef.current.setLocalDescription(answer)
+        socket.emit(SOCKET_EVENTS.MAKE_ANSWER, {
+          to: data.from,
+          answer,
+        })
+        if (data.isVideo) setIsVideoCall(true)
+        return
+      }
+
       // Only accept if not currently in call
       if (activeCall || isCalling) {
         // busy?

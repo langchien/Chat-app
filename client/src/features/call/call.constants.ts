@@ -1,3 +1,5 @@
+import { envConfig } from '@/config/envConfig'
+
 export const MEDIA_CONSTRAINTS = {
   VIDEO: {
     width: { min: 640, ideal: 1280, max: 1920 },
@@ -17,3 +19,15 @@ export const MEDIA_CONSTRAINTS = {
     frameRate: { ideal: 30, max: 60 },
   },
 } as const
+
+export const ICE_SERVERS = {
+  iceServers: [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:global.stun.twilio.com:3478' },
+    {
+      urls: envConfig.turnServerUrl,
+      username: envConfig.turnServerUsername,
+      credential: envConfig.turnServerCredential,
+    },
+  ],
+}

@@ -240,7 +240,10 @@ export function PrevVideoCallSetupModal({ onJoin, onCancel }: PrevVideoCallSetup
             <Button
               variant='outline'
               type='button'
-              onClick={onCancel}
+              onClick={() => {
+                onCancel()
+                setOpen(false)
+              }}
               className='flex-1 h-10 md:h-11 text-sm md:text-base'
             >
               Hủy bỏ

@@ -40,14 +40,18 @@ export function ChatHeader() {
           <h2 className='font-bold text-lg min-w-0 line-clamp-1 capitalize'>{chatDisplayName}</h2>
         </div>
         <div className='flex gap-2'>
-          <Button variant='ghost' size='icon' onClick={handleVoiceCall}>
-            <Phone className='w-5 h-5 text-muted-foreground' />
-          </Button>
+          {chat.type === 'direct' && (
+            <>
+              <Button variant='ghost' size='icon' onClick={handleVoiceCall}>
+                <Phone className='w-5 h-5 text-muted-foreground' />
+              </Button>
 
-          <PrevVideoCallSetupModal
-            onJoin={(stream) => handleStartCall(stream, true)}
-            onCancel={() => {}}
-          />
+              <PrevVideoCallSetupModal
+                onJoin={(stream) => handleStartCall(stream, true)}
+                onCancel={() => {}}
+              />
+            </>
+          )}
 
           <ChatInfo />
         </div>

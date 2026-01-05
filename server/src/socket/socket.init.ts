@@ -71,14 +71,24 @@ const initSocketService = () => {
     })
 
     // --- Media Call Signaling ---
-    socket.on(SOCKET_EVENTS.CALL_USER, ({ to, offer, isVideo }) => {
+    socket.on(SOCKET_EVENTS.CALL_USER, async ({ to, offer, isVideo }) => {
       const targetSocketId = onlineUsers.get(to)
       if (targetSocketId) {
+        // Fetch full user info to display on receiver side (IncomingCall modal)
+        const callerInfo = await prismaService.user.findUnique({
+          where: { id: userId },
+          select: {
+            id: true,
+            displayName: true,
+            avatarUrl: true,
+          },
+        })
+
         io.to(targetSocketId).emit(SOCKET_EVENTS.CALL_MADE, {
           offer,
           socket: socket.id,
           from: userId, // Caller User ID
-          user: socket.data.user, // Full user info if needed
+          user: callerInfo || socket.data.user, // Fallback to token payload if db fail
           isVideo,
         })
       }

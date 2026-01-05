@@ -139,7 +139,6 @@ export function ActiveCall() {
           size='icon'
           className='h-14 w-14 rounded-full shadow-lg'
           onClick={toggleCamera}
-          disabled={!isVideoCall} // Disable camera toggle if voice-only call (optional design choice)
         >
           {isCameraOn ? <Video className='h-6 w-6' /> : <VideoOff className='h-6 w-6' />}
         </Button>

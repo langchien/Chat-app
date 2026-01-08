@@ -63,6 +63,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
   const targetSocketIdRef = useRef<string | null>(null)
   const targetUserIdRef = useRef<string | null>(null) // To send socket events
   const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const iceCandidatesQueue = useRef<RTCIceCandidateInit[]>([]) // Buffer for early candidates
 
   // Clean up function
   const cleanUpCall = useCallback(() => {
@@ -82,6 +83,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
     setCallDuration(0)
     targetSocketIdRef.current = null
     targetUserIdRef.current = null
+    iceCandidatesQueue.current = []
 
     if (peerConnectionRef.current) {
       peerConnectionRef.current.close()
@@ -121,6 +123,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
       setIsMicOn(true)
 
       // 2. Create PC
+      console.log('RTCPeerConnection Config:', ICE_SERVERS)
       const pc = new RTCPeerConnection(ICE_SERVERS)
       peerConnectionRef.current = pc
 
@@ -132,6 +135,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
       // 4. Handle ICE
       pc.onicecandidate = (event) => {
         if (event.candidate) {
+          console.log('ICE Candidate generated:', event.candidate.type, event.candidate)
           socket?.emit(SOCKET_EVENTS.ICE_CANDIDATE, {
             to: targetUserId,
             candidate: event.candidate,
@@ -194,6 +198,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
       setIsMicOn(true)
 
       // 2. Create PC
+      console.log('RTCPeerConnection Config (Answer):', ICE_SERVERS)
       const pc = new RTCPeerConnection(ICE_SERVERS)
       peerConnectionRef.current = pc
 
@@ -203,6 +208,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
       // 4. Handle ICE
       pc.onicecandidate = (event) => {
         if (event.candidate) {
+          console.log('ICE Candidate generated (Answer):', event.candidate.type, event.candidate)
           // Warning: sending to userId or socketId?
           // The server expects "to" which is userId usually for mapped lookup.
           // But wait, server logic uses `onlineUsers.get(to)`. So `to` must be userId.
@@ -245,6 +251,19 @@ export function CallProvider({ children }: { children: ReactNode }) {
         to: incomingCall.from,
         answer,
       })
+
+      // 9. Process Buffered Candidates
+      if (iceCandidatesQueue.current.length > 0) {
+        console.log('Processing buffered ICE candidates:', iceCandidatesQueue.current.length)
+        iceCandidatesQueue.current.forEach(async (candidate) => {
+          try {
+            await pc.addIceCandidate(new RTCIceCandidate(candidate))
+          } catch (e) {
+            console.error('Error adding buffered candidate:', e)
+          }
+        })
+        iceCandidatesQueue.current = []
+      }
 
       // Optimistic state update
       setIncomingCall(null)
@@ -375,7 +394,14 @@ export function CallProvider({ children }: { children: ReactNode }) {
 
     socket.on(SOCKET_EVENTS.ICE_CANDIDATE, async (data) => {
       if (peerConnectionRef.current) {
-        await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(data.candidate))
+        try {
+          await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(data.candidate))
+        } catch (e) {
+          console.error('Error adding ICE candidate:', e)
+        }
+      } else {
+        console.log('Buffering ICE candidate (PC not ready)')
+        iceCandidatesQueue.current.push(data.candidate)
       }
     })
 

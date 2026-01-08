@@ -7,7 +7,11 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies for build (including devDevs)
-RUN npm ci
+# Increase timeout and retries for stability on VPS
+RUN npm config set fetch-retries 5 \
+    && npm config set fetch-retry-mintimeout 20000 \
+    && npm config set fetch-retry-maxtimeout 120000 \
+    && npm ci
 
 # Copy source code
 COPY . .
@@ -30,7 +34,12 @@ COPY package*.json ./
 
 # Install ONLY production dependencies
 # npm cache clean helps reduce image size
-RUN npm ci --omit=dev && npm cache clean --force
+# Install ONLY production dependencies
+# npm cache clean helps reduce image size
+RUN npm config set fetch-retries 5 \
+    && npm config set fetch-retry-mintimeout 20000 \
+    && npm config set fetch-retry-maxtimeout 120000 \
+    && npm ci --omit=dev && npm cache clean --force
 
 # Copy prisma schema and generate client for production
 COPY prisma ./prisma

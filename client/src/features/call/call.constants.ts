@@ -21,13 +21,5 @@ export const MEDIA_CONSTRAINTS = {
 } as const
 
 export const ICE_SERVERS = {
-  iceServers: [
-    { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:global.stun.twilio.com:3478' },
-    {
-      urls: envConfig.turnServerUrl,
-      username: envConfig.turnServerUsername,
-      credential: envConfig.turnServerCredential,
-    },
-  ],
+  iceServers: envConfig.iceServers,
 }
